@@ -48,7 +48,7 @@ export function SearchResults({ results, query }: SearchResultsProps) {
         <div className="text-xs font-medium text-muted-foreground">Sources</div>
         {query && (
           <div className="text-xs text-muted-foreground">
-            Results for "{query}"
+            Results for &ldquo;{query}&rdquo;
           </div>
         )}
       </div>
