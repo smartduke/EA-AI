@@ -8,8 +8,8 @@ const textPartSchema = z.object({
 export const postRequestBodySchema = z.object({
   id: z.string().uuid(),
   message: z.object({
-    id: z.string().uuid(),
-    createdAt: z.coerce.date(),
+    id: z.string().uuid().default(() => crypto.randomUUID()), // Generate UUID if not provided
+    createdAt: z.coerce.date().optional().default(() => new Date()), // Make optional and provide default
     role: z.enum(['user']),
     content: z.string().min(1).max(2000),
     parts: z.array(textPartSchema),
@@ -23,7 +23,7 @@ export const postRequestBodySchema = z.object({
       )
       .optional(),
   }),
-  selectedChatModel: z.enum(['chat-model', 'chat-model-reasoning']),
+  selectedChatModel: z.enum(['chat-model', 'chat-model-reasoning', 'gpt-4o-mini']),
   selectedVisibilityType: z.enum(['public', 'private']),
 });
 

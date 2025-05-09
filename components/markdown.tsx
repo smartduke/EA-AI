@@ -4,10 +4,46 @@ import ReactMarkdown, { type Components } from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import { CodeBlock } from './code-block';
 
+// Regular expression to find citation references like [1], [2], etc.
+const CITATION_REGEX = /\[(\d+)\]/g;
+
+// Function to process text and wrap citations in styled spans
+const processTextWithCitations = (text: string) => {
+  if (!text) return null;
+  
+  const parts = [];
+  let lastIndex = 0;
+  let match;
+  
+  while ((match = CITATION_REGEX.exec(text)) !== null) {
+    if (match.index > lastIndex) {
+      parts.push(<span key={`text-${lastIndex}`}>{text.slice(lastIndex, match.index)}</span>);
+    }
+    
+    parts.push(
+      <span 
+        key={`citation-${match.index}`} 
+        className="inline-flex justify-center items-center bg-muted text-muted-foreground px-1.5 py-0.5 rounded-md text-xs font-medium"
+      >
+        {match[0]}
+      </span>
+    );
+    
+    lastIndex = match.index + match[0].length;
+  }
+  
+  if (lastIndex < text.length) {
+    parts.push(<span key={`text-${lastIndex}`}>{text.slice(lastIndex)}</span>);
+  }
+  
+  return parts.length ? <>{parts}</> : text;
+};
+
 const components: Partial<Components> = {
   // @ts-expect-error
   code: CodeBlock,
   pre: ({ children }) => <>{children}</>,
+  text: ({ children }) => processTextWithCitations(children as string),
   ol: ({ node, children, ...props }) => {
     return (
       <ol className="list-decimal list-outside ml-4" {...props}>

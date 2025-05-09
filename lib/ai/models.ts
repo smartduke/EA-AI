@@ -17,4 +17,9 @@ export const chatModels: Array<ChatModel> = [
     name: 'Reasoning model',
     description: 'Uses advanced reasoning',
   },
+  {
+    id: 'gpt-4o-mini',
+    name: 'GPT-4o-mini',
+    description: 'Smaller, faster version of GPT-4o with excellent capabilities',
+  },
 ];

@@ -1172,3 +1172,22 @@ export const WarningIcon = ({ size = 16 }: { size?: number }) => {
     </svg>
   );
 };
+
+export const ExternalLinkIcon = ({ size = 16 }: { size?: number }) => {
+  return (
+    <svg
+      height={size}
+      strokeLinejoin="round"
+      viewBox="0 0 16 16"
+      width={size}
+      style={{ color: 'currentcolor' }}
+    >
+      <path
+        fillRule="evenodd"
+        clipRule="evenodd"
+        d="M6.75 1H6V2.5H6.75H11.4393L5.21967 8.71967L4.68934 9.25L5.75 10.3107L6.28033 9.78033L12.5 3.56066V8.25V9H14V8.25V2V1.5V1H13.5H7.25H6.75ZM1.75 4H1V4.75V13.25C1 13.6642 1.33579 14 1.75 14H10.25H11V13.25V12.5H10.25V13.25H1.75V4.75H2.5V4H1.75Z"
+        fill="currentColor"
+      />
+    </svg>
+  );
+};
