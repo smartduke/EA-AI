@@ -43,74 +43,6 @@ const PurePreviewMessage = ({
 }) => {
   const [mode, setMode] = useState<'view' | 'edit'>('view');
 
-  function generateFollowUpQuestions(message: string): string[] {
-    // Extract meaningful keywords from the message to generate context-aware questions
-    const text = message.toLowerCase();
-    
-    // Create a list of contextual questions based on detected topics
-    
-    // Technology related questions
-    if (text.includes("technology") || text.includes("ai") || text.includes("software") || 
-        text.includes("digital") || text.includes("computer") || text.includes("artificial intelligence")) {
-      return [
-        "What are the ethical implications of this technology?",
-        "How might this technology evolve in the next 5 years?",
-        "What companies are leading in this space?",
-        "How could this technology impact everyday life?"
-      ];
-    } 
-    // Science related questions
-    else if (text.includes("science") || text.includes("research") || text.includes("study") || 
-             text.includes("experiment") || text.includes("discovery")) {
-      return [
-        "What are the limitations of this research?",
-        "How does this compare to previous studies?",
-        "What practical applications could result from this?",
-        "Are there any controversies around this research?"
-      ];
-    } 
-    // History related questions
-    else if (text.includes("history") || text.includes("event") || text.includes("war") || 
-             text.includes("century") || text.includes("ancient") || text.includes("historical")) {
-      return [
-        "How did this event influence modern society?",
-        "What were the key factors leading to this historical outcome?",
-        "Are there alternative perspectives on this historical event?",
-        "What primary sources document this historical period?"
-      ];
-    } 
-    // Health related questions
-    else if (text.includes("health") || text.includes("medical") || text.includes("disease") || 
-             text.includes("treatment") || text.includes("cure") || text.includes("medicine")) {
-      return [
-        "What are the latest treatments for this condition?",
-        "How is this diagnosed?",
-        "What lifestyle factors affect this health issue?",
-        "Are there any promising research directions?"
-      ];
-    }
-    // Business and economics questions
-    else if (text.includes("business") || text.includes("economy") || text.includes("market") || 
-             text.includes("investment") || text.includes("finance") || text.includes("company") ||
-             text.includes("startup")) {
-      return [
-        "How might economic trends affect this market?",
-        "What are the competitive factors in this industry?",
-        "How are regulations impacting this sector?",
-        "What innovation opportunities exist in this field?"
-      ];
-    }
-    // Default questions if no specific context was detected
-    else {
-      return [
-        "Can you explain more about this topic?",
-        "What are the most recent developments in this area?",
-        "How does this impact society?",
-        "What are some alternative perspectives on this issue?"
-      ];
-    }
-  }
-
   return (
     <AnimatePresence>
       <motion.div
@@ -200,7 +132,14 @@ const PurePreviewMessage = ({
                             message.role === 'user',
                         })}
                       >
-                        <Markdown>{sanitizeText(part.text)}</Markdown>
+                        <Markdown>
+                          {(() => {
+                            const content = sanitizeText(part.text);
+                            // Remove the follow-up questions section if it exists
+                            const parts = content.split('---');
+                            return parts[0].trim();
+                          })()}
+                        </Markdown>
                       </div>
                     </div>
                   );
@@ -295,16 +234,61 @@ const PurePreviewMessage = ({
 
             {message.role === 'assistant' && (
               <FollowUpQuestions
-                questions={generateFollowUpQuestions(message.content || '')}
-                onSelectQuestion={(question) => {
-                  setMessages((messages) => [
-                    ...messages, 
-                    { 
-                      id: generateUUID(), // Add missing id property
-                      role: 'user', 
-                      content: question 
+                questions={(() => {
+                  // Look for follow-up questions in message parts
+                  const followUpPart = message.parts?.find(
+                    (part) =>
+                      part.type === 'text' &&
+                      'text' in part &&
+                      part.text.includes('---'),
+                  );
+
+                  if (followUpPart && 'text' in followUpPart) {
+                    const parts = followUpPart.text.split('---');
+                    if (parts.length > 1) {
+                      const questionsText = parts[1].trim();
+                      // Extract numbered questions [1] Question text
+                      const questions =
+                        questionsText.match(/\[\d+\][^\n]+/g) || [];
+                      return questions;
                     }
-                  ]);
+                  }
+                  return [];
+                })()}
+                onSelectQuestion={(question) => {
+                  // Add the question as a new user message
+                  setMessages((currentMessages) => {
+                    const newMessages = [
+                      ...currentMessages,
+                      {
+                        id: generateUUID(),
+                        role: 'user' as const,
+                        content: question,
+                        parts: [{ type: 'text' as const, text: question }],
+                      } as UIMessage,
+                    ];
+
+                    // Update the last assistant message to include the follow-up questions
+                    const lastAssistantMessage = newMessages
+                      .filter((msg) => msg.role === 'assistant')
+                      .pop();
+
+                    if (lastAssistantMessage) {
+                      const textPart = lastAssistantMessage.parts?.find(
+                        (part) => part.type === 'text' && 'text' in part,
+                      );
+
+                      if (textPart && 'text' in textPart) {
+                        const parts = textPart.text.split('---');
+                        if (parts.length > 1) {
+                          // Keep the follow-up questions in the message
+                          textPart.text = `${parts[0].trim()}\n\n---\n${parts[1].trim()}`;
+                        }
+                      }
+                    }
+
+                    return newMessages;
+                  });
                   reload();
                 }}
               />

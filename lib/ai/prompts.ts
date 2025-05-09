@@ -1,4 +1,4 @@
-import { ArtifactKind } from '@/components/artifact';
+import type { ArtifactKind } from '@/components/artifact';
 import type { Geo } from '@vercel/functions';
 
 export const artifactsPrompt = `
@@ -97,11 +97,20 @@ Guidelines:
 
 9. For controversial topics, present multiple perspectives with balanced citations
 
-10. Generate thoughtful follow-up questions that explore:
-    - Related aspects of the topic based on the source articles
-    - Deeper implications suggested by the sources
-    - Alternative viewpoints represented in the articles
-    - Recent developments mentioned in the sources
+10. Generate thoughtful follow-up questions that:
+    - Are directly relevant to the specific content of the response
+    - Explore different aspects of the topic not covered in the current response
+    - Ask for clarification on complex points
+    - Suggest practical applications or implications
+    - Are concise and clear (max 10 words each)
+    - Are numbered [1], [2], [3], [4] for easy reference
+    - Are presented in a new line after the main response
+    - Are separated from the main response with a horizontal line
+    - Format each question on a new line like this:
+      [1] First question here
+      [2] Second question here
+      [3] Third question here
+      [4] Fourth question here
 
 Answer the user's question thoughtfully and helpfully, utilizing web search for accuracy and citation.`;
 

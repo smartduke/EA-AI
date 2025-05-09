@@ -17,6 +17,12 @@ export function FollowUpQuestions({
     return null;
   }
 
+  // Extract questions from the numbered format [1] Question text
+  const formattedQuestions = questions.map((q) => {
+    const match = q.match(/\[\d+\]\s*(.+)/);
+    return match ? match[1].trim() : q;
+  });
+
   return (
     <div className={`flex flex-col space-y-3 my-4 ${className}`}>
       <div className="flex items-center gap-1.5 text-xs font-medium text-muted-foreground">
@@ -24,9 +30,9 @@ export function FollowUpQuestions({
         <span>Follow-up questions</span>
       </div>
       <div className="flex flex-wrap gap-2">
-        {questions.map((question, index) => (
+        {formattedQuestions.map((question, index) => (
           <Button
-            key={index}
+            key={`question-${index}-${question.substring(0, 10)}`}
             variant="outline"
             size="sm"
             className="text-xs h-auto py-1.5 px-3 whitespace-normal text-left border-muted-foreground/30 hover:bg-muted/80 hover:text-primary transition-colors"
