@@ -1,18 +1,21 @@
 import React from 'react';
 import { Card } from '@/components/ui/card';
-import { ExternalLinkIcon } from '@/components/icons';
 import { cn } from '@/lib/utils';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 
 export interface SearchResult {
   title: string;
   snippet: string;
   url: string;
   source: string;
+  favicon?: string; // Add optional favicon URL
 }
 
 interface SearchResultsProps {
   results: SearchResult[];
   query?: string;
+  hideTitle?: boolean; // Option to hide the "Sources" title
+  listView?: boolean; // Option for list view in Sources tab
 }
 
 // Helper function to clean URL for display
@@ -26,7 +29,19 @@ function cleanUrlForDisplay(url: string): string {
   }
 }
 
-export function SearchResults({ results, query }: SearchResultsProps) {
+// Helper function to get favicon URL for a domain
+function getFaviconUrl(url: string): string {
+  try {
+    const urlObj = new URL(url);
+    const domain = urlObj.hostname;
+    // Using Google's favicon service
+    return `https://www.google.com/s2/favicons?domain=${domain}&sz=32`;
+  } catch (e) {
+    return ''; // Return empty string if URL parsing fails
+  }
+}
+
+export function SearchResults({ results, query, hideTitle = false, listView = false }: SearchResultsProps) {
   if (!results || results.length === 0) {
     return null;
   }
@@ -43,53 +58,114 @@ export function SearchResults({ results, query }: SearchResultsProps) {
   }
 
   return (
-    <div className="flex flex-col space-y-3 mt-4 mb-2 text-sm w-full">
-      <div className="flex items-center justify-between">
-        <div className="text-xs font-medium text-muted-foreground">Sources</div>
-        {query && (
-          <div className="text-xs text-muted-foreground">
-            Results for &ldquo;{query}&rdquo;
+    <TooltipProvider delayDuration={100}>
+      <div className={cn('flex flex-col w-full', listView ? 'gap-1' : 'gap-3')}>
+        {!hideTitle && (
+          <div className="flex items-center justify-between">
+            <div className="text-xs font-medium text-muted-foreground">Sources</div>
+            {query && (
+              <div className="text-xs text-muted-foreground">
+                Results for &ldquo;{query}&rdquo;
+              </div>
+            )}
           </div>
         )}
-      </div>
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 w-full">
-        {searchResults.map((result, index) => (
-          <Card 
-            key={`search-result-${index}-${result.source || 'unknown'}`} 
-            className="p-3 hover:bg-muted/50 transition-colors border border-muted/60"
-          >
-            <div className="flex flex-col space-y-2">
-              <a 
-                href={result.url}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="font-medium text-primary hover:underline line-clamp-1 flex items-center gap-1 group"
-              >
-                {result.title || 'Untitled'}
-                <span className="opacity-70 group-hover:opacity-100">
-                  <ExternalLinkIcon size={12} />
-                </span>
-              </a>
-              <p className="text-xs text-muted-foreground line-clamp-3">
-                {result.snippet || 'No description available'}
-              </p>
-              <div className="flex justify-between items-center text-xs mt-1">
-                <span className="text-muted-foreground truncate max-w-[70%]">
-                  {cleanUrlForDisplay(result.url)}
-                </span>
-                <span 
-                  className={cn(
-                    "px-2 py-0.5 rounded font-medium",
-                    result.source === 'wikipedia' ? 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400' : 'bg-muted text-muted-foreground'
-                  )}
+        <div className={cn(
+          "grid gap-3 w-full",
+          listView ? "grid-cols-1" : "grid-cols-1 sm:grid-cols-2 md:grid-cols-3"
+        )}>
+          {searchResults.map((result, index) => (
+            <Tooltip key={`search-result-${index}-${result.source || 'unknown'}`}>
+              <TooltipTrigger asChild>
+                <a 
+                  href={result.url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="block w-full h-full"
                 >
-                  [{index + 1}]
-                </span>
-              </div>
-            </div>
-          </Card>
-        ))}
+                  <Card className={cn(
+                    "p-3 hover:bg-muted/50 transition-colors border border-muted/60 flex flex-col justify-between cursor-pointer",
+                    listView ? "h-auto" : "h-[90px]"
+                  )}>
+                    <div className="flex flex-col gap-[5px] justify-between h-full space-y-0">
+                      <span className="font-medium text-primary line-clamp-2 text-sm">
+                        {result.title || 'Untitled'}
+                      </span>
+                      <div className="flex items-center text-xs">
+                        <div className="flex items-center gap-2">
+                          {result.favicon ? (
+                            <img
+                              src={result.favicon}
+                              alt={`${cleanUrlForDisplay(result.url)} favicon`}
+                              className="w-4 h-4 rounded-full"
+                              onError={(e) => {
+                                e.currentTarget.style.display = 'none';
+                                (e.currentTarget.nextSibling as HTMLElement).style.display = 'flex';
+                              }}
+                            />
+                          ) : (
+                            <img
+                              src={getFaviconUrl(result.url)}
+                              alt={`${cleanUrlForDisplay(result.url)} favicon`}
+                              className="w-4 h-4 rounded-full"
+                              onError={(e) => {
+                                e.currentTarget.style.display = 'none';
+                                (e.currentTarget.nextSibling as HTMLElement).style.display = 'flex';
+                              }}
+                            />
+                          )}
+                          <div 
+                            className="w-4 h-4 bg-muted rounded-full flex items-center justify-center text-[10px]"
+                            style={{ display: 'none' }}
+                          >
+                            {(cleanUrlForDisplay(result.url).charAt(0) || 'S').toUpperCase()}
+                          </div>
+                          <span className="text-muted-foreground truncate">
+                            {cleanUrlForDisplay(result.url)}
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                  </Card>
+                </a>
+              </TooltipTrigger>
+              <TooltipContent side="bottom" className="max-w-[280px]">
+                <div className="space-y-2">
+                  <a 
+                    href={result.url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="font-medium inline-block"
+                  >
+                    {result.title}
+                  </a>
+                  {result.snippet && <p className="text-xs text-muted-foreground">{result.snippet}</p>}
+                  <div className="flex items-center gap-2 text-xs">
+                    {result.favicon ? (
+                      <img
+                        src={result.favicon}
+                        alt={`${cleanUrlForDisplay(result.url)} favicon`}
+                        className="w-4 h-4 rounded-full"
+                      />
+                    ) : (
+                      <img
+                        src={getFaviconUrl(result.url)}
+                        alt={`${cleanUrlForDisplay(result.url)} favicon`}
+                        className="w-4 h-4 rounded-full"
+                        onError={(e) => {
+                          e.currentTarget.style.display = 'none';
+                          (e.currentTarget.nextSibling as HTMLElement).style.display = 'flex';
+                        }}
+                      />
+                    )}
+                    <span>{cleanUrlForDisplay(result.url)}</span>
+                  </div>
+                </div>
+              </TooltipContent>
+            </Tooltip>
+          ))}
+        </div>
       </div>
-    </div>
+    </TooltipProvider>
   );
 }

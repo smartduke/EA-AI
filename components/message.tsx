@@ -21,6 +21,8 @@ import { MessageReasoning } from './message-reasoning';
 import { SearchResults } from './search-results';
 import { FollowUpQuestions } from './follow-up-questions';
 import type { UseChatHelpers } from '@ai-sdk/react';
+import { TabView } from './tab-view';
+import type { SearchResult } from './search-results';
 
 const PurePreviewMessage = ({
   chatId,
@@ -54,23 +56,14 @@ const PurePreviewMessage = ({
       >
         <div
           className={cn(
-            'flex gap-4 w-full group-data-[role=user]/message:ml-auto group-data-[role=user]/message:max-w-2xl',
+            'flex gap-4 w-full',
             {
               'w-full': mode === 'edit',
-              'group-data-[role=user]/message:w-fit': mode !== 'edit',
             },
           )}
         >
-          {message.role === 'assistant' && (
-            <div className="size-8 flex items-center rounded-full justify-center ring-1 shrink-0 ring-border bg-background">
-              <div className="translate-y-px">
-                <SparklesIcon size={14} />
-              </div>
-            </div>
-          )}
-
           <div
-            className={cn('flex flex-col gap-4 w-full', {
+            className={cn('flex flex-col w-full', {
               'min-h-96': message.role === 'assistant' && requiresScrollPadding,
             })}
           >
@@ -107,6 +100,27 @@ const PurePreviewMessage = ({
                 if (mode === 'view') {
                   return (
                     <div key={key} className="flex flex-row gap-2 items-start">
+                     
+
+                      <div
+                        data-testid="message-content"
+                        className={cn('flex flex-col gap-4', {
+                          'py-2 rounded-xl text-2xl font-semibold':
+                            message.role === 'user',
+                        })}
+                      >
+                        {/* Only render the text content directly for user messages */}
+                        {message.role === 'user' && (
+                          <Markdown>
+                            {(() => {
+                              const content = sanitizeText(part.text);
+                              // Remove the follow-up questions section if it exists
+                              const parts = content.split('---');
+                              return parts[0].trim();
+                            })()}
+                          </Markdown>
+                        )}
+                      </div>
                       {message.role === 'user' && !isReadonly && (
                         <Tooltip>
                           <TooltipTrigger asChild>
@@ -124,23 +138,6 @@ const PurePreviewMessage = ({
                           <TooltipContent>Edit message</TooltipContent>
                         </Tooltip>
                       )}
-
-                      <div
-                        data-testid="message-content"
-                        className={cn('flex flex-col gap-4', {
-                          'bg-primary text-primary-foreground px-3 py-2 rounded-xl':
-                            message.role === 'user',
-                        })}
-                      >
-                        <Markdown>
-                          {(() => {
-                            const content = sanitizeText(part.text);
-                            // Remove the follow-up questions section if it exists
-                            const parts = content.split('---');
-                            return parts[0].trim();
-                          })()}
-                        </Markdown>
-                      </div>
                     </div>
                   );
                 }
@@ -221,16 +218,51 @@ const PurePreviewMessage = ({
                           result={result}
                           isReadonly={isReadonly}
                         />
-                      ) : toolName === 'webSearch' ? (
-                        <SearchResults results={result.results} />
-                      ) : (
-                        <pre>{JSON.stringify(result, null, 2)}</pre>
-                      )}
+                      ) : null}
                     </div>
                   );
                 }
               }
             })}
+
+            {message.role === 'assistant' && (
+              <div data-testid="message-content" className="flex flex-col gap-4">
+                {(() => {
+                  // Extract sources from any webSearch tool calls
+                  let sources: SearchResult[] = [];
+                  let content = '';
+                  let title = '';
+
+                  // Extract title from message content
+                  const titleMatch = message.content?.match(/^# (.+)$/m);
+                  if (titleMatch && titleMatch[1]) {
+                    title = titleMatch[1].trim();
+                  }
+
+                  // Get the content from message parts
+                  message.parts?.forEach(part => {
+                    if (part.type === 'text') {
+                      content = part.text;
+                    } else if (part.type === 'tool-invocation' && 
+                             part.toolInvocation?.toolName === 'webSearch' && 
+                             part.toolInvocation?.state === 'result') {
+                      const results = part.toolInvocation.result?.results;
+                      if (results && Array.isArray(results)) {
+                        sources = [...sources, ...results];
+                      }
+                    }
+                  });
+
+                  return (
+                    <TabView 
+                      title={title} 
+                      content={content} 
+                      sources={sources} 
+                    />
+                  );
+                })()}
+              </div>
+            )}
 
             {message.role === 'assistant' && (
               <FollowUpQuestions
@@ -337,15 +369,13 @@ export const ThinkingMessage = () => {
     >
       <div
         className={cx(
-          'flex gap-4 group-data-[role=user]/message:px-3 w-full group-data-[role=user]/message:w-fit group-data-[role=user]/message:ml-auto group-data-[role=user]/message:max-w-2xl group-data-[role=user]/message:py-2 rounded-xl',
+          'flex gap-4 group-data-[role=user]/message:px-3 w-full group-data-[role=user]/message:w-fit group-data-[role=user]/message:max-w-2xl group-data-[role=user]/message:py-2 rounded-xl',
           {
             'group-data-[role=user]/message:bg-muted': true,
           },
         )}
       >
-        <div className="size-8 flex items-center rounded-full justify-center ring-1 shrink-0 ring-border">
-          <SparklesIcon size={14} />
-        </div>
+        {/* Removed assistant icon */}
 
         <div className="flex flex-col gap-2 w-full">
           <div className="flex flex-col gap-4 text-muted-foreground">

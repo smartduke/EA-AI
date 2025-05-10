@@ -42,7 +42,7 @@ export function FollowUpQuestions({
           </Button>
         ))}
       </div>
-      <div className="border-t border-border pt-2 mt-2">
+      <div className="border-border pt-2 mt-2">
         <div className="text-xs text-muted-foreground/70">
           Click on a question to continue the conversation
         </div>
