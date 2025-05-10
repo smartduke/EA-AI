@@ -39,6 +39,8 @@ function PureMessages({
     status,
   });
 
+  const isThinking = status === 'submitted';
+
   return (
     <div
       ref={messagesContainerRef}
@@ -66,9 +68,7 @@ function PureMessages({
         />
       ))}
 
-      {status === 'submitted' &&
-        messages.length > 0 &&
-        messages[messages.length - 1].role === 'user' && <ThinkingMessage />}
+      {isThinking && <ThinkingMessage />}
 
       <motion.div
         ref={messagesEndRef}

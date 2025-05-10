@@ -23,6 +23,8 @@ import { FollowUpQuestions } from './follow-up-questions';
 import type { UseChatHelpers } from '@ai-sdk/react';
 import { TabView } from './tab-view';
 import type { SearchResult } from './search-results';
+import { Tabs, TabsList } from './ui/tabs';
+import { CheckCircleFillIcon, BoxIcon } from './icons';
 
 const PurePreviewMessage = ({
   chatId,
@@ -234,9 +236,11 @@ const PurePreviewMessage = ({
                   let title = '';
 
                   // Extract title from message content
-                  const titleMatch = message.content?.match(/^# (.+)$/m);
-                  if (titleMatch && titleMatch[1]) {
-                    title = titleMatch[1].trim();
+                  if (message.content) {
+                    const titleMatch = message.content.match(/^# (.+)$/m);
+                    if (titleMatch && titleMatch[1]) {
+                      title = titleMatch[1].trim();
+                    }
                   }
 
                   // Get the content from message parts
@@ -257,7 +261,7 @@ const PurePreviewMessage = ({
                     <TabView 
                       title={title} 
                       content={content} 
-                      sources={sources} 
+                      sources={sources}
                     />
                   );
                 })()}
@@ -364,23 +368,18 @@ export const ThinkingMessage = () => {
       data-testid="message-assistant-loading"
       className="w-full mx-auto max-w-3xl px-4 group/message min-h-96"
       initial={{ y: 5, opacity: 0 }}
-      animate={{ y: 0, opacity: 1, transition: { delay: 1 } }}
+      animate={{ y: 0, opacity: 1, transition: { delay: 0.2 } }}
       data-role={role}
     >
-      <div
-        className={cx(
-          'flex gap-4 group-data-[role=user]/message:px-3 w-full group-data-[role=user]/message:w-fit group-data-[role=user]/message:max-w-2xl group-data-[role=user]/message:py-2 rounded-xl',
-          {
-            'group-data-[role=user]/message:bg-muted': true,
-          },
-        )}
-      >
-        {/* Removed assistant icon */}
-
+      <div className="flex gap-4 w-full">
         <div className="flex flex-col gap-2 w-full">
-          <div className="flex flex-col gap-4 text-muted-foreground">
-            Hmm...
-          </div>
+          {/* Use the TabView with isLoading=true */}
+          <TabView
+            title=""
+            content=""
+            sources={[]}
+            isLoading={true}
+          />
         </div>
       </div>
     </motion.div>

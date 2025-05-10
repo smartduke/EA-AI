@@ -127,8 +127,8 @@ export async function POST(request: Request) {
     const { longitude, latitude, city, country } = geolocation(request);
 
     const requestHints: RequestHints = {
-      longitude: longitude ? parseFloat(longitude) : undefined,
-      latitude: latitude ? parseFloat(latitude) : undefined,
+      longitude: longitude ? Number.parseFloat(longitude) : undefined,
+      latitude: latitude ? Number.parseFloat(latitude) : undefined,
       city,
       country,
     };
@@ -160,7 +160,13 @@ export async function POST(request: Request) {
             experimental_activeTools:
               selectedChatModel === 'chat-model-reasoning'
                 ? []
-                : ['getWeather', 'createDocument', 'updateDocument', 'requestSuggestions', 'webSearch'],
+                : [
+                    'getWeather',
+                    'createDocument',
+                    'updateDocument',
+                    'requestSuggestions',
+                    'webSearch',
+                  ],
             experimental_transform: smoothStream({ chunking: 'word' }),
             experimental_generateMessageId: generateUUID,
             tools: {
@@ -243,9 +249,12 @@ export async function POST(request: Request) {
     }
   } catch (error: any) {
     console.error('Chat API error:', error);
-    return new Response(`Error: ${error.message || 'An error occurred while processing your request!'}`, {
-      status: 500,
-    });
+    return new Response(
+      `Error: ${error.message || 'An error occurred while processing your request!'}`,
+      {
+        status: 500,
+      },
+    );
   }
 }
 

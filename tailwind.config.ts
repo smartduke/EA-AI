@@ -73,6 +73,29 @@ const config: Config = {
           ring: 'hsl(var(--sidebar-ring))',
         },
       },
+      typography: {
+        DEFAULT: {
+          css: {
+            'ol > li > p:first-child': {
+              marginTop: '0',
+            },
+            'ol > li > p:last-child': {
+              marginBottom: '0',
+            },
+            'ul > li > p:first-child': {
+              marginTop: '0',
+            },
+            'ul > li > p:last-child': {
+              marginBottom: '0',
+            },
+            // Remove excess margin from images
+            'img': {
+              marginTop: '0.5em',
+              marginBottom: '0.5em',
+            },
+          },
+        },
+      },
     },
   },
   plugins: [require('tailwindcss-animate'), require('@tailwindcss/typography')],

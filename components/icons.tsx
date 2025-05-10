@@ -1046,7 +1046,10 @@ export const TerminalIcon = ({ size = 16 }: { size?: number }) => {
   );
 };
 
-export const ClockRewind = ({ size = 16, className }: { size?: number, className?: string }) => {
+export const ClockRewind = ({
+  size = 16,
+  className,
+}: { size?: number; className?: string }) => {
   return (
     <svg
       height={size}
