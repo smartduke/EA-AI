@@ -6,7 +6,7 @@ import type { SearchResult } from './search-results';
 import { Markdown } from './markdown';
 import { sanitizeText } from '@/lib/utils';
 import { Button } from './ui/button';
-import { FileIcon, BoxIcon, CheckCircleFillIcon, ImageIcon } from './icons';
+import { BoxIcon, CheckCircleFillIcon, ImageIcon, CrossIcon } from './icons';
 import {
   Tooltip,
   TooltipContent,
@@ -71,6 +71,8 @@ export function TabView({
   isLoading = false,
 }: TabViewProps) {
   const [activeTab, setActiveTab] = useState('answer');
+  const [lightboxOpen, setLightboxOpen] = useState(false);
+  const [lightboxImageIndex, setLightboxImageIndex] = useState(0);
 
   // Extract just the main content, removing follow-up questions if they exist
   const mainContent = (() => {
@@ -129,6 +131,45 @@ export function TabView({
   function escapeRegExp(string: string) {
     return string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
   }
+
+  // Lightbox handlers
+  const openLightbox = (index: number) => {
+    setLightboxImageIndex(index);
+    setLightboxOpen(true);
+  };
+
+  const closeLightbox = () => {
+    setLightboxOpen(false);
+  };
+
+  const goToPrevious = () => {
+    setLightboxImageIndex((prev) =>
+      prev > 0 ? prev - 1 : imageSources.length - 1,
+    );
+  };
+
+  const goToNext = () => {
+    setLightboxImageIndex((prev) =>
+      prev < imageSources.length - 1 ? prev + 1 : 0,
+    );
+  };
+
+  // Handle keyboard navigation
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (!lightboxOpen) return;
+
+    switch (e.key) {
+      case 'Escape':
+        closeLightbox();
+        break;
+      case 'ArrowLeft':
+        goToPrevious();
+        break;
+      case 'ArrowRight':
+        goToNext();
+        break;
+    }
+  };
 
   return (
     <div className="flex flex-col w-full">
@@ -313,33 +354,56 @@ export function TabView({
               {/* Preview images */}
               {imageSources && imageSources.length > 0 && (
                 <div className="mb-4">
-                  <div className="flex flex-row gap-3 flex-wrap">
-                    {imageSources.slice(0, 6).map((result) => (
-                      <a
-                        key={`image-${result.url}`}
-                        href={result.url}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="relative w-24 h-24 rounded-lg overflow-hidden border border-neutral-200 dark:border-neutral-800 hover:opacity-90 transition-opacity"
+                  {/* Mobile: Show 4 images */}
+                  <div className="flex flex-row gap-2 overflow-hidden sm:hidden">
+                    {imageSources.slice(0, 4).map((result, index) => (
+                      <button
+                        key={`answer-mobile-image-${index}-${result.url}`}
+                        type="button"
+                        onClick={() => setActiveTab('images')}
+                        className="relative flex-shrink-0 w-20 h-20 rounded-lg overflow-hidden border border-neutral-200 dark:border-neutral-800 hover:opacity-90 transition-opacity cursor-pointer"
                       >
                         <img
                           src={result.imageUrl || result.url}
                           alt={result.title}
                           className="w-full h-full object-cover"
                         />
-                      </a>
+                        {/* Blur overlay on last image if there are more images */}
+                        {index === 3 && imageSources.length > 4 && (
+                          <div className="absolute inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center">
+                            <span className="text-white text-xs font-medium">
+                              +{imageSources.length - 4}
+                            </span>
+                          </div>
+                        )}
+                      </button>
                     ))}
+                  </div>
 
-                    {imageSources.length > 6 && (
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        className="px-3 h-auto py-1 rounded-lg bg-neutral-100 dark:bg-neutral-900 hover:bg-neutral-200 dark:hover:bg-neutral-800"
-                        onClick={handleViewMoreImages}
+                  {/* Desktop: Show 7 images */}
+                  <div className="hidden sm:flex flex-row gap-2 overflow-hidden">
+                    {imageSources.slice(0, 7).map((result, index) => (
+                      <button
+                        key={`answer-desktop-image-${index}-${result.url}`}
+                        type="button"
+                        onClick={() => setActiveTab('images')}
+                        className="relative flex-shrink-0 w-16 h-16 md:w-20 md:h-20 lg:w-24 lg:h-24 rounded-lg overflow-hidden border border-neutral-200 dark:border-neutral-800 hover:opacity-90 transition-opacity cursor-pointer"
                       >
-                        +{imageSources.length - 6} more
-                      </Button>
-                    )}
+                        <img
+                          src={result.imageUrl || result.url}
+                          alt={result.title}
+                          className="w-full h-full object-cover"
+                        />
+                        {/* Blur overlay on last image if there are more images */}
+                        {index === 6 && imageSources.length > 7 && (
+                          <div className="absolute inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center">
+                            <span className="text-white text-xs sm:text-sm font-medium">
+                              +{imageSources.length - 7}
+                            </span>
+                          </div>
+                        )}
+                      </button>
+                    ))}
                   </div>
                 </div>
               )}
@@ -449,13 +513,12 @@ export function TabView({
               </div>
             ) : imageSources && imageSources.length > 0 ? (
               <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4 w-full">
-                {imageSources.map((result) => (
-                  <a
-                    key={`image-result-${result.url}`}
-                    href={result.url}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="group flex flex-col border border-neutral-200 dark:border-neutral-800 rounded-lg overflow-hidden hover:border-neutral-300 dark:hover:border-neutral-700 transition-colors"
+                {imageSources.map((result, index) => (
+                  <button
+                    key={`images-tab-${index}-${result.url}`}
+                    type="button"
+                    onClick={() => openLightbox(index)}
+                    className="group flex flex-col border border-neutral-200 dark:border-neutral-800 rounded-lg overflow-hidden hover:border-neutral-300 dark:hover:border-neutral-700 transition-colors cursor-pointer"
                   >
                     <div className="relative aspect-square bg-neutral-50 dark:bg-neutral-900 overflow-hidden">
                       <img
@@ -464,7 +527,7 @@ export function TabView({
                         className="w-full h-full object-cover group-hover:scale-105 transition-transform"
                       />
                     </div>
-                    <div className="p-2">
+                    <div className="p-2 text-left">
                       <p className="text-xs text-neutral-800 dark:text-neutral-200 truncate group-hover:underline">
                         {result.title || 'Image result'}
                       </p>
@@ -484,7 +547,7 @@ export function TabView({
                         </span>
                       </div>
                     </div>
-                  </a>
+                  </button>
                 ))}
               </div>
             ) : (
@@ -495,6 +558,128 @@ export function TabView({
           </div>
         </TabsContent>
       </Tabs>
+
+      {/* Lightbox Modal */}
+      {lightboxOpen && imageSources[lightboxImageIndex] && (
+        <div
+          className="fixed inset-0 z-50 bg-black/90 flex items-center justify-center p-4"
+          onClick={closeLightbox}
+          onKeyDown={handleKeyDown}
+          tabIndex={-1}
+        >
+          {/* Close button */}
+          <button
+            type="button"
+            onClick={closeLightbox}
+            className="absolute top-4 right-4 z-60 p-2 rounded-full bg-black/50 text-white hover:bg-black/70 transition-colors"
+          >
+            <CrossIcon size={24} />
+          </button>
+
+          {/* Navigation buttons */}
+          {imageSources.length > 1 && (
+            <>
+              <button
+                type="button"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  goToPrevious();
+                }}
+                className="absolute left-4 top-1/2 -translate-y-1/2 z-60 p-2 rounded-full bg-black/50 text-white hover:bg-black/70 transition-colors"
+              >
+                <svg
+                  width="24"
+                  height="24"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                >
+                  <polyline points="15,18 9,12 15,6" />
+                </svg>
+              </button>
+              <button
+                type="button"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  goToNext();
+                }}
+                className="absolute right-4 top-1/2 -translate-y-1/2 z-60 p-2 rounded-full bg-black/50 text-white hover:bg-black/70 transition-colors"
+              >
+                <svg
+                  width="24"
+                  height="24"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                >
+                  <polyline points="9,18 15,12 9,6" />
+                </svg>
+              </button>
+            </>
+          )}
+
+          {/* Main image */}
+          <div
+            className="relative max-w-[90vw] max-h-[90vh] flex flex-col items-center"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <img
+              src={
+                imageSources[lightboxImageIndex].imageUrl ||
+                imageSources[lightboxImageIndex].url
+              }
+              alt={imageSources[lightboxImageIndex].title || 'Image'}
+              className="max-w-full max-h-[80vh] object-contain rounded-lg"
+            />
+
+            {/* Image info */}
+            <div className="mt-4 bg-black/50 rounded-lg p-4 max-w-full">
+              <h3 className="text-white font-medium mb-2">
+                {imageSources[lightboxImageIndex].title || 'Image result'}
+              </h3>
+              <div className="flex items-center gap-2">
+                {imageSources[lightboxImageIndex].url && (
+                  <img
+                    src={
+                      imageSources[lightboxImageIndex].favicon ||
+                      getFaviconUrl(imageSources[lightboxImageIndex].url)
+                    }
+                    alt=""
+                    className="w-4 h-4 rounded-full"
+                    onError={(e) => {
+                      e.currentTarget.style.display = 'none';
+                    }}
+                  />
+                )}
+                <span className="text-neutral-300 text-sm">
+                  {extractDomainName(
+                    imageSources[lightboxImageIndex].url || '',
+                  )}
+                </span>
+                <a
+                  href={imageSources[lightboxImageIndex].url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-blue-400 hover:text-blue-300 text-sm underline ml-2"
+                >
+                  View source
+                </a>
+              </div>
+              {imageSources.length > 1 && (
+                <p className="text-neutral-400 text-sm mt-2">
+                  {lightboxImageIndex + 1} of {imageSources.length}
+                </p>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

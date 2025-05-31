@@ -6,7 +6,12 @@ import { AnimatePresence, motion } from 'framer-motion';
 import { memo, useState } from 'react';
 import type { Vote } from '@/lib/db/schema';
 import { DocumentToolCall, DocumentToolResult } from './document';
-import { PencilEditIcon, SparklesIcon } from './icons';
+import {
+  PencilEditIcon,
+  SparklesIcon,
+  CheckCircleFillIcon,
+  BoxIcon,
+} from './icons';
 import { Markdown } from './markdown';
 import { MessageActions } from './message-actions';
 import { PreviewAttachment } from './preview-attachment';
@@ -18,13 +23,10 @@ import { Tooltip, TooltipContent, TooltipTrigger } from './ui/tooltip';
 import { MessageEditor } from './message-editor';
 import { DocumentPreview } from './document-preview';
 import { MessageReasoning } from './message-reasoning';
-import { SearchResults } from './search-results';
 import { FollowUpQuestions } from './follow-up-questions';
 import type { UseChatHelpers } from '@ai-sdk/react';
 import { TabView } from './tab-view';
 import type { SearchResult } from './search-results';
-import { Tabs, TabsList } from './ui/tabs';
-import { CheckCircleFillIcon, BoxIcon } from './icons';
 
 const PurePreviewMessage = ({
   chatId,
@@ -57,12 +59,9 @@ const PurePreviewMessage = ({
         data-role={message.role}
       >
         <div
-          className={cn(
-            'flex gap-4 w-full',
-            {
-              'w-full': mode === 'edit',
-            },
-          )}
+          className={cn('flex gap-4 w-full', {
+            'w-full': mode === 'edit',
+          })}
         >
           <div
             className={cn('flex flex-col w-full', {
@@ -102,8 +101,6 @@ const PurePreviewMessage = ({
                 if (mode === 'view') {
                   return (
                     <div key={key} className="flex flex-row gap-2 items-start">
-                     
-
                       <div
                         data-testid="message-content"
                         className={cn('flex flex-col gap-4', {
@@ -228,7 +225,10 @@ const PurePreviewMessage = ({
             })}
 
             {message.role === 'assistant' && (
-              <div data-testid="message-content" className="flex flex-col gap-4">
+              <div
+                data-testid="message-content"
+                className="flex flex-col gap-4"
+              >
                 {(() => {
                   // Extract sources from any webSearch tool calls
                   let sources: SearchResult[] = [];
@@ -238,18 +238,20 @@ const PurePreviewMessage = ({
                   // Extract title from message content
                   if (message.content) {
                     const titleMatch = message.content.match(/^# (.+)$/m);
-                    if (titleMatch && titleMatch[1]) {
+                    if (titleMatch?.[1]) {
                       title = titleMatch[1].trim();
                     }
                   }
 
                   // Get the content from message parts
-                  message.parts?.forEach(part => {
+                  message.parts?.forEach((part) => {
                     if (part.type === 'text') {
                       content = part.text;
-                    } else if (part.type === 'tool-invocation' && 
-                             part.toolInvocation?.toolName === 'webSearch' && 
-                             part.toolInvocation?.state === 'result') {
+                    } else if (
+                      part.type === 'tool-invocation' &&
+                      part.toolInvocation?.toolName === 'webSearch' &&
+                      part.toolInvocation?.state === 'result'
+                    ) {
                       const results = part.toolInvocation.result?.results;
                       if (results && Array.isArray(results)) {
                         sources = [...sources, ...results];
@@ -258,9 +260,9 @@ const PurePreviewMessage = ({
                   });
 
                   return (
-                    <TabView 
-                      title={title} 
-                      content={content} 
+                    <TabView
+                      title={title}
+                      content={content}
                       sources={sources}
                     />
                   );
@@ -374,12 +376,7 @@ export const ThinkingMessage = () => {
       <div className="flex gap-4 w-full">
         <div className="flex flex-col gap-2 w-full">
           {/* Use the TabView with isLoading=true */}
-          <TabView
-            title=""
-            content=""
-            sources={[]}
-            isLoading={true}
-          />
+          <TabView title="" content="" sources={[]} isLoading={true} />
         </div>
       </div>
     </motion.div>

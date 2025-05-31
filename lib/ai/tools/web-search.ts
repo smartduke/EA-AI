@@ -185,15 +185,39 @@ function processTextResults(results: any[]): SearchResult[] {
  * Process image search results into a standardized format
  */
 function processImageResults(results: any[]): SearchResult[] {
-  return results.map((result) => ({
-    title: result.title || 'Untitled Image',
-    snippet: result.content || 'No description available',
-    url: result.url,
-    source: result.engine || 'image',
-    type: 'image',
-    imageUrl: result.img_src || result.thumbnail || result.url,
-    domain: result.parsed_url?.[1] || new URL(result.url).hostname,
-  }));
+  // Domains to exclude from image results
+  const excludedDomains = ['artic.edu', 'unsplash.com'];
+
+  return results
+    .map((result) => ({
+      title: result.title || 'Untitled Image',
+      snippet: result.content || 'No description available',
+      url: result.url,
+      source: result.engine || 'image',
+      type: 'image',
+      imageUrl: result.img_src || result.thumbnail || result.url,
+      domain: result.parsed_url?.[1] || new URL(result.url).hostname,
+    }))
+    .filter((result) => {
+      // Extract domain from URL for filtering
+      let domain = '';
+      try {
+        domain = new URL(result.url).hostname.toLowerCase();
+      } catch (e) {
+        domain = result.domain?.toLowerCase() || '';
+      }
+
+      // Check if domain should be excluded
+      const shouldExclude = excludedDomains.some((excludedDomain) =>
+        domain.includes(excludedDomain.toLowerCase()),
+      );
+
+      if (shouldExclude) {
+        console.log(`🚫 Filtered out image from excluded domain: ${domain}`);
+      }
+
+      return !shouldExclude;
+    }) as SearchResult[];
 }
 
 /**
