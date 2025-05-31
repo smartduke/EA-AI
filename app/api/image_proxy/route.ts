@@ -1,5 +1,5 @@
-import { NextRequest, NextResponse } from 'next/server';
-import crypto from 'crypto';
+import { type NextRequest, NextResponse } from 'next/server';
+import crypto from 'node:crypto';
 
 // Maximum file size for images (5MB)
 const MAX_FILE_SIZE = 5 * 1024 * 1024;
@@ -48,7 +48,7 @@ export async function GET(request: NextRequest) {
     // Ensure the URL is properly formatted with a protocol
     let formattedImageUrl = imageUrl;
     if (!formattedImageUrl.startsWith('http://') && !formattedImageUrl.startsWith('https://')) {
-      formattedImageUrl = 'https://' + formattedImageUrl;
+      formattedImageUrl = `https://${formattedImageUrl}`;
     }
 
     console.log(`Image proxy fetching: ${formattedImageUrl}`);
@@ -70,7 +70,7 @@ export async function GET(request: NextRequest) {
 
     // Get content type and size
     const contentType = response.headers.get('content-type') || '';
-    const contentLength = parseInt(response.headers.get('content-length') || '0', 10);
+    const contentLength = Number.parseInt(response.headers.get('content-length') || '0', 10);
 
     // Validate content type
     if (!ALLOWED_CONTENT_TYPES.some(type => contentType.startsWith(type))) {

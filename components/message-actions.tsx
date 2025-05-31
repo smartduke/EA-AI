@@ -172,7 +172,7 @@ export function PureMessageActions({
         </div>
       </TooltipProvider>
       
-      <div className="w-full mt-6 border-t border-border/60"></div>
+      <div className="w-full mt-6 border-t border-border/60" />
     </>
   );
 }

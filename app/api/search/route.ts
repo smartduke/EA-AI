@@ -1,6 +1,6 @@
-import { NextRequest, NextResponse } from 'next/server';
+import { type NextRequest, NextResponse } from 'next/server';
 import * as cheerio from 'cheerio';
-import crypto from 'crypto';
+import crypto from 'node:crypto';
 
 // Secret key for generating image proxy hashes
 // In production, use a secure environment variable
@@ -210,7 +210,7 @@ export async function GET(request: NextRequest) {
       // Use default fallback if no country-specific fallback is available
       console.log('Using default fallback news');
       return NextResponse.json({
-        results: FALLBACK_NEWS['default'],
+        results: FALLBACK_NEWS.default,
         query,
         timestamp: new Date().toISOString(),
         message: `Using default fallback news`,
@@ -232,7 +232,7 @@ export async function GET(request: NextRequest) {
 
     // Use fallback news based on country in query or default
     const fallbackNews =
-      (country && FALLBACK_NEWS[country]) || FALLBACK_NEWS['default'];
+      (country && FALLBACK_NEWS[country]) || FALLBACK_NEWS.default;
     console.log(
       `Error occurred, using fallback news (${country || 'default'})`,
     );

@@ -97,7 +97,7 @@ async function fetchTrendingNews(): Promise<NewsItem[]> {
     const randomNewsType = newsTypes[Math.floor(Math.random() * newsTypes.length)];
     
     // Create query based on country data only
-    let searchQuery = countryName ? `${countryName} ${randomNewsType}` : randomNewsType;
+    const searchQuery = countryName ? `${countryName} ${randomNewsType}` : randomNewsType;
     
     console.log(`Final search query: "${searchQuery}"`);
     const response = await fetch(`/api/search?q=${encodeURIComponent(searchQuery)}&category=news`, {

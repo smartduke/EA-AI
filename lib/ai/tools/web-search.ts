@@ -6,8 +6,11 @@ interface SearchResult {
   snippet: string;
   url: string;
   source: string;
-  type?: 'image' | 'text';
+  type?: 'image' | 'text' | 'video';
   imageUrl?: string;
+  videoUrl?: string;
+  thumbnailUrl?: string;
+  duration?: string;
   domain?: string;
   favicon?: string;
 }
@@ -32,6 +35,9 @@ const SEARXNG_CONFIG = {
   imageEngines: (
     process.env.SEARXNG_IMAGE_ENGINES || 'google_images,bing_images'
   ).split(','),
+  videoEngines: (
+    process.env.SEARXNG_VIDEO_ENGINES || 'youtube,google_videos'
+  ).split(','),
   categories: (process.env.SEARXNG_CATEGORIES || 'general,science,news').split(
     ',',
   ),
@@ -41,8 +47,11 @@ const SEARXNG_CONFIG = {
   imageResultsCount: Number.parseInt(
     process.env.SEARXNG_IMAGE_RESULTS_COUNT || '20',
   ),
+  videoResultsCount: Number.parseInt(
+    process.env.SEARXNG_VIDEO_RESULTS_COUNT || '15',
+  ),
   totalResultsLimit: Number.parseInt(
-    process.env.SEARXNG_TOTAL_RESULTS_LIMIT || '30',
+    process.env.SEARXNG_TOTAL_RESULTS_LIMIT || '40',
   ),
   retryCount: Number.parseInt(process.env.SEARXNG_RETRY_COUNT || '3'),
   retryDelay: Number.parseInt(process.env.SEARXNG_RETRY_DELAY || '1000'),
@@ -221,6 +230,47 @@ function processImageResults(results: any[]): SearchResult[] {
 }
 
 /**
+ * Process video search results into a standardized format
+ */
+function processVideoResults(results: any[]): SearchResult[] {
+  // Only include YouTube videos
+  const allowedDomains = ['youtube.com', 'youtu.be'];
+
+  return results
+    .map((result) => ({
+      title: result.title || 'Untitled Video',
+      snippet: result.content || 'No description available',
+      url: result.url,
+      source: result.engine || 'video',
+      type: 'video',
+      videoUrl: result.url,
+      thumbnailUrl: result.thumbnail || result.img_src || result.url,
+      duration: result.duration || 'Unknown',
+      domain: result.parsed_url?.[1] || new URL(result.url).hostname,
+    }))
+    .filter((result) => {
+      // Extract domain from URL for filtering
+      let domain = '';
+      try {
+        domain = new URL(result.url).hostname.toLowerCase();
+      } catch (e) {
+        domain = result.domain?.toLowerCase() || '';
+      }
+
+      // Check if domain is YouTube
+      const isYouTube = allowedDomains.some((allowedDomain) =>
+        domain.includes(allowedDomain.toLowerCase()),
+      );
+
+      if (!isYouTube) {
+        console.log(`🚫 Filtered out non-YouTube video from domain: ${domain}`);
+      }
+
+      return isYouTube;
+    }) as SearchResult[];
+}
+
+/**
  * Fetches search results from SearXNG with retry capability
  */
 async function fetchFromSearxNG(query: string): Promise<SearchResult[]> {
@@ -245,27 +295,36 @@ async function fetchFromSearxNG(query: string): Promise<SearchResult[]> {
         );
       }
 
-      // Make both text and image searches in parallel
-      const [textResultsRaw, imageResultsRaw] = await Promise.all([
-        makeSearchRequest(
-          searxngBaseUrl,
-          query,
-          'general',
-          SEARXNG_CONFIG.engines,
-          SEARXNG_CONFIG.resultsCount,
-        ),
-        makeSearchRequest(
-          searxngBaseUrl,
-          query,
-          'images',
-          SEARXNG_CONFIG.imageEngines,
-          SEARXNG_CONFIG.imageResultsCount,
-        ),
-      ]);
+      // Make all searches in parallel
+      const [textResultsRaw, imageResultsRaw, videoResultsRaw] =
+        await Promise.all([
+          makeSearchRequest(
+            searxngBaseUrl,
+            query,
+            'general',
+            SEARXNG_CONFIG.engines,
+            SEARXNG_CONFIG.resultsCount,
+          ),
+          makeSearchRequest(
+            searxngBaseUrl,
+            query,
+            'images',
+            SEARXNG_CONFIG.imageEngines,
+            SEARXNG_CONFIG.imageResultsCount,
+          ),
+          makeSearchRequest(
+            searxngBaseUrl,
+            query,
+            'videos',
+            SEARXNG_CONFIG.videoEngines,
+            SEARXNG_CONFIG.videoResultsCount,
+          ),
+        ]);
 
       // Process results into standardized format
       const textResults = processTextResults(textResultsRaw);
       const imageResults = processImageResults(imageResultsRaw);
+      const videoResults = processVideoResults(videoResultsRaw);
 
       // Ensure proper balance of results
       const combinedResults: SearchResult[] = [];
@@ -277,6 +336,10 @@ async function fetchFromSearxNG(query: string): Promise<SearchResult[]> {
       // Get up to 20 image results, but don't exceed our limit
       const maxImages = Math.min(20, imageResults.length);
       combinedResults.push(...imageResults.slice(0, maxImages));
+
+      // Get up to 15 video results, but don't exceed our limit
+      const maxVideos = Math.min(15, videoResults.length);
+      combinedResults.push(...videoResults.slice(0, maxVideos));
 
       // If we have room for more text results, include them
       if (
@@ -298,7 +361,7 @@ async function fetchFromSearxNG(query: string): Promise<SearchResult[]> {
       }
 
       console.log(
-        `Found ${textResults.length} text results and ${imageResults.length} image results, returning ${combinedResults.length} combined results (with ${combinedResults.filter((r) => r.type === 'image').length} images)`,
+        `Found ${textResults.length} text results, ${imageResults.length} image results, and ${videoResults.length} video results, returning ${combinedResults.length} combined results (with ${combinedResults.filter((r) => r.type === 'image').length} images and ${combinedResults.filter((r) => r.type === 'video').length} videos)`,
       );
 
       if (combinedResults.length === 0) {

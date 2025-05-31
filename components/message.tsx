@@ -8,9 +8,6 @@ import type { Vote } from '@/lib/db/schema';
 import { DocumentToolCall, DocumentToolResult } from './document';
 import {
   PencilEditIcon,
-  SparklesIcon,
-  CheckCircleFillIcon,
-  BoxIcon,
 } from './icons';
 import { Markdown } from './markdown';
 import { MessageActions } from './message-actions';

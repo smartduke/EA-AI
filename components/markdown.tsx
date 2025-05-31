@@ -21,9 +21,9 @@ function getFaviconUrl(url: string): string {
 function extractDomainName(url: string): string {
   try {
     const urlObj = new URL(url);
-    let domain = urlObj.hostname.replace('www.', '');
+    const domain = urlObj.hostname.replace('www.', '');
     // Limit domain name length for display
-    return domain.length > 20 ? domain.substring(0, 18) + '...' : domain;
+    return domain.length > 20 ? `${domain.substring(0, 18)}...` : domain;
   } catch (e) {
     return url;
   }

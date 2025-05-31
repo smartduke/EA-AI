@@ -115,7 +115,6 @@ const TabsContent = React.forwardRef<HTMLDivElement, TabsContentProps>(
         ref={ref}
         role="tabpanel"
         data-state={isActive ? "active" : "inactive"}
-        tabIndex={0}
         className={cn(
           "mt-3 animate-in fade-in-50 slide-in-from-bottom-3 duration-300 ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2",
           className
