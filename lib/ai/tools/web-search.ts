@@ -1,13 +1,15 @@
 import { tool } from 'ai';
 import { z } from 'zod';
-import type { CheerioAPI } from 'cheerio';
-import * as cheerio from 'cheerio';
 
 interface SearchResult {
   title: string;
   snippet: string;
   url: string;
   source: string;
+  type?: 'image' | 'text';
+  imageUrl?: string;
+  domain?: string;
+  favicon?: string;
 }
 
 interface SearchResponse {
@@ -27,12 +29,21 @@ const SEARXNG_CONFIG = {
   engines: (
     process.env.SEARXNG_ENGINES || 'google,bing,brave,duckduckgo,wikipedia'
   ).split(','),
+  imageEngines: (
+    process.env.SEARXNG_IMAGE_ENGINES || 'google_images,bing_images'
+  ).split(','),
   categories: (process.env.SEARXNG_CATEGORIES || 'general,science,news').split(
     ',',
   ),
   language: process.env.SEARXNG_LANGUAGE || 'all',
-  format: 'html', // Use HTML format
+  format: 'json', // Use JSON format
   resultsCount: Number.parseInt(process.env.SEARXNG_RESULTS_COUNT || '10'),
+  imageResultsCount: Number.parseInt(
+    process.env.SEARXNG_IMAGE_RESULTS_COUNT || '20',
+  ),
+  totalResultsLimit: Number.parseInt(
+    process.env.SEARXNG_TOTAL_RESULTS_LIMIT || '30',
+  ),
   retryCount: Number.parseInt(process.env.SEARXNG_RETRY_COUNT || '3'),
   retryDelay: Number.parseInt(process.env.SEARXNG_RETRY_DELAY || '1000'),
 };
@@ -94,6 +105,98 @@ let searxngBaseUrl = '';
 })();
 
 /**
+ * Makes a search request to SearXNG
+ */
+async function makeSearchRequest(
+  baseUrl: string,
+  query: string,
+  category: string,
+  engines: string[],
+  numResults: number,
+): Promise<any[]> {
+  const searchUrl = new URL('search', baseUrl);
+  searchUrl.searchParams.append('format', 'json');
+  searchUrl.searchParams.append('q', query);
+  searchUrl.searchParams.append('engines', engines.join(','));
+  searchUrl.searchParams.append('categories', category);
+  searchUrl.searchParams.append('language', SEARXNG_CONFIG.language);
+  searchUrl.searchParams.append('pageno', '1');
+  searchUrl.searchParams.append('results', numResults.toString());
+
+  // Custom headers to avoid potential blocking
+  const headers = {
+    'User-Agent':
+      'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/119.0.0.0 Safari/537.36',
+    Accept: 'application/json',
+    'Accept-Language': 'en-US,en;q=0.9',
+    Origin: baseUrl,
+    Referer: baseUrl,
+    DNT: '1',
+    'Cache-Control': 'no-cache',
+  };
+
+  console.log(`🔍 Fetching SearXNG results from: ${searchUrl.toString()}`);
+
+  // Fetch with timeout
+  const controller = new AbortController();
+  const timeoutId = setTimeout(
+    () => controller.abort(),
+    SEARXNG_CONFIG.timeout,
+  );
+
+  try {
+    const response = await fetch(searchUrl.toString(), {
+      headers,
+      signal: controller.signal,
+    });
+
+    clearTimeout(timeoutId);
+
+    if (!response.ok) {
+      throw new Error(
+        `SearXNG search failed with status: ${response.status} - ${response.statusText}`,
+      );
+    }
+
+    const jsonResponse = await response.json();
+    return jsonResponse.results || [];
+  } catch (error) {
+    clearTimeout(timeoutId);
+    throw error;
+  }
+}
+
+/**
+ * Process text search results into a standardized format
+ */
+function processTextResults(results: any[]): SearchResult[] {
+  return results.map((result) => ({
+    title: result.title || 'Untitled',
+    snippet: result.content || 'No description available',
+    url: result.url,
+    source: result.engine || 'web',
+    type: 'text',
+    domain: result.parsed_url?.[1] || new URL(result.url).hostname,
+    favicon: result.favicon || null,
+  }));
+}
+
+/**
+ * Process image search results into a standardized format
+ */
+function processImageResults(results: any[]): SearchResult[] {
+  return results.map((result) => ({
+    title: result.title || 'Untitled Image',
+    snippet: result.content || 'No description available',
+    url: result.url,
+    source: result.engine || 'image',
+    type: 'image',
+    imageUrl: result.img_src || result.thumbnail || result.url,
+    domain: result.parsed_url?.[1] || new URL(result.url).hostname,
+  }));
+}
+
+/**
  * Fetches search results from SearXNG with retry capability
  */
 async function fetchFromSearxNG(query: string): Promise<SearchResult[]> {
@@ -118,95 +221,68 @@ async function fetchFromSearxNG(query: string): Promise<SearchResult[]> {
         );
       }
 
-      // Build the SearXNG search URL with parameters
-      const searchUrl = new URL(`${searxngBaseUrl}/search`);
-      searchUrl.searchParams.append('q', query);
-      searchUrl.searchParams.append(
-        'engines',
-        SEARXNG_CONFIG.engines.join(','),
-      );
-      searchUrl.searchParams.append(
-        'categories',
-        SEARXNG_CONFIG.categories.join(','),
-      );
-      searchUrl.searchParams.append('language', SEARXNG_CONFIG.language);
-      searchUrl.searchParams.append('pageno', '1');
+      // Make both text and image searches in parallel
+      const [textResultsRaw, imageResultsRaw] = await Promise.all([
+        makeSearchRequest(
+          searxngBaseUrl,
+          query,
+          'general',
+          SEARXNG_CONFIG.engines,
+          SEARXNG_CONFIG.resultsCount,
+        ),
+        makeSearchRequest(
+          searxngBaseUrl,
+          query,
+          'images',
+          SEARXNG_CONFIG.imageEngines,
+          SEARXNG_CONFIG.imageResultsCount,
+        ),
+      ]);
 
-      // Custom headers to avoid potential blocking
-      const headers = {
-        'User-Agent':
-          'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/119.0.0.0 Safari/537.36',
-        Accept:
-          'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8',
-        'Accept-Language': 'en-US,en;q=0.9',
-        Origin: searxngBaseUrl,
-        Referer: searxngBaseUrl,
-        DNT: '1',
-        'Cache-Control': 'no-cache',
-      };
+      // Process results into standardized format
+      const textResults = processTextResults(textResultsRaw);
+      const imageResults = processImageResults(imageResultsRaw);
 
-      console.log(`🔍 Fetching SearXNG results from: ${searchUrl.toString()}`);
+      // Ensure proper balance of results
+      const combinedResults: SearchResult[] = [];
 
-      // Fetch with timeout
-      const controller = new AbortController();
-      const timeoutId = setTimeout(
-        () => controller.abort(),
-        SEARXNG_CONFIG.timeout,
-      );
+      // Get at least 10 text results if available
+      const textResultsToInclude = Math.min(10, textResults.length);
+      combinedResults.push(...textResults.slice(0, textResultsToInclude));
 
-      const response = await fetch(searchUrl.toString(), {
-        headers,
-        signal: controller.signal,
-      });
+      // Get up to 20 image results, but don't exceed our limit
+      const maxImages = Math.min(20, imageResults.length);
+      combinedResults.push(...imageResults.slice(0, maxImages));
 
-      clearTimeout(timeoutId);
-
-      if (!response.ok) {
-        throw new Error(
-          `SearXNG search failed with status: ${response.status} - ${response.statusText}`,
+      // If we have room for more text results, include them
+      if (
+        combinedResults.length < SEARXNG_CONFIG.totalResultsLimit &&
+        textResults.length > textResultsToInclude
+      ) {
+        const remainingSpace =
+          SEARXNG_CONFIG.totalResultsLimit - combinedResults.length;
+        const additionalTextResults = Math.min(
+          remainingSpace,
+          textResults.length - textResultsToInclude,
+        );
+        combinedResults.push(
+          ...textResults.slice(
+            textResultsToInclude,
+            textResultsToInclude + additionalTextResults,
+          ),
         );
       }
 
-      const html = await response.text();
+      console.log(
+        `Found ${textResults.length} text results and ${imageResults.length} image results, returning ${combinedResults.length} combined results (with ${combinedResults.filter((r) => r.type === 'image').length} images)`,
+      );
 
-      // Parse HTML response using cheerio
-      const $: CheerioAPI = cheerio.load(html);
-      const results: SearchResult[] = [];
-
-      // Extract results from the HTML
-      $('.result').each((_: number, element) => {
-        const $element = $(element);
-        // Updated selectors to match SearXNG's HTML structure
-        const titleElement = $element.find('h3 a');
-        const snippetElement = $element.find('.content');
-        const urlElement = $element.find('.url');
-        const engineElement = $element.find('.engine');
-
-        if (titleElement.length) {
-          const title = titleElement.text().trim();
-          const url = titleElement.attr('href') || urlElement.text().trim();
-          const snippet = snippetElement.text().trim();
-          const source = engineElement.text().trim();
-
-          if (title && url) {
-            results.push({
-              title: title || 'Untitled',
-              snippet: snippet || 'No description available',
-              url: url,
-              source: source || 'web',
-            });
-          }
-        }
-      });
-
-      console.log(`Found ${results.length} results in HTML`);
-
-      if (results.length === 0) {
+      if (combinedResults.length === 0) {
         console.log(`⚠️ No usable results found from SearXNG for "${query}"`);
         return [];
       }
 
-      return results.slice(0, SEARXNG_CONFIG.resultsCount);
+      return combinedResults;
     } catch (error: any) {
       console.error(
         `❌ SearXNG search error (attempt ${attempt + 1}/${SEARXNG_CONFIG.retryCount}):`,
