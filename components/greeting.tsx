@@ -1,4 +1,5 @@
 import { motion } from 'framer-motion';
+import { WeatherSnippet } from './weather-snippet';
 
 export const Greeting = () => {
   return (
@@ -20,9 +21,17 @@ export const Greeting = () => {
         animate={{ opacity: 1, y: 0 }}
         exit={{ opacity: 0, y: 10 }}
         transition={{ delay: 0.6 }}
-        className="text-2xl text-zinc-500"
+        className="text-2xl text-zinc-500 mb-6"
       >
-        Not Just Info. Not Just AI. It’s Info × AI
+        Not Just Info. Not Just AI. It's Info × AI
+      </motion.div>
+      <motion.div
+        initial={{ opacity: 0, y: 10 }}
+        animate={{ opacity: 1, y: 0 }}
+        exit={{ opacity: 0, y: 10 }}
+        transition={{ delay: 0.7 }}
+      >
+        <WeatherSnippet />
       </motion.div>
     </div>
   );

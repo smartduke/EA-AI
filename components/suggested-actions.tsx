@@ -16,8 +16,8 @@ interface NewsItem {
   source: string;
   timestamp?: string; // Adding timestamp field
   imageUrl?: string;
-  domain?: string;   // Domain name of the source
-  favicon?: string;  // Favicon URL for the source website
+  domain?: string; // Domain name of the source
+  favicon?: string; // Favicon URL for the source website
 }
 
 // List of non-English news domains to filter out
@@ -44,17 +44,19 @@ interface SuggestedActionsProps {
 
 // Function to format relative time
 function formatRelativeTime(timestamp?: string): string {
-  if (!timestamp) return "Just now";
-  
+  if (!timestamp) return 'Just now';
+
   const now = new Date();
   const date = new Date(timestamp);
   const diffInSeconds = Math.floor((now.getTime() - date.getTime()) / 1000);
-  
+
   if (diffInSeconds < 60) return `${diffInSeconds} sec ago`;
   if (diffInSeconds < 3600) return `${Math.floor(diffInSeconds / 60)} min ago`;
-  if (diffInSeconds < 86400) return `${Math.floor(diffInSeconds / 3600)} hr ago`;
-  if (diffInSeconds < 604800) return `${Math.floor(diffInSeconds / 86400)} day ago`;
-  
+  if (diffInSeconds < 86400)
+    return `${Math.floor(diffInSeconds / 3600)} hr ago`;
+  if (diffInSeconds < 604800)
+    return `${Math.floor(diffInSeconds / 86400)} day ago`;
+
   return `${Math.floor(diffInSeconds / 604800)} week ago`;
 }
 
@@ -62,89 +64,109 @@ function formatRelativeTime(timestamp?: string): string {
 async function fetchTrendingNews(): Promise<NewsItem[]> {
   try {
     // Get user location first
-    let locationQuery = "";
-    let countryName = "";
-    
+    let locationQuery = '';
+    let countryName = '';
+
     try {
-      console.log("Fetching geolocation data...");
+      console.log('Fetching geolocation data...');
       const geoResponse = await fetch('/api/geolocation');
       if (geoResponse.ok) {
         const geoData: GeoLocation = await geoResponse.json();
-        console.log("Geolocation data received:", {
+        console.log('Geolocation data received:', {
           ip: geoData.ip,
-          country: geoData.country || "Not detected",
-          city: geoData.city || "Not detected",
-          region: geoData.region || "Not detected"
+          country: geoData.country || 'Not detected',
+          city: geoData.city || 'Not detected',
+          region: geoData.region || 'Not detected',
         });
-        
+
         // Only use country for news relevance, ignore city
         if (geoData.country) {
           countryName = geoData.country;
           locationQuery = `${geoData.country} `;
           console.log(`Country detected: ${geoData.country}`);
         } else {
-          console.log("No country data detected");
+          console.log('No country data detected');
         }
       } else {
-        console.log("Geolocation API response not OK", await geoResponse.text());
+        console.log(
+          'Geolocation API response not OK',
+          await geoResponse.text(),
+        );
       }
     } catch (error) {
       console.error('Error fetching location:', error);
     }
-    
+
     // Using trending news queries tailored to location if available
-    const newsTypes = ['breaking news', 'trending today', 'latest headlines', 'top stories'];
-    const randomNewsType = newsTypes[Math.floor(Math.random() * newsTypes.length)];
-    
+    const newsTypes = [
+      'breaking news',
+      'trending today',
+      'latest headlines',
+      'top stories',
+    ];
+    const randomNewsType =
+      newsTypes[Math.floor(Math.random() * newsTypes.length)];
+
     // Create query based on country data only
-    const searchQuery = countryName ? `${countryName} ${randomNewsType}` : randomNewsType;
-    
+    const searchQuery = countryName
+      ? `${countryName} ${randomNewsType}`
+      : randomNewsType;
+
     console.log(`Final search query: "${searchQuery}"`);
-    const response = await fetch(`/api/search?q=${encodeURIComponent(searchQuery)}&category=news`, {
-      method: 'GET',
-      headers: {
-        'Content-Type': 'application/json',
+    const response = await fetch(
+      `/api/search?q=${encodeURIComponent(searchQuery)}&category=news`,
+      {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+        },
       },
-    });
+    );
 
     if (!response.ok) {
-      console.error("News API response not OK", await response.text());
+      console.error('News API response not OK', await response.text());
       throw new Error('Failed to fetch trending news');
     }
 
     const data = await response.json();
     console.log(`Retrieved ${data.results?.length || 0} news items`);
-    
+
     // Add timestamps to news items
     const now = new Date();
-    const results = (data.results || []).map((item: NewsItem, index: number) => {
-      // Simulate different timestamps for items
-      const minutesAgo = Math.floor(Math.random() * 120) + 5;
-      const timestamp = new Date(now.getTime() - minutesAgo * 60000).toISOString();
-      
-      // Extract domain from URL if not already provided
-      if (!item.domain && item.url) {
-        try {
-          const url = new URL(item.url);
-          item.domain = url.hostname;
-        } catch (e) {
-          console.error("Could not parse URL for domain:", item.url);
+    const results = (data.results || []).map(
+      (item: NewsItem, index: number) => {
+        // Simulate different timestamps for items
+        const minutesAgo = Math.floor(Math.random() * 120) + 5;
+        const timestamp = new Date(
+          now.getTime() - minutesAgo * 60000,
+        ).toISOString();
+
+        // Extract domain from URL if not already provided
+        if (!item.domain && item.url) {
+          try {
+            const url = new URL(item.url);
+            item.domain = url.hostname;
+          } catch (e) {
+            console.error('Could not parse URL for domain:', item.url);
+          }
         }
-      }
-      
-      return { ...item, timestamp };
-    });
+
+        return { ...item, timestamp };
+      },
+    );
 
     // Filter out non-English news sources
     const filteredResults = results.filter((item: NewsItem) => {
       const domain = item.domain || '';
-      return !nonEnglishDomains.some(blockedDomain => 
-        domain.includes(blockedDomain)
+      return !nonEnglishDomains.some((blockedDomain) =>
+        domain.includes(blockedDomain),
       );
     });
-    
-    console.log(`Filtered ${results.length - filteredResults.length} non-English news items`);
-    
+
+    console.log(
+      `Filtered ${results.length - filteredResults.length} non-English news items`,
+    );
+
     return filteredResults;
   } catch (error) {
     console.error('Error fetching trending news:', error);
@@ -179,7 +201,11 @@ const NewsBoxSkeleton = ({ index }: { index: number }) => (
 );
 
 // Display news items when loaded
-const NewsBox = ({ item, index, onClick }: { item: NewsItem; index: number; onClick: () => void }) => (
+const NewsBox = ({
+  item,
+  index,
+  onClick,
+}: { item: NewsItem; index: number; onClick: () => void }) => (
   <motion.div
     initial={{ opacity: 0, y: 20 }}
     animate={{ opacity: 1, y: 0 }}
@@ -193,24 +219,25 @@ const NewsBox = ({ item, index, onClick }: { item: NewsItem; index: number; onCl
       className="text-left border rounded-xl p-4 w-full h-auto flex-col items-start justify-start hover:bg-slate-50 dark:hover:bg-slate-900/50 overflow-hidden"
     >
       {/* Title with improved display - no truncation */}
-      <h3 className="font-medium text-sm leading-normal w-full" 
-        style={{ 
-          wordWrap: 'break-word', 
+      <h3
+        className="font-medium text-sm leading-normal w-full"
+        style={{
+          wordWrap: 'break-word',
           wordBreak: 'break-word',
-          whiteSpace: 'normal' 
+          whiteSpace: 'normal',
         }}
       >
         {item.title}
       </h3>
-      
+
       {/* Source domain and timestamp */}
       <div className="flex items-center justify-between w-full text-xs text-muted-foreground">
         <div className="flex items-center">
           {/* Small favicon near source name */}
           {item.favicon ? (
-            <img 
-              src={item.favicon} 
-              alt={item.domain || "Source"} 
+            <img
+              src={item.favicon}
+              alt={item.domain || 'Source'}
               className="w-4 h-4 rounded-full mr-1.5"
               onError={(e) => {
                 e.currentTarget.style.display = 'none';
@@ -221,7 +248,9 @@ const NewsBox = ({ item, index, onClick }: { item: NewsItem; index: number; onCl
               {(item.domain?.charAt(0) || 'N').toUpperCase()}
             </div>
           )}
-          <span className="truncate max-w-[100px]">{item.domain || 'News Source'}</span>
+          <span className="truncate max-w-[100px]">
+            {item.domain || 'News Source'}
+          </span>
         </div>
         <div className="flex items-center">
           <ClockRewind className="mr-0.5 svg-size-2" />
@@ -245,8 +274,8 @@ function PureSuggestedActions({
     const getTrendingNews = async () => {
       setIsLoading(true);
       const news = await fetchTrendingNews();
-      // Limit to 4 news items
-      setNewsItems(news.slice(0, 4));
+      // Limit to 6 news items
+      setNewsItems(news.slice(0, 6));
       setIsLoading(false);
     };
 
@@ -258,28 +287,28 @@ function PureSuggestedActions({
       data-testid="suggested-actions"
       className="grid sm:grid-cols-2 gap-3 w-full"
     >
-      {isLoading ? (
-        // Display loading skeletons while fetching news
-        Array(4).fill(0).map((_, index) => (
-          <NewsBoxSkeleton key={`skeleton-${index}`} index={index} />
-        ))
-      ) : (
-        // Display news items when loaded
-        newsItems.map((item, index) => (
-          <NewsBox 
-            key={`trending-news-${index}`}
-            item={item}
-            index={index}
-            onClick={async () => {
-              window.history.replaceState({}, '', `/chat/${chatId}`);
-              append({
-                role: 'user',
-                content: `Tell me more about this news: "${item.title}"`,
-              });
-            }}
-          />
-        ))
-      )}
+      {isLoading
+        ? // Display loading skeletons while fetching news
+          Array(6)
+            .fill(0)
+            .map((_, index) => (
+              <NewsBoxSkeleton key={`skeleton-${index}`} index={index} />
+            ))
+        : // Display news items when loaded
+          newsItems.map((item, index) => (
+            <NewsBox
+              key={`trending-news-${index}`}
+              item={item}
+              index={index}
+              onClick={async () => {
+                window.history.replaceState({}, '', `/chat/${chatId}`);
+                append({
+                  role: 'user',
+                  content: `Tell me more about this news: "${item.title}"`,
+                });
+              }}
+            />
+          ))}
     </div>
   );
 }

@@ -21,6 +21,7 @@ import { PreviewAttachment } from './preview-attachment';
 import { Button } from './ui/button';
 import { Textarea } from './ui/textarea';
 import { SuggestedActions } from './suggested-actions';
+import { NewsCategoryTabs } from './news-categories-tabs';
 import equal from 'fast-deep-equal';
 import type { UseChatHelpers } from '@ai-sdk/react';
 import { AnimatePresence, motion } from 'framer-motion';
@@ -194,7 +195,12 @@ function PureMultimodalInput({
   }, [status, scrollToBottom]);
 
   return (
-    <div className="relative w-full flex flex-col gap-4">
+    <div
+      className={cx('relative w-full flex flex-col', {
+        'gap-4': messages.length > 0,
+        'gap-2': messages.length === 0,
+      })}
+    >
       <AnimatePresence>
         {!isAtBottom && (
           <motion.div
@@ -220,92 +226,199 @@ function PureMultimodalInput({
         )}
       </AnimatePresence>
 
-      {messages.length === 0 &&
-        attachments.length === 0 &&
-        uploadQueue.length === 0 && (
-          <SuggestedActions
+      {messages.length === 0 && (
+        <>
+          <input
+            type="file"
+            className="fixed -top-4 -left-4 size-0.5 opacity-0 pointer-events-none"
+            ref={fileInputRef}
+            multiple
+            onChange={handleFileChange}
+            tabIndex={-1}
+          />
+
+          {(attachments.length > 0 || uploadQueue.length > 0) && (
+            <div
+              data-testid="attachments-preview"
+              className="flex flex-row gap-2 overflow-x-scroll items-end"
+            >
+              {attachments.map((attachment) => (
+                <PreviewAttachment
+                  key={attachment.url}
+                  attachment={attachment}
+                />
+              ))}
+
+              {uploadQueue.map((filename) => (
+                <PreviewAttachment
+                  key={filename}
+                  attachment={{
+                    url: '',
+                    name: filename,
+                    contentType: '',
+                  }}
+                  isUploading={true}
+                />
+              ))}
+            </div>
+          )}
+
+          <div className="relative">
+            <Textarea
+              data-testid="multimodal-input"
+              ref={textareaRef}
+              placeholder="Send a message..."
+              value={input}
+              onChange={handleInput}
+              className={cx(
+                'min-h-[24px] max-h-[calc(75dvh)] overflow-hidden resize-none rounded-2xl !text-base bg-muted pb-10 dark:border-zinc-700',
+                className,
+              )}
+              rows={2}
+              autoFocus
+              onKeyDown={(event) => {
+                if (
+                  event.key === 'Enter' &&
+                  !event.shiftKey &&
+                  !event.nativeEvent.isComposing
+                ) {
+                  event.preventDefault();
+
+                  if (status !== 'ready') {
+                    toast.error(
+                      'Please wait for the model to finish its response!',
+                    );
+                  } else {
+                    submitForm();
+                  }
+                }
+              }}
+            />
+
+            <div className="absolute bottom-0 p-2 w-fit flex flex-row justify-start">
+              <AttachmentsButton fileInputRef={fileInputRef} status={status} />
+            </div>
+
+            <div className="absolute bottom-0 right-0 p-2 w-fit flex flex-row justify-end">
+              {status === 'submitted' ? (
+                <StopButton stop={stop} setMessages={setMessages} />
+              ) : (
+                <SendButton
+                  input={input}
+                  submitForm={submitForm}
+                  uploadQueue={uploadQueue}
+                />
+              )}
+            </div>
+          </div>
+
+          {/* Hide suggested actions - keeping code intact for future use */}
+          {/* <SuggestedActions
             append={append}
             chatId={chatId}
             selectedVisibilityType={selectedVisibilityType}
+          /> */}
+
+          {/* New News Headlines Feature */}
+          <NewsCategoryTabs
+            onSelectMessageAction={(message: string) => {
+              window.history.replaceState({}, '', `/chat/${chatId}`);
+              append({
+                role: 'user',
+                content: message,
+              });
+            }}
           />
-        )}
-
-      <input
-        type="file"
-        className="fixed -top-4 -left-4 size-0.5 opacity-0 pointer-events-none"
-        ref={fileInputRef}
-        multiple
-        onChange={handleFileChange}
-        tabIndex={-1}
-      />
-
-      {(attachments.length > 0 || uploadQueue.length > 0) && (
-        <div
-          data-testid="attachments-preview"
-          className="flex flex-row gap-2 overflow-x-scroll items-end"
-        >
-          {attachments.map((attachment) => (
-            <PreviewAttachment key={attachment.url} attachment={attachment} />
-          ))}
-
-          {uploadQueue.map((filename) => (
-            <PreviewAttachment
-              key={filename}
-              attachment={{
-                url: '',
-                name: filename,
-                contentType: '',
-              }}
-              isUploading={true}
-            />
-          ))}
-        </div>
+        </>
       )}
 
-      <Textarea
-        data-testid="multimodal-input"
-        ref={textareaRef}
-        placeholder="Send a message..."
-        value={input}
-        onChange={handleInput}
-        className={cx(
-          'min-h-[24px] max-h-[calc(75dvh)] overflow-hidden resize-none rounded-2xl !text-base bg-muted pb-10 dark:border-zinc-700',
-          className,
-        )}
-        rows={2}
-        autoFocus
-        onKeyDown={(event) => {
-          if (
-            event.key === 'Enter' &&
-            !event.shiftKey &&
-            !event.nativeEvent.isComposing
-          ) {
-            event.preventDefault();
-
-            if (status !== 'ready') {
-              toast.error('Please wait for the model to finish its response!');
-            } else {
-              submitForm();
-            }
-          }
-        }}
-      />
-
-      <div className="absolute bottom-0 p-2 w-fit flex flex-row justify-start">
-        <AttachmentsButton fileInputRef={fileInputRef} status={status} />
-      </div>
-
-      <div className="absolute bottom-0 right-0 p-2 w-fit flex flex-row justify-end">
-        {status === 'submitted' ? (
-          <StopButton stop={stop} setMessages={setMessages} />
-        ) : (
-          <SendButton
-            input={input}
-            submitForm={submitForm}
-            uploadQueue={uploadQueue}
+      {messages.length > 0 && (
+        <>
+          <input
+            type="file"
+            className="fixed -top-4 -left-4 size-0.5 opacity-0 pointer-events-none"
+            ref={fileInputRef}
+            multiple
+            onChange={handleFileChange}
+            tabIndex={-1}
           />
-        )}
-      </div>
+
+          {(attachments.length > 0 || uploadQueue.length > 0) && (
+            <div
+              data-testid="attachments-preview"
+              className="flex flex-row gap-2 overflow-x-scroll items-end"
+            >
+              {attachments.map((attachment) => (
+                <PreviewAttachment
+                  key={attachment.url}
+                  attachment={attachment}
+                />
+              ))}
+
+              {uploadQueue.map((filename) => (
+                <PreviewAttachment
+                  key={filename}
+                  attachment={{
+                    url: '',
+                    name: filename,
+                    contentType: '',
+                  }}
+                  isUploading={true}
+                />
+              ))}
+            </div>
+          )}
+
+          <div className="relative">
+            <Textarea
+              data-testid="multimodal-input"
+              ref={textareaRef}
+              placeholder="Send a message..."
+              value={input}
+              onChange={handleInput}
+              className={cx(
+                'min-h-[24px] max-h-[calc(75dvh)] overflow-hidden resize-none rounded-2xl !text-base bg-muted pb-10 dark:border-zinc-700',
+                className,
+              )}
+              rows={2}
+              autoFocus
+              onKeyDown={(event) => {
+                if (
+                  event.key === 'Enter' &&
+                  !event.shiftKey &&
+                  !event.nativeEvent.isComposing
+                ) {
+                  event.preventDefault();
+
+                  if (status !== 'ready') {
+                    toast.error(
+                      'Please wait for the model to finish its response!',
+                    );
+                  } else {
+                    submitForm();
+                  }
+                }
+              }}
+            />
+
+            <div className="absolute bottom-0 p-2 w-fit flex flex-row justify-start">
+              <AttachmentsButton fileInputRef={fileInputRef} status={status} />
+            </div>
+
+            <div className="absolute bottom-0 right-0 p-2 w-fit flex flex-row justify-end">
+              {status === 'submitted' ? (
+                <StopButton stop={stop} setMessages={setMessages} />
+              ) : (
+                <SendButton
+                  input={input}
+                  submitForm={submitForm}
+                  uploadQueue={uploadQueue}
+                />
+              )}
+            </div>
+          </div>
+        </>
+      )}
     </div>
   );
 }
