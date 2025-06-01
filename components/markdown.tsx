@@ -4,7 +4,13 @@ import ReactMarkdown, { type Components } from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import rehypeRaw from 'rehype-raw';
 import { CodeBlock } from './code-block';
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from '@/components/ui/tooltip';
+import Image from 'next/image';
 
 // Function to get favicon URL for a domain
 function getFaviconUrl(url: string): string {
@@ -60,11 +66,13 @@ const processTextWithCitations = (text: string) => {
     return text;
   }
 
-  const parts = [];
+  const parts: React.ReactNode[] = [];
   let lastIndex = 0;
-  let match;
 
-  while ((match = CITATION_REGEX.exec(text)) !== null) {
+  CITATION_REGEX.lastIndex = 0; // Reset regex state
+  let match = CITATION_REGEX.exec(text);
+
+  while (match !== null) {
     if (match.index > lastIndex) {
       parts.push(
         <span key={`text-${lastIndex}`}>
@@ -83,6 +91,7 @@ const processTextWithCitations = (text: string) => {
     );
 
     lastIndex = match.index + match[0].length;
+    match = CITATION_REGEX.exec(text);
   }
 
   if (lastIndex < text.length) {
@@ -94,13 +103,13 @@ const processTextWithCitations = (text: string) => {
 
 const CustomLink = ({ node, children, href, ...props }: any) => {
   const { sources } = useContext(MarkdownContext);
-  
+
   // Check if this is a citation link by matching URL with sources
   if (href && sources && sources.length > 0) {
-    const sourceMatch = sources.find(source => 
-      source.url && href.includes(source.url)
+    const sourceMatch = sources.find(
+      (source) => source.url && href.includes(source.url),
     );
-    
+
     if (sourceMatch) {
       // Extract the source name (publication name)
       let sourceName = '';
@@ -129,10 +138,12 @@ const CustomLink = ({ node, children, href, ...props }: any) => {
                 {...props}
               >
                 {sourceMatch.url && (
-                  <img
+                  <Image
                     src={sourceMatch.favicon || getFaviconUrl(sourceMatch.url)}
                     alt=""
-                    className="w-3 h-3 rounded-full mr-1"
+                    width={12}
+                    height={12}
+                    className="size-3 rounded-full mr-1"
                     onError={(e) => {
                       e.currentTarget.style.display = 'none';
                     }}
@@ -141,8 +152,8 @@ const CustomLink = ({ node, children, href, ...props }: any) => {
                 <span className="font-medium">{sourceName || children}</span>
               </a>
             </TooltipTrigger>
-            <TooltipContent side="top" className="max-w-[20rem] p-1" sideOffset={5}>
-              <a 
+            <TooltipContent side="top" className="max-w-80 p-1" sideOffset={5}>
+              <a
                 href={href}
                 target="_blank"
                 rel="noreferrer"
@@ -157,10 +168,12 @@ const CustomLink = ({ node, children, href, ...props }: any) => {
               )}
               <span className="flex items-center gap-1">
                 {sourceMatch.url && (
-                  <img
+                  <Image
                     src={sourceMatch.favicon || getFaviconUrl(sourceMatch.url)}
                     alt=""
-                    className="w-3 h-3 rounded-full"
+                    width={12}
+                    height={12}
+                    className="size-3 rounded-full"
                     onError={(e) => {
                       e.currentTarget.style.display = 'none';
                     }}
@@ -168,7 +181,8 @@ const CustomLink = ({ node, children, href, ...props }: any) => {
                 )}
                 <span className="text-xs text-muted-foreground/80 leading-none">
                   {extractDomainName(sourceMatch.url || '')}
-                  {sourceMatch.publishedDate && ` • ${formatPublicationDate(sourceMatch.publishedDate)}`}
+                  {sourceMatch.publishedDate &&
+                    ` • ${formatPublicationDate(sourceMatch.publishedDate)}`}
                 </span>
               </span>
             </TooltipContent>
@@ -227,9 +241,7 @@ const components: Partial<Components> = {
   },
   a: CustomLink,
   sup: ({ children }) => {
-    return (
-      <sup className="text-xs align-super">{children}</sup>
-    );
+    return <sup className="text-xs align-super">{children}</sup>;
   },
   h1: ({ node, children, ...props }) => {
     return (
@@ -279,11 +291,14 @@ const components: Partial<Components> = {
 const remarkPlugins = [remarkGfm];
 const rehypePlugins = [rehypeRaw];
 
-const NonMemoizedMarkdown = ({ children, sources }: { children: string, sources?: any[] }) => {
+const NonMemoizedMarkdown = ({
+  children,
+  sources,
+}: { children: string; sources?: any[] }) => {
   return (
     <MarkdownContext.Provider value={{ sources }}>
-      <ReactMarkdown 
-        remarkPlugins={remarkPlugins} 
+      <ReactMarkdown
+        remarkPlugins={remarkPlugins}
         rehypePlugins={rehypePlugins}
         components={components}
       >
@@ -295,7 +310,7 @@ const NonMemoizedMarkdown = ({ children, sources }: { children: string, sources?
 
 export const Markdown = memo(
   NonMemoizedMarkdown,
-  (prevProps, nextProps) => 
-    prevProps.children === nextProps.children && 
-    JSON.stringify(prevProps.sources) === JSON.stringify(nextProps.sources)
+  (prevProps, nextProps) =>
+    prevProps.children === nextProps.children &&
+    JSON.stringify(prevProps.sources) === JSON.stringify(nextProps.sources),
 );

@@ -2,7 +2,7 @@
 
 import { cn } from '@/lib/utils';
 import { Loader2, Search } from 'lucide-react';
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { Button } from './ui/button';
 
 // Define the props for the component
@@ -50,69 +50,63 @@ export function NewsCategoryTabs({
   );
 
   // Function to fetch headlines for a specific category
-  async function fetchCategoryHeadlines(category: string) {
-    if (headlines[category]?.length > 0) {
-      return; // Already loaded
-    }
-
-    setIsLoading((prev) => ({ ...prev, [category]: true }));
-    try {
-      const baseUrl = window.location.origin;
-      const response = await fetch(
-        `${baseUrl}/api/news-headlines?category=${category}`,
-        {
-          cache: 'no-store',
-        },
-      );
-
-      if (!response.ok) {
-        throw new Error(`API error: ${response.status} ${response.statusText}`);
+  const fetchCategoryHeadlines = useCallback(
+    async (category: string) => {
+      if (headlines[category]?.length > 0) {
+        return; // Already loaded
       }
 
-      const data = await response.json();
+      setIsLoading((prev) => ({ ...prev, [category]: true }));
+      try {
+        const baseUrl = window.location.origin;
+        const response = await fetch(
+          `${baseUrl}/api/news-headlines?category=${category}`,
+          {
+            cache: 'no-store',
+          },
+        );
 
-      if (data.headlines?.length > 0) {
-        setHeadlines((prev) => ({
-          ...prev,
-          [category]: data.headlines.slice(0, 6), // Limit to 6 headlines per category
-        }));
+        if (!response.ok) {
+          throw new Error(
+            `API error: ${response.status} ${response.statusText}`,
+          );
+        }
+
+        const data = await response.json();
+
+        if (data.headlines?.length > 0) {
+          setHeadlines((prev) => ({
+            ...prev,
+            [category]: data.headlines.slice(0, 6), // Limit to 6 headlines per category
+          }));
+        }
+      } catch (error) {
+        console.error(`Error fetching headlines for ${category}:`, error);
+      } finally {
+        setIsLoading((prev) => ({ ...prev, [category]: false }));
       }
-    } catch (error) {
-      console.error(`Error fetching headlines for ${category}:`, error);
-    } finally {
-      setIsLoading((prev) => ({ ...prev, [category]: false }));
-    }
-  }
+    },
+    [headlines],
+  );
 
   // Initial fetch for the first active category
   useEffect(() => {
     fetchCategoryHeadlines(activeCategory);
-  }, [activeCategory]);
+  }, [activeCategory, fetchCategoryHeadlines]);
 
-  // Initial load for all categories to preload data
+  // Load headlines for all categories on mount
   useEffect(() => {
-    const loadInitialCategories = async () => {
-      // Load the active category first
-      await fetchCategoryHeadlines(activeCategory);
-
-      // Then load a couple more categories in the background
-      const priorityCategories = ['WORLD', 'TECHNOLOGY'];
-      for (const category of priorityCategories) {
-        if (category !== activeCategory) {
-          fetchCategoryHeadlines(category);
-        }
-      }
-    };
-
-    loadInitialCategories();
-  }, []);
+    CATEGORIES.forEach((category) => {
+      fetchCategoryHeadlines(category.id);
+    });
+  }, [fetchCategoryHeadlines]);
 
   return (
     <div className={cn('w-full', className)}>
       <div className="flex items-center mb-2 gap-2">
         <h3 className="font-semibold text-md">News Headlines</h3>
         {isLoading[activeCategory] && (
-          <Loader2 className="h-3 w-3 animate-spin text-muted-foreground" />
+          <Loader2 className="size-3 mr-2 animate-spin" />
         )}
       </div>
 
