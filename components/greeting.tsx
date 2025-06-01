@@ -3,33 +3,30 @@ import { WeatherSnippet } from './weather-snippet';
 
 export const Greeting = () => {
   return (
-    <div
-      key="overview"
-      className="max-w-3xl mx-auto md:mt-20 px-8 size-full flex flex-col justify-center"
-    >
+    <div key="overview" className="max-w-4xl mx-auto px-8 flex flex-col">
+      {/* Simple Main Greeting */}
       <motion.div
-        initial={{ opacity: 0, y: 10 }}
+        initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
-        exit={{ opacity: 0, y: 10 }}
-        transition={{ delay: 0.5 }}
-        className="text-2xl font-semibold"
+        exit={{ opacity: 0, y: 20 }}
+        transition={{ delay: 0.3, duration: 0.8 }}
+        className="text-center mb-4"
       >
-        Welcome to Info × Ai
+        <h1 className="text-4xl md:text-5xl font-semibold text-gray-900 dark:text-gray-100 mb-2">
+          Welcome to InfoxAI
+        </h1>
+        <p className="text-lg text-gray-600 dark:text-gray-400">
+          Your intelligent assistant for information, weather, and news
+        </p>
       </motion.div>
+
+      {/* Simple Weather Section */}
       <motion.div
-        initial={{ opacity: 0, y: 10 }}
-        animate={{ opacity: 1, y: 0 }}
-        exit={{ opacity: 0, y: 10 }}
-        transition={{ delay: 0.6 }}
-        className="text-2xl text-zinc-500 mb-6"
-      >
-        Not Just Info. Not Just AI. It&apos;s Info × AI
-      </motion.div>
-      <motion.div
-        initial={{ opacity: 0, y: 10 }}
-        animate={{ opacity: 1, y: 0 }}
-        exit={{ opacity: 0, y: 10 }}
-        transition={{ delay: 0.7 }}
+        initial={{ opacity: 0, y: 20, scale: 0.95 }}
+        animate={{ opacity: 1, y: 0, scale: 1 }}
+        exit={{ opacity: 0, y: 20, scale: 0.95 }}
+        transition={{ delay: 0.5, duration: 0.8 }}
+        className="flex justify-center"
       >
         <WeatherSnippet />
       </motion.div>

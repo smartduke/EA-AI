@@ -1,7 +1,14 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { MapPin, Sun, Cloud, CloudRain, Snowflake } from 'lucide-react';
+import {
+  MapPin,
+  Sun,
+  Cloud,
+  CloudRain,
+  Snowflake,
+  Thermometer,
+} from 'lucide-react';
 
 interface WeatherData {
   temperature: number;
@@ -125,13 +132,15 @@ export function WeatherSnippet() {
 
   if (loading) {
     return (
-      <div className="flex items-center gap-3 p-4 bg-muted/50 rounded-lg max-w-sm mx-auto">
-        <div className="animate-pulse">
-          <div className="size-8 bg-muted rounded-full" />
-        </div>
-        <div className="flex-1 animate-pulse">
-          <div className="h-4 bg-muted rounded w-24 mb-1" />
-          <div className="h-3 bg-muted rounded w-16" />
+      <div className="max-w-sm mx-auto">
+        <div className="p-4 rounded-lg bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700">
+          <div className="flex items-center gap-3">
+            <div className="size-8 bg-gray-200 dark:bg-gray-600 rounded animate-pulse" />
+            <div className="flex-1 space-y-2">
+              <div className="h-4 bg-gray-200 dark:bg-gray-600 rounded animate-pulse" />
+              <div className="h-3 bg-gray-200 dark:bg-gray-600 rounded w-2/3 animate-pulse" />
+            </div>
+          </div>
         </div>
       </div>
     );
@@ -144,23 +153,34 @@ export function WeatherSnippet() {
   const WeatherIcon = getWeatherIcon(weather.temperature);
 
   return (
-    <div className="flex items-center gap-3 p-4 bg-gradient-to-r from-blue-50 to-sky-50 dark:from-blue-950/50 dark:to-sky-950/50 rounded-lg max-w-sm mx-auto border border-blue-100 dark:border-blue-800">
-      <div className="flex items-center justify-center size-8 rounded-full bg-blue-100 dark:bg-blue-800">
-        <WeatherIcon className="size-4 text-blue-600 dark:text-blue-300" />
-      </div>
+    <div className="max-w-xs mx-auto">
+      <div className="p-3 rounded-xl bg-gradient-to-br from-blue-50 via-sky-50 to-indigo-50 dark:from-blue-900/20 dark:via-sky-900/20 dark:to-indigo-900/20 border border-blue-200/50 dark:border-blue-700/50 shadow-lg backdrop-blur-sm">
+        <div className="flex items-center gap-2.5">
+          {/* Colorful Weather Icon */}
+          <div className="p-2 rounded-lg bg-gradient-to-br from-blue-400 to-sky-500 shadow-md">
+            <WeatherIcon className="size-4 text-white drop-shadow-sm" />
+          </div>
 
-      <div className="flex-1 min-w-0">
-        <div className="flex items-center gap-2 text-sm font-medium text-gray-900 dark:text-gray-100">
-          <span>{weather.temperature}°C</span>
-          <span className="text-gray-500 dark:text-gray-400">•</span>
-          <span className="text-gray-600 dark:text-gray-300">
-            {weather.condition}
-          </span>
-        </div>
+          {/* Weather Info */}
+          <div className="flex-1 min-w-0">
+            {/* Temperature and Condition */}
+            <div className="flex items-center gap-2 mb-1">
+              <span className="text-lg font-bold bg-gradient-to-r from-blue-600 to-sky-600 dark:from-blue-400 dark:to-sky-400 bg-clip-text text-transparent">
+                {weather.temperature}°C
+              </span>
+              <span className="text-xs font-medium text-blue-700 dark:text-blue-300 bg-blue-100/60 dark:bg-blue-900/40 px-2 py-0.5 rounded-full">
+                {weather.condition}
+              </span>
+            </div>
 
-        <div className="flex items-center gap-1 text-xs text-gray-500 dark:text-gray-400 mt-0.5">
-          <MapPin className="size-3" />
-          <span className="truncate">{weather.location}</span>
+            {/* Location */}
+            <div className="flex items-center gap-1">
+              <MapPin className="size-2.5 text-blue-500 dark:text-blue-400" />
+              <span className="text-xs text-blue-600 dark:text-blue-300 truncate font-medium">
+                {weather.location}
+              </span>
+            </div>
+          </div>
         </div>
       </div>
     </div>

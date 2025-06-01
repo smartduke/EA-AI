@@ -40,11 +40,16 @@ function PureMessages({
   });
 
   const isThinking = status === 'submitted';
+  const isHomePage = messages.length === 0;
 
   return (
     <div
       ref={messagesContainerRef}
-      className="flex flex-col min-w-0 gap-3 flex-1 overflow-y-scroll pt-4 relative"
+      className={`flex flex-col min-w-0 gap-3 relative ${
+        isHomePage
+          ? 'pt-4' // Home page: just basic spacing
+          : 'flex-1 overflow-y-scroll pt-4' // Chat page: original layout
+      }`}
       suppressHydrationWarning
     >
       {messages.length === 0 && <Greeting />}
@@ -73,7 +78,7 @@ function PureMessages({
 
       <motion.div
         ref={messagesEndRef}
-        className="shrink-0 min-w-[24px] min-h-[24px]"
+        className="shrink-0 min-w-[24px] min-h-[12px]"
         onViewportLeave={onViewportLeave}
         onViewportEnter={onViewportEnter}
       />

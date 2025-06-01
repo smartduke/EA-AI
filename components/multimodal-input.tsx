@@ -271,7 +271,11 @@ function PureMultimodalInput({
               value={input}
               onChange={handleInput}
               className={cx(
-                'min-h-[24px] max-h-[calc(75dvh)] overflow-hidden resize-none rounded-2xl !text-base bg-muted pb-10 dark:border-zinc-700',
+                'min-h-[24px] max-h-[calc(75dvh)] overflow-hidden resize-none rounded-2xl !text-base pb-12 pr-12 pl-4 pt-4',
+                'bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600',
+                'shadow-sm hover:shadow-md focus:shadow-md transition-all duration-200',
+                'placeholder:text-gray-500 dark:placeholder:text-gray-400',
+                'focus:ring-2 focus:ring-blue-500 focus:border-blue-500',
                 className,
               )}
               rows={2}
@@ -295,11 +299,11 @@ function PureMultimodalInput({
               }}
             />
 
-            <div className="absolute bottom-0 p-2 w-fit flex flex-row justify-start">
+            <div className="absolute bottom-2 left-2 w-fit flex flex-row justify-start">
               <AttachmentsButton fileInputRef={fileInputRef} status={status} />
             </div>
 
-            <div className="absolute bottom-0 right-0 p-2 w-fit flex flex-row justify-end">
+            <div className="absolute bottom-2 right-2 w-fit flex flex-row justify-end">
               {status === 'submitted' ? (
                 <StopButton stop={stop} setMessages={setMessages} />
               ) : (
@@ -321,6 +325,7 @@ function PureMultimodalInput({
 
           {/* New News Headlines Feature */}
           <NewsCategoryTabs
+            className="mt-4"
             onSelectMessageAction={(message: string) => {
               window.history.replaceState({}, '', `/chat/${chatId}`);
               append({
@@ -377,7 +382,11 @@ function PureMultimodalInput({
               value={input}
               onChange={handleInput}
               className={cx(
-                'min-h-[24px] max-h-[calc(75dvh)] overflow-hidden resize-none rounded-2xl !text-base bg-muted pb-10 dark:border-zinc-700',
+                'min-h-[24px] max-h-[calc(75dvh)] overflow-hidden resize-none rounded-2xl !text-base pb-12 pr-12 pl-4 pt-4',
+                'bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600',
+                'shadow-sm hover:shadow-md focus:shadow-md transition-all duration-200',
+                'placeholder:text-gray-500 dark:placeholder:text-gray-400',
+                'focus:ring-2 focus:ring-blue-500 focus:border-blue-500',
                 className,
               )}
               rows={2}
@@ -401,11 +410,11 @@ function PureMultimodalInput({
               }}
             />
 
-            <div className="absolute bottom-0 p-2 w-fit flex flex-row justify-start">
+            <div className="absolute bottom-2 left-2 w-fit flex flex-row justify-start">
               <AttachmentsButton fileInputRef={fileInputRef} status={status} />
             </div>
 
-            <div className="absolute bottom-0 right-0 p-2 w-fit flex flex-row justify-end">
+            <div className="absolute bottom-2 right-2 w-fit flex flex-row justify-end">
               {status === 'submitted' ? (
                 <StopButton stop={stop} setMessages={setMessages} />
               ) : (
@@ -446,7 +455,7 @@ function PureAttachmentsButton({
   return (
     <Button
       data-testid="attachments-button"
-      className="rounded-md rounded-bl-lg p-[7px] h-fit dark:border-zinc-700 hover:dark:bg-zinc-900 hover:bg-zinc-200"
+      className="p-2 h-fit rounded-xl bg-gray-100 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors"
       onClick={(event) => {
         event.preventDefault();
         fileInputRef.current?.click();
@@ -459,7 +468,7 @@ function PureAttachmentsButton({
   );
 }
 
-const AttachmentsButton = memo(PureAttachmentsButton);
+const AttachmentsButton = memo(PureAttachmentsButton, () => true);
 
 function PureStopButton({
   stop,
@@ -470,8 +479,7 @@ function PureStopButton({
 }) {
   return (
     <Button
-      data-testid="stop-button"
-      className="rounded-full p-1.5 h-fit border dark:border-zinc-600"
+      className="p-2 h-fit rounded-xl bg-red-500 text-white border-0 hover:bg-red-600 transition-colors"
       onClick={(event) => {
         event.preventDefault();
         stop();
@@ -483,7 +491,7 @@ function PureStopButton({
   );
 }
 
-const StopButton = memo(PureStopButton);
+const StopButton = memo(PureStopButton, () => true);
 
 function PureSendButton({
   submitForm,
@@ -496,8 +504,7 @@ function PureSendButton({
 }) {
   return (
     <Button
-      data-testid="send-button"
-      className="rounded-full p-1.5 h-fit border dark:border-zinc-600"
+      className="p-2 h-fit rounded-xl bg-blue-500 text-white border-0 hover:bg-blue-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
       onClick={(event) => {
         event.preventDefault();
         submitForm();
