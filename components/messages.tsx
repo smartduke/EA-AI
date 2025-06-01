@@ -44,7 +44,8 @@ function PureMessages({
   return (
     <div
       ref={messagesContainerRef}
-      className="flex flex-col min-w-0 gap-3 flex overflow-y-scroll pt-4 relative"
+      className="flex flex-col min-w-0 gap-3 flex-1 overflow-y-scroll pt-4 relative"
+      suppressHydrationWarning
     >
       {messages.length === 0 && <Greeting />}
 
