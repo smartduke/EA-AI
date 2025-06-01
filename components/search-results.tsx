@@ -1,12 +1,16 @@
 import React from 'react';
-import { Card } from '@/components/ui/card';
-import { cn } from '@/lib/utils';
+import { Button } from '@/components/ui/button';
+import { ExternalLinkIcon } from './icons';
+import { Card, CardContent } from '@/components/ui/card';
+import { motion } from 'framer-motion';
+import Image from 'next/image';
 import {
   Tooltip,
   TooltipContent,
   TooltipProvider,
   TooltipTrigger,
 } from '@/components/ui/tooltip';
+import { cn } from '@/lib/utils';
 
 export interface SearchResult {
   title: string;
@@ -45,6 +49,15 @@ function getFaviconUrl(url: string): string {
   } catch (e) {
     return ''; // Return empty string if URL parsing fails
   }
+}
+
+// Helper function to convert protocol-relative URLs to absolute HTTPS URLs
+function normalizeImageUrl(url: string): string {
+  if (!url) return '';
+  if (url.startsWith('//')) {
+    return `https:${url}`;
+  }
+  return url;
 }
 
 export function SearchResults({
@@ -117,27 +130,25 @@ export function SearchResults({
                       <div className="flex items-center text-xs">
                         <div className="flex items-center gap-2">
                           {result.favicon ? (
-                            <img
+                            <Image
                               src={result.favicon}
                               alt={`${cleanUrlForDisplay(result.url)} favicon`}
-                              className="w-4 h-4 rounded-full"
+                              width={16}
+                              height={16}
+                              className="size-4 rounded-full"
                               onError={(e) => {
                                 e.currentTarget.style.display = 'none';
-                                (
-                                  e.currentTarget.nextSibling as HTMLElement
-                                ).style.display = 'flex';
                               }}
                             />
                           ) : (
-                            <img
+                            <Image
                               src={getFaviconUrl(result.url)}
                               alt={`${cleanUrlForDisplay(result.url)} favicon`}
-                              className="w-4 h-4 rounded-full"
+                              width={16}
+                              height={16}
+                              className="size-4 rounded-full"
                               onError={(e) => {
                                 e.currentTarget.style.display = 'none';
-                                (
-                                  e.currentTarget.nextSibling as HTMLElement
-                                ).style.display = 'flex';
                               }}
                             />
                           )}
@@ -175,21 +186,22 @@ export function SearchResults({
                   )}
                   <div className="flex items-center gap-2 text-xs">
                     {result.favicon ? (
-                      <img
+                      <Image
                         src={result.favicon}
                         alt={`${cleanUrlForDisplay(result.url)} favicon`}
-                        className="w-4 h-4 rounded-full"
+                        width={16}
+                        height={16}
+                        className="size-4 rounded-full"
                       />
                     ) : (
-                      <img
+                      <Image
                         src={getFaviconUrl(result.url)}
                         alt={`${cleanUrlForDisplay(result.url)} favicon`}
-                        className="w-4 h-4 rounded-full"
+                        width={16}
+                        height={16}
+                        className="size-4 rounded-full"
                         onError={(e) => {
                           e.currentTarget.style.display = 'none';
-                          (
-                            e.currentTarget.nextSibling as HTMLElement
-                          ).style.display = 'flex';
                         }}
                       />
                     )}

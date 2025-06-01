@@ -7,6 +7,7 @@ import type { UseChatHelpers } from '@ai-sdk/react';
 import type { VisibilityType } from './visibility-selector';
 import { ClockRewind } from './icons';
 import { Skeleton } from './ui/skeleton';
+import Image from 'next/image';
 
 // Define the interface for news items
 interface NewsItem {
@@ -40,6 +41,15 @@ interface SuggestedActionsProps {
   chatId: string;
   append: UseChatHelpers['append'];
   selectedVisibilityType: VisibilityType;
+}
+
+// Helper function to convert protocol-relative URLs to absolute HTTPS URLs
+function normalizeImageUrl(url: string): string {
+  if (!url) return '';
+  if (url.startsWith('//')) {
+    return `https:${url}`;
+  }
+  return url;
 }
 
 // Function to format relative time
@@ -235,13 +245,12 @@ const NewsBox = ({
         <div className="flex items-center">
           {/* Small favicon near source name */}
           {item.favicon ? (
-            <img
-              src={item.favicon}
+            <Image
+              src={normalizeImageUrl(item.favicon)}
               alt={item.domain || 'Source'}
+              width={16}
+              height={16}
               className="w-4 h-4 rounded-full mr-1.5"
-              onError={(e) => {
-                e.currentTarget.style.display = 'none';
-              }}
             />
           ) : (
             <div className="w-4 h-4 bg-muted rounded-full flex items-center justify-center text-[10px] mr-1.5">
@@ -292,12 +301,15 @@ function PureSuggestedActions({
           Array(6)
             .fill(0)
             .map((_, index) => (
-              <NewsBoxSkeleton key={`skeleton-${index}`} index={index} />
+              <NewsBoxSkeleton
+                key={`skeleton-loading-${index}-${Date.now()}`}
+                index={index}
+              />
             ))
         : // Display news items when loaded
           newsItems.map((item, index) => (
             <NewsBox
-              key={`trending-news-${index}`}
+              key={`trending-news-${item.url || item.title}-${index}`}
               item={item}
               index={index}
               onClick={async () => {

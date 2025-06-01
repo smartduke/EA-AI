@@ -23,6 +23,15 @@ function getFaviconUrl(url: string): string {
   }
 }
 
+// Helper function to convert protocol-relative URLs to absolute HTTPS URLs
+function normalizeImageUrl(url: string): string {
+  if (!url) return '';
+  if (url.startsWith('//')) {
+    return `https:${url}`;
+  }
+  return url;
+}
+
 // Extracts domain name from URL for display
 function extractDomainName(url: string): string {
   try {
@@ -139,7 +148,9 @@ const CustomLink = ({ node, children, href, ...props }: any) => {
               >
                 {sourceMatch.url && (
                   <Image
-                    src={sourceMatch.favicon || getFaviconUrl(sourceMatch.url)}
+                    src={normalizeImageUrl(
+                      sourceMatch.favicon || getFaviconUrl(sourceMatch.url),
+                    )}
                     alt=""
                     width={12}
                     height={12}
@@ -169,7 +180,9 @@ const CustomLink = ({ node, children, href, ...props }: any) => {
               <span className="flex items-center gap-1">
                 {sourceMatch.url && (
                   <Image
-                    src={sourceMatch.favicon || getFaviconUrl(sourceMatch.url)}
+                    src={normalizeImageUrl(
+                      sourceMatch.favicon || getFaviconUrl(sourceMatch.url),
+                    )}
                     alt=""
                     width={12}
                     height={12}

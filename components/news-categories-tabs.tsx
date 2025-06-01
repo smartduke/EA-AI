@@ -45,9 +45,13 @@ export function NewsCategoryTabs({
   const [headlines, setHeadlines] = useState<Record<string, HeadlineType[]>>(
     {},
   );
-  const [isLoading, setIsLoading] = useState<Record<string, boolean>>(
-    CATEGORIES.reduce((acc, category) => ({ ...acc, [category.id]: true }), {}),
-  );
+  const [isLoading, setIsLoading] = useState<Record<string, boolean>>(() => {
+    const loadingState: Record<string, boolean> = {};
+    CATEGORIES.forEach((category) => {
+      loadingState[category.id] = true;
+    });
+    return loadingState;
+  });
 
   // Function to fetch headlines for a specific category
   const fetchCategoryHeadlines = useCallback(
@@ -145,7 +149,10 @@ export function NewsCategoryTabs({
             {isLoading[category.id] ? (
               // Loading skeleton
               Array.from({ length: 6 }).map((_, i) => (
-                <div key={i} className="h-auto p-0 text-base flex items-center">
+                <div
+                  key={`loading-${category.id}-${i}`}
+                  className="h-auto p-0 text-base flex items-center"
+                >
                   <Search
                     size={16}
                     className="mr-2 text-muted-foreground animate-pulse"
@@ -160,7 +167,7 @@ export function NewsCategoryTabs({
               headlines[category.id].map(
                 (headline: HeadlineType, i: number) => (
                   <Button
-                    key={i}
+                    key={`${category.id}-${headline.link}-${i}`}
                     variant="link"
                     className="h-auto p-0 text-left"
                     name={headline.message}

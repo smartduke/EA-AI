@@ -32,6 +32,15 @@ function getFaviconUrl(url: string): string {
   }
 }
 
+// Helper function to convert protocol-relative URLs to absolute HTTPS URLs
+function normalizeImageUrl(url: string): string {
+  if (!url) return '';
+  if (url.startsWith('//')) {
+    return `https:${url}`;
+  }
+  return url;
+}
+
 // Extracts domain name from URL for display
 function extractDomainName(url: string): string {
   try {
@@ -248,7 +257,7 @@ export function TabView({
               Answer
             </span>
             {activeTab === 'answer' && (
-              <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-neutral-800 dark:bg-neutral-200" />
+              <div className="absolute bottom-0 inset-x-0 h-0.5 bg-neutral-800 dark:bg-neutral-200" />
             )}
           </TabsTrigger>
 
@@ -268,7 +277,7 @@ export function TabView({
               )}
             </span>
             {activeTab === 'sources' && (
-              <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-neutral-800 dark:bg-neutral-200" />
+              <div className="absolute bottom-0 inset-x-0 h-0.5 bg-neutral-800 dark:bg-neutral-200" />
             )}
           </TabsTrigger>
 
@@ -289,7 +298,7 @@ export function TabView({
                 )}
               </span>
               {activeTab === 'images' && (
-                <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-neutral-800 dark:bg-neutral-200" />
+                <div className="absolute bottom-0 inset-x-0 h-0.5 bg-neutral-800 dark:bg-neutral-200" />
               )}
             </TabsTrigger>
           )}
@@ -311,7 +320,7 @@ export function TabView({
                 )}
               </span>
               {activeTab === 'videos' && (
-                <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-neutral-800 dark:bg-neutral-200" />
+                <div className="absolute bottom-0 inset-x-0 h-0.5 bg-neutral-800 dark:bg-neutral-200" />
               )}
             </TabsTrigger>
           )}
@@ -448,10 +457,10 @@ export function TabView({
                         key={`answer-mobile-image-${index}-${result.url}`}
                         type="button"
                         onClick={() => setActiveTab('images')}
-                        className="relative flex-shrink-0 w-20 h-20 rounded-lg overflow-hidden border border-neutral-200 dark:border-neutral-800 hover:opacity-90 transition-opacity cursor-pointer sm:hidden"
+                        className="relative shrink-0 size-20 rounded-lg overflow-hidden border border-neutral-200 dark:border-neutral-800 hover:opacity-90 transition-opacity cursor-pointer sm:hidden"
                       >
                         <Image
-                          src={result.imageUrl || result.url}
+                          src={normalizeImageUrl(result.imageUrl || result.url)}
                           alt={result.title}
                           width={80}
                           height={80}
@@ -474,10 +483,10 @@ export function TabView({
                         key={`answer-desktop-image-${index}-${result.url}`}
                         type="button"
                         onClick={() => setActiveTab('images')}
-                        className="relative flex-shrink-0 w-16 h-16 md:w-20 md:h-20 lg:w-24 lg:h-24 rounded-lg overflow-hidden border border-neutral-200 dark:border-neutral-800 hover:opacity-90 transition-opacity cursor-pointer hidden sm:block"
+                        className="relative shrink-0 size-16 md:size-20 lg:size-24 rounded-lg overflow-hidden border border-neutral-200 dark:border-neutral-800 hover:opacity-90 transition-opacity cursor-pointer hidden sm:block"
                       >
                         <Image
-                          src={result.imageUrl || result.url}
+                          src={normalizeImageUrl(result.imageUrl || result.url)}
                           alt={result.title}
                           width={240}
                           height={240}
@@ -507,10 +516,12 @@ export function TabView({
                         key={`answer-mobile-video-${index}-${result.url}`}
                         type="button"
                         onClick={() => openVideoLightbox(index)}
-                        className="relative flex-shrink-0 w-20 h-20 rounded-lg overflow-hidden border border-neutral-200 dark:border-neutral-800 hover:opacity-90 transition-opacity cursor-pointer sm:hidden"
+                        className="relative shrink-0 size-20 rounded-lg overflow-hidden border border-neutral-200 dark:border-neutral-800 hover:opacity-90 transition-opacity cursor-pointer sm:hidden"
                       >
                         <Image
-                          src={result.thumbnailUrl || result.url}
+                          src={normalizeImageUrl(
+                            result.thumbnailUrl || result.url,
+                          )}
                           alt={result.title}
                           width={80}
                           height={80}
@@ -541,10 +552,12 @@ export function TabView({
                         key={`answer-desktop-video-${index}-${result.url}`}
                         type="button"
                         onClick={() => openVideoLightbox(index)}
-                        className="relative flex-shrink-0 w-16 h-16 md:w-20 md:h-20 lg:w-24 lg:h-24 rounded-lg overflow-hidden border border-neutral-200 dark:border-neutral-800 hover:opacity-90 transition-opacity cursor-pointer hidden sm:block"
+                        className="relative shrink-0 size-16 md:size-20 lg:size-24 rounded-lg overflow-hidden border border-neutral-200 dark:border-neutral-800 hover:opacity-90 transition-opacity cursor-pointer hidden sm:block"
                       >
                         <Image
-                          src={result.thumbnailUrl || result.url}
+                          src={normalizeImageUrl(
+                            result.thumbnailUrl || result.url,
+                          )}
                           alt={result.title}
                           width={240}
                           height={240}
@@ -589,10 +602,10 @@ export function TabView({
                     key={`source-detail-skeleton-${idx}`}
                     className="flex gap-3 p-3 border border-neutral-200 dark:border-neutral-800 rounded-lg"
                   >
-                    <div className="flex items-center justify-center rounded-full bg-neutral-100 dark:bg-neutral-800 w-7 h-7 animate-pulse" />
+                    <div className="flex items-center justify-center rounded-full bg-neutral-100 dark:bg-neutral-800 size-7 animate-pulse" />
                     <div className="flex-1 space-y-2">
                       <div className="flex items-center gap-2 mb-1.5">
-                        <div className="w-4 h-4 rounded-full bg-neutral-200 dark:bg-neutral-700 animate-pulse" />
+                        <div className="size-4 rounded-full bg-neutral-200 dark:bg-neutral-700 animate-pulse" />
                         <div className="w-24 h-3 bg-neutral-200 dark:bg-neutral-700 rounded animate-pulse" />
                       </div>
                       <div className="h-4 bg-neutral-100 dark:bg-neutral-800 rounded w-3/4 animate-pulse" />
@@ -609,7 +622,7 @@ export function TabView({
                     key={`source-detail-${result.url}`}
                     className="flex gap-3 p-3 border border-neutral-200 dark:border-neutral-800 rounded-lg hover:bg-neutral-50 dark:hover:bg-neutral-900 transition-colors"
                   >
-                    <div className="flex items-center justify-center rounded-full bg-neutral-100 dark:bg-neutral-800 w-7 h-7 text-sm font-bold shrink-0">
+                    <div className="flex items-center justify-center rounded-full bg-neutral-100 dark:bg-neutral-800 size-7 text-sm font-bold shrink-0">
                       {i + 1}
                     </div>
                     <div className="flex-1 overflow-hidden">
@@ -688,7 +701,7 @@ export function TabView({
                   >
                     <div className="relative aspect-square bg-neutral-50 dark:bg-neutral-900 overflow-hidden">
                       <Image
-                        src={result.imageUrl || result.url}
+                        src={normalizeImageUrl(result.imageUrl || result.url)}
                         alt={result.title || 'Image result'}
                         fill
                         className="size-full object-cover group-hover:scale-105 transition-transform"
@@ -751,7 +764,9 @@ export function TabView({
                   >
                     <div className="relative aspect-video bg-neutral-50 dark:bg-neutral-900 overflow-hidden">
                       <Image
-                        src={result.thumbnailUrl || result.url}
+                        src={normalizeImageUrl(
+                          result.thumbnailUrl || result.url,
+                        )}
                         alt={result.title || 'Video result'}
                         fill
                         className="size-full object-cover group-hover:scale-105 transition-transform"
@@ -867,10 +882,10 @@ export function TabView({
             onClick={(e) => e.stopPropagation()}
           >
             <Image
-              src={
+              src={normalizeImageUrl(
                 imageSources[lightboxImageIndex].imageUrl ||
-                imageSources[lightboxImageIndex].url
-              }
+                  imageSources[lightboxImageIndex].url,
+              )}
               alt={imageSources[lightboxImageIndex].title || 'Image'}
               width={800}
               height={600}
