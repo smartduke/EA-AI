@@ -20,12 +20,19 @@ export function useMessages({
 
   const [hasSentMessage, setHasSentMessage] = useState(false);
 
+  // Removed auto-scroll to bottom on chat load/refresh
+  // useEffect(() => {
+  //   if (chatId) {
+  //     scrollToBottom('instant');
+  //     setHasSentMessage(false);
+  //   }
+  // }, [chatId, scrollToBottom]);
+
   useEffect(() => {
     if (chatId) {
-      scrollToBottom('instant');
       setHasSentMessage(false);
     }
-  }, [chatId, scrollToBottom]);
+  }, [chatId]);
 
   useEffect(() => {
     if (status === 'submitted') {

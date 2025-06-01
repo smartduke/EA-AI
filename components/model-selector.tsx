@@ -14,6 +14,7 @@ import { chatModels } from '@/lib/ai/models';
 import { cn } from '@/lib/utils';
 
 import { CheckCircleFillIcon, ChevronDownIcon } from './icons';
+import { LayoutGrid } from 'lucide-react';
 import { entitlementsByUserType } from '@/lib/ai/entitlements';
 import type { Session } from 'next-auth';
 
@@ -21,9 +22,11 @@ export function ModelSelector({
   session,
   selectedModelId,
   className,
+  compact = false,
 }: {
   session: Session;
   selectedModelId: string;
+  compact?: boolean;
 } & React.ComponentProps<typeof Button>) {
   const [open, setOpen] = useState(false);
   const [optimisticModelId, setOptimisticModelId] =
@@ -58,8 +61,14 @@ export function ModelSelector({
           variant="outline"
           className="md:px-2 md:h-[34px]"
         >
-          {selectedChatModel?.name}
-          <ChevronDownIcon />
+          {compact ? (
+            <LayoutGrid className="size-4" />
+          ) : (
+            <>
+              {selectedChatModel?.name}
+              <ChevronDownIcon />
+            </>
+          )}
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="start" className="min-w-[300px]">

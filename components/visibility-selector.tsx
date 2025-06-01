@@ -15,7 +15,9 @@ import {
   GlobeIcon,
   LockIcon,
 } from './icons';
+import { Share2 } from 'lucide-react';
 import { useChatVisibility } from '@/hooks/use-chat-visibility';
+import { toast } from 'sonner';
 
 export type VisibilityType = 'private' | 'public';
 
@@ -59,6 +61,17 @@ export function VisibilitySelector({
     [visibilityType],
   );
 
+  const copyToClipboard = async () => {
+    try {
+      const url = `${window.location.origin}/chat/${chatId}`;
+      await navigator.clipboard.writeText(url);
+      toast.success('Chat URL copied to clipboard!');
+    } catch (error) {
+      console.error('Failed to copy URL:', error);
+      toast.error('Failed to copy URL to clipboard');
+    }
+  };
+
   return (
     <DropdownMenu open={open} onOpenChange={setOpen}>
       <DropdownMenuTrigger
@@ -73,26 +86,35 @@ export function VisibilitySelector({
           variant="outline"
           className="hidden md:flex md:px-2 md:h-[34px]"
         >
-          {selectedVisibility?.icon}
-          {selectedVisibility?.label}
+          <Share2 className="size-4" />
+          Share
           <ChevronDownIcon />
         </Button>
       </DropdownMenuTrigger>
 
-      <DropdownMenuContent align="start" className="min-w-[300px]">
+      <DropdownMenuContent align="end" className="min-w-[300px]">
         {visibilities.map((visibility) => (
           <DropdownMenuItem
             data-testid={`visibility-selector-item-${visibility.id}`}
             key={visibility.id}
-            onSelect={() => {
+            onSelect={async () => {
               setVisibilityType(visibility.id);
+
+              // Copy URL to clipboard when Public is selected
+              if (visibility.id === 'public') {
+                await copyToClipboard();
+              }
+
               setOpen(false);
             }}
             className="gap-4 group/item flex flex-row justify-between items-center"
             data-active={visibility.id === visibilityType}
           >
             <div className="flex flex-col gap-1 items-start">
-              {visibility.label}
+              <div className="flex items-center gap-2">
+                {visibility.icon}
+                {visibility.label}
+              </div>
               {visibility.description && (
                 <div className="text-xs text-muted-foreground">
                   {visibility.description}

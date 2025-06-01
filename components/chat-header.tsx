@@ -2,10 +2,9 @@
 import { useRouter } from 'next/navigation';
 import { useWindowSize } from 'usehooks-ts';
 
-import { ModelSelector } from '@/components/model-selector';
 import { SidebarToggle } from '@/components/sidebar-toggle';
 import { Button } from '@/components/ui/button';
-import { PlusIcon, } from './icons';
+import { PlusIcon } from './icons';
 import { useSidebar } from './ui/sidebar';
 import { memo } from 'react';
 import { Tooltip, TooltipContent, TooltipTrigger } from './ui/tooltip';
@@ -18,12 +17,14 @@ function PureChatHeader({
   selectedVisibilityType,
   isReadonly,
   session,
+  isHomePage,
 }: {
   chatId: string;
   selectedModelId: string;
   selectedVisibilityType: VisibilityType;
   isReadonly: boolean;
   session: Session;
+  isHomePage: boolean;
 }) {
   const router = useRouter();
   const { open } = useSidebar();
@@ -31,7 +32,7 @@ function PureChatHeader({
   const { width: windowWidth } = useWindowSize();
 
   return (
-    <header className="flex sticky top-0 bg-background py-1.5 items-center px-2 md:px-2 gap-2">
+    <header className="flex sticky top-0 py-1.5 items-center px-2 md:px-2 gap-2 bg-transparent z-10">
       <SidebarToggle />
 
       {(!open || windowWidth < 768) && (
@@ -53,19 +54,12 @@ function PureChatHeader({
         </Tooltip>
       )}
 
-      {!isReadonly && (
-        <ModelSelector
-          session={session}
-          selectedModelId={selectedModelId}
-          className="order-1 md:order-2"
-        />
-      )}
-
-      {!isReadonly && (
+      {/* Show visibility selector only on chat pages (not home page) and move to right */}
+      {!isReadonly && !isHomePage && (
         <VisibilitySelector
           chatId={chatId}
           selectedVisibilityType={selectedVisibilityType}
-          className="order-1 md:order-3"
+          className="ml-auto"
         />
       )}
     </header>
@@ -73,5 +67,7 @@ function PureChatHeader({
 }
 
 export const ChatHeader = memo(PureChatHeader, (prevProps, nextProps) => {
-  return prevProps.selectedModelId === nextProps.selectedModelId;
+  if (prevProps.selectedModelId !== nextProps.selectedModelId) return false;
+  if (prevProps.isHomePage !== nextProps.isHomePage) return false;
+  return true;
 });

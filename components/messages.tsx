@@ -45,7 +45,7 @@ function PureMessages({
   return (
     <div
       ref={messagesContainerRef}
-      className={`flex flex-col min-w-0 gap-3 relative ${
+      className={`flex flex-col min-w-0 gap-3 relative -mt-10 ${
         isHomePage
           ? 'pt-4' // Home page: just basic spacing
           : 'flex-1 overflow-y-scroll pt-4' // Chat page: original layout

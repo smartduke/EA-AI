@@ -123,6 +123,7 @@ export function Chat({
           selectedVisibilityType={initialVisibilityType}
           isReadonly={isReadonly}
           session={session}
+          isHomePage={isHomePage}
         />
 
         {/* Conditional layout based on whether we're on home page or chat page */}
@@ -155,6 +156,8 @@ export function Chat({
                   setMessages={setMessages}
                   append={append}
                   selectedVisibilityType={visibilityType}
+                  session={session}
+                  selectedModelId={initialChatModel}
                 />
               </div>
             )}
@@ -188,6 +191,8 @@ export function Chat({
                   setMessages={setMessages}
                   append={append}
                   selectedVisibilityType={visibilityType}
+                  session={session}
+                  selectedModelId={initialChatModel}
                 />
               )}
             </form>

@@ -22,12 +22,14 @@ import { Button } from './ui/button';
 import { Textarea } from './ui/textarea';
 import { SuggestedActions } from './suggested-actions';
 import { NewsCategoryTabs } from './news-categories-tabs';
+import { ModelSelector } from './model-selector';
 import equal from 'fast-deep-equal';
 import type { UseChatHelpers } from '@ai-sdk/react';
 import { AnimatePresence, motion } from 'framer-motion';
 import { ArrowDown } from 'lucide-react';
 import { useScrollToBottom } from '@/hooks/use-scroll-to-bottom';
 import type { VisibilityType } from './visibility-selector';
+import type { Session } from 'next-auth';
 
 function PureMultimodalInput({
   chatId,
@@ -43,6 +45,8 @@ function PureMultimodalInput({
   handleSubmit,
   className,
   selectedVisibilityType,
+  session,
+  selectedModelId,
 }: {
   chatId: string;
   input: UseChatHelpers['input'];
@@ -57,6 +61,8 @@ function PureMultimodalInput({
   handleSubmit: UseChatHelpers['handleSubmit'];
   className?: string;
   selectedVisibilityType: VisibilityType;
+  session: Session;
+  selectedModelId: string;
 }) {
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const { width } = useWindowSize();
@@ -187,12 +193,19 @@ function PureMultimodalInput({
   );
 
   const { isAtBottom, scrollToBottom } = useScrollToBottom();
+  const [isInitialMount, setIsInitialMount] = useState(true);
 
+  // Prevent auto-scroll on initial page load, but allow it for new messages
   useEffect(() => {
-    if (status === 'submitted') {
+    setIsInitialMount(false);
+  }, []);
+
+  // Restore auto-scroll when user submits a message (but not on initial mount)
+  useEffect(() => {
+    if (status === 'submitted' && !isInitialMount) {
       scrollToBottom();
     }
-  }, [status, scrollToBottom]);
+  }, [status, scrollToBottom, isInitialMount]);
 
   return (
     <div
@@ -267,7 +280,7 @@ function PureMultimodalInput({
             <Textarea
               data-testid="multimodal-input"
               ref={textareaRef}
-              placeholder="Send a message..."
+              placeholder="Ask anything..."
               value={input}
               onChange={handleInput}
               className={cx(
@@ -299,7 +312,13 @@ function PureMultimodalInput({
               }}
             />
 
-            <div className="absolute bottom-2 left-2 w-fit flex flex-row justify-start">
+            <div className="absolute bottom-2 left-2 w-fit flex flex-row justify-start gap-2">
+              <ModelSelector
+                session={session}
+                selectedModelId={selectedModelId}
+                className="h-8 px-2 text-xs"
+                compact={true}
+              />
               <AttachmentsButton fileInputRef={fileInputRef} status={status} />
             </div>
 
@@ -378,7 +397,7 @@ function PureMultimodalInput({
             <Textarea
               data-testid="multimodal-input"
               ref={textareaRef}
-              placeholder="Send a message..."
+              placeholder="Ask anything..."
               value={input}
               onChange={handleInput}
               className={cx(
@@ -410,7 +429,13 @@ function PureMultimodalInput({
               }}
             />
 
-            <div className="absolute bottom-2 left-2 w-fit flex flex-row justify-start">
+            <div className="absolute bottom-2 left-2 w-fit flex flex-row justify-start gap-2">
+              <ModelSelector
+                session={session}
+                selectedModelId={selectedModelId}
+                className="h-8 px-2 text-xs"
+                compact={true}
+              />
               <AttachmentsButton fileInputRef={fileInputRef} status={status} />
             </div>
 
@@ -440,6 +465,7 @@ export const MultimodalInput = memo(
     if (!equal(prevProps.attachments, nextProps.attachments)) return false;
     if (prevProps.selectedVisibilityType !== nextProps.selectedVisibilityType)
       return false;
+    if (prevProps.selectedModelId !== nextProps.selectedModelId) return false;
 
     return true;
   },
