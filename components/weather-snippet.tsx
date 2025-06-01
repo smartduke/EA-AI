@@ -127,7 +127,7 @@ export function WeatherSnippet() {
     return (
       <div className="flex items-center gap-3 p-4 bg-muted/50 rounded-lg max-w-sm mx-auto">
         <div className="animate-pulse">
-          <div className="w-8 h-8 bg-muted rounded-full" />
+          <div className="size-8 bg-muted rounded-full" />
         </div>
         <div className="flex-1 animate-pulse">
           <div className="h-4 bg-muted rounded w-24 mb-1" />
@@ -145,8 +145,8 @@ export function WeatherSnippet() {
 
   return (
     <div className="flex items-center gap-3 p-4 bg-gradient-to-r from-blue-50 to-sky-50 dark:from-blue-950/50 dark:to-sky-950/50 rounded-lg max-w-sm mx-auto border border-blue-100 dark:border-blue-800">
-      <div className="flex items-center justify-center w-8 h-8 rounded-full bg-blue-100 dark:bg-blue-800">
-        <WeatherIcon className="w-4 h-4 text-blue-600 dark:text-blue-300" />
+      <div className="flex items-center justify-center size-8 rounded-full bg-blue-100 dark:bg-blue-800">
+        <WeatherIcon className="size-4 text-blue-600 dark:text-blue-300" />
       </div>
 
       <div className="flex-1 min-w-0">
@@ -159,7 +159,7 @@ export function WeatherSnippet() {
         </div>
 
         <div className="flex items-center gap-1 text-xs text-gray-500 dark:text-gray-400 mt-0.5">
-          <MapPin className="w-3 h-3" />
+          <MapPin className="size-3" />
           <span className="truncate">{weather.location}</span>
         </div>
       </div>

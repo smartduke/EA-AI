@@ -19,6 +19,7 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from '@/components/ui/tooltip';
+import Image from 'next/image';
 
 // Helper function to get favicon URL for a domain
 function getFaviconUrl(url: string): string {
@@ -360,12 +361,14 @@ export function TabView({
                               className="flex items-center gap-1.5 bg-neutral-100 dark:bg-neutral-900 hover:bg-neutral-200 dark:hover:bg-neutral-800 px-2.5 py-1.5 rounded-full text-sm transition-colors"
                             >
                               {result.url && (
-                                <img
+                                <Image
                                   src={
                                     result.favicon || getFaviconUrl(result.url)
                                   }
                                   alt=""
-                                  className="w-4 h-4 rounded-full"
+                                  width={12}
+                                  height={12}
+                                  className="size-3 rounded-full"
                                   onError={(e) => {
                                     e.currentTarget.style.display = 'none';
                                   }}
@@ -396,13 +399,15 @@ export function TabView({
                               )}
                               <div className="flex items-center gap-1.5 pt-1">
                                 {result.url && (
-                                  <img
+                                  <Image
                                     src={
                                       result.favicon ||
                                       getFaviconUrl(result.url)
                                     }
                                     alt=""
-                                    className="w-3 h-3 rounded-full"
+                                    width={12}
+                                    height={12}
+                                    className="size-3 rounded-full"
                                     onError={(e) => {
                                       e.currentTarget.style.display = 'none';
                                     }}
@@ -445,10 +450,12 @@ export function TabView({
                         onClick={() => setActiveTab('images')}
                         className="relative flex-shrink-0 w-20 h-20 rounded-lg overflow-hidden border border-neutral-200 dark:border-neutral-800 hover:opacity-90 transition-opacity cursor-pointer sm:hidden"
                       >
-                        <img
+                        <Image
                           src={result.imageUrl || result.url}
                           alt={result.title}
-                          className="w-full h-full object-cover"
+                          width={80}
+                          height={80}
+                          className="size-full object-cover"
                         />
                         {/* Blur overlay on last image if there are more images */}
                         {index === 3 && imageSources.length > 4 && (
@@ -469,10 +476,12 @@ export function TabView({
                         onClick={() => setActiveTab('images')}
                         className="relative flex-shrink-0 w-16 h-16 md:w-20 md:h-20 lg:w-24 lg:h-24 rounded-lg overflow-hidden border border-neutral-200 dark:border-neutral-800 hover:opacity-90 transition-opacity cursor-pointer hidden sm:block"
                       >
-                        <img
+                        <Image
                           src={result.imageUrl || result.url}
                           alt={result.title}
-                          className="w-full h-full object-cover"
+                          width={240}
+                          height={240}
+                          className="size-full object-cover"
                         />
                         {/* Blur overlay on last image if there are more images */}
                         {index === 6 && imageSources.length > 7 && (
@@ -500,10 +509,12 @@ export function TabView({
                         onClick={() => openVideoLightbox(index)}
                         className="relative flex-shrink-0 w-20 h-20 rounded-lg overflow-hidden border border-neutral-200 dark:border-neutral-800 hover:opacity-90 transition-opacity cursor-pointer sm:hidden"
                       >
-                        <img
+                        <Image
                           src={result.thumbnailUrl || result.url}
                           alt={result.title}
-                          className="w-full h-full object-cover"
+                          width={80}
+                          height={80}
+                          className="size-full object-cover"
                         />
                         {/* Play button overlay */}
                         <div className="absolute inset-0 bg-black/20 flex items-center justify-center">
@@ -532,10 +543,12 @@ export function TabView({
                         onClick={() => openVideoLightbox(index)}
                         className="relative flex-shrink-0 w-16 h-16 md:w-20 md:h-20 lg:w-24 lg:h-24 rounded-lg overflow-hidden border border-neutral-200 dark:border-neutral-800 hover:opacity-90 transition-opacity cursor-pointer hidden sm:block"
                       >
-                        <img
+                        <Image
                           src={result.thumbnailUrl || result.url}
                           alt={result.title}
-                          className="w-full h-full object-cover"
+                          width={240}
+                          height={240}
+                          className="size-full object-cover"
                         />
                         {/* Play button overlay */}
                         <div className="absolute inset-0 bg-black/20 flex items-center justify-center">
@@ -602,10 +615,12 @@ export function TabView({
                     <div className="flex-1 overflow-hidden">
                       <div className="flex items-center gap-2 mb-1.5">
                         {result.url && (
-                          <img
+                          <Image
                             src={result.favicon || getFaviconUrl(result.url)}
                             alt=""
-                            className="w-4 h-4 rounded-full"
+                            width={12}
+                            height={12}
+                            className="size-3 rounded-full"
                             onError={(e) => {
                               e.currentTarget.style.display = 'none';
                             }}
@@ -672,10 +687,11 @@ export function TabView({
                     className="group flex flex-col border border-neutral-200 dark:border-neutral-800 rounded-lg overflow-hidden hover:border-neutral-300 dark:hover:border-neutral-700 transition-colors cursor-pointer"
                   >
                     <div className="relative aspect-square bg-neutral-50 dark:bg-neutral-900 overflow-hidden">
-                      <img
+                      <Image
                         src={result.imageUrl || result.url}
                         alt={result.title || 'Image result'}
-                        className="w-full h-full object-cover group-hover:scale-105 transition-transform"
+                        fill
+                        className="size-full object-cover group-hover:scale-105 transition-transform"
                       />
                     </div>
                     <div className="p-2 text-left">
@@ -684,10 +700,12 @@ export function TabView({
                       </p>
                       <div className="flex items-center gap-1.5 mt-1">
                         {result.url && (
-                          <img
+                          <Image
                             src={result.favicon || getFaviconUrl(result.url)}
                             alt=""
-                            className="w-3 h-3 rounded-full"
+                            width={12}
+                            height={12}
+                            className="size-3 rounded-full"
                             onError={(e) => {
                               e.currentTarget.style.display = 'none';
                             }}
@@ -732,10 +750,11 @@ export function TabView({
                     className="group flex flex-col border border-neutral-200 dark:border-neutral-800 rounded-lg overflow-hidden hover:border-neutral-300 dark:hover:border-neutral-700 transition-colors cursor-pointer"
                   >
                     <div className="relative aspect-video bg-neutral-50 dark:bg-neutral-900 overflow-hidden">
-                      <img
+                      <Image
                         src={result.thumbnailUrl || result.url}
                         alt={result.title || 'Video result'}
-                        className="w-full h-full object-cover group-hover:scale-105 transition-transform"
+                        fill
+                        className="size-full object-cover group-hover:scale-105 transition-transform"
                       />
                       {/* Play button overlay */}
                       <div className="absolute inset-0 bg-black/20 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
@@ -847,12 +866,14 @@ export function TabView({
             className="relative max-w-[90vw] max-h-[90vh] flex flex-col items-center"
             onClick={(e) => e.stopPropagation()}
           >
-            <img
+            <Image
               src={
                 imageSources[lightboxImageIndex].imageUrl ||
                 imageSources[lightboxImageIndex].url
               }
               alt={imageSources[lightboxImageIndex].title || 'Image'}
+              width={800}
+              height={600}
               className="max-w-full max-h-[80vh] object-contain rounded-lg"
             />
 
@@ -863,13 +884,15 @@ export function TabView({
               </h3>
               <div className="flex items-center gap-2">
                 {imageSources[lightboxImageIndex].url && (
-                  <img
+                  <Image
                     src={
                       imageSources[lightboxImageIndex].favicon ||
                       getFaviconUrl(imageSources[lightboxImageIndex].url)
                     }
                     alt=""
-                    className="w-4 h-4 rounded-full"
+                    width={16}
+                    height={16}
+                    className="size-4 rounded-full"
                     onError={(e) => {
                       e.currentTarget.style.display = 'none';
                     }}
@@ -979,13 +1002,13 @@ export function TabView({
                   title={
                     videoSources[lightboxVideoIndex].title || 'YouTube video'
                   }
-                  className="w-full h-full rounded-lg"
+                  className="size-full rounded-lg"
                   frameBorder="0"
                   allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
                   allowFullScreen
                 />
               ) : (
-                <div className="w-full h-full bg-neutral-800 rounded-lg flex items-center justify-center">
+                <div className="size-full bg-neutral-800 rounded-lg flex items-center justify-center">
                   <p className="text-white">Unable to load video</p>
                 </div>
               );
