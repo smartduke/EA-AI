@@ -16,7 +16,7 @@ import {
 import { toast } from 'sonner';
 import { useLocalStorage, useWindowSize } from 'usehooks-ts';
 
-import { ArrowUpIcon, PaperclipIcon, StopIcon } from './icons';
+import { GPSIcon, UploadIcon, StopIcon } from './icons';
 import { PreviewAttachment } from './preview-attachment';
 import { Button } from './ui/button';
 import { Textarea } from './ui/textarea';
@@ -83,7 +83,12 @@ function PureMultimodalInput({
   const resetHeight = () => {
     if (textareaRef.current) {
       textareaRef.current.style.height = 'auto';
-      textareaRef.current.style.height = '98px';
+      // Set height based on whether we're on home page or chat page
+      if (messages.length === 0) {
+        textareaRef.current.style.height = '98px'; // Home page height
+      } else {
+        textareaRef.current.style.height = '50px'; // Chat page height
+      }
     }
   };
 
@@ -221,19 +226,19 @@ function PureMultimodalInput({
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: 10 }}
             transition={{ type: 'spring', stiffness: 300, damping: 20 }}
-            className="absolute left-1/2 bottom-28 -translate-x-1/2 z-50"
+            className="absolute left-1/2 -translate-x-1/2 z-50"
+            style={{ bottom: '3.3rem' }}
           >
             <Button
               data-testid="scroll-to-bottom-button"
-              className="rounded-full"
-              size="icon"
-              variant="outline"
+              className="p-2 h-[34px] rounded-lg bg-gray-100 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors"
               onClick={(event) => {
                 event.preventDefault();
                 scrollToBottom();
               }}
+              variant="ghost"
             >
-              <ArrowDown />
+              <ArrowDown size={12} />
             </Button>
           </motion.div>
         )}
@@ -316,7 +321,7 @@ function PureMultimodalInput({
               <ModelSelector
                 session={session}
                 selectedModelId={selectedModelId}
-                className="h-8 px-2 text-xs"
+                className="p-2 h-[34px] text-xs"
                 compact={true}
               />
               <AttachmentsButton fileInputRef={fileInputRef} status={status} />
@@ -401,14 +406,14 @@ function PureMultimodalInput({
               value={input}
               onChange={handleInput}
               className={cx(
-                'min-h-[24px] max-h-[calc(75dvh)] overflow-hidden resize-none rounded-2xl !text-base pb-12 pr-12 pl-4 pt-4',
+                'min-h-[44px] max-h-[calc(75dvh)] overflow-hidden resize-none rounded-lg !text-base pb-3 pr-16 pl-[5.5rem] pt-3',
                 'bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600',
                 'shadow-sm hover:shadow-md focus:shadow-md transition-all duration-200',
                 'placeholder:text-gray-500 dark:placeholder:text-gray-400',
                 'focus:ring-2 focus:ring-blue-500 focus:border-blue-500',
                 className,
               )}
-              rows={2}
+              rows={1}
               autoFocus
               onKeyDown={(event) => {
                 if (
@@ -429,17 +434,17 @@ function PureMultimodalInput({
               }}
             />
 
-            <div className="absolute bottom-2 left-2 w-fit flex flex-row justify-start gap-2">
+            <div className="absolute bottom-2 left-2 w-fit flex flex-row justify-start gap-1 items-center">
               <ModelSelector
                 session={session}
                 selectedModelId={selectedModelId}
-                className="h-8 px-2 text-xs"
+                className="p-2 h-[34px] text-xs"
                 compact={true}
               />
               <AttachmentsButton fileInputRef={fileInputRef} status={status} />
             </div>
 
-            <div className="absolute bottom-2 right-2 w-fit flex flex-row justify-end">
+            <div className="absolute bottom-2 right-2 w-fit flex flex-row justify-end items-center">
               {status === 'submitted' ? (
                 <StopButton stop={stop} setMessages={setMessages} />
               ) : (
@@ -481,7 +486,7 @@ function PureAttachmentsButton({
   return (
     <Button
       data-testid="attachments-button"
-      className="p-2 h-fit rounded-xl bg-gray-100 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors"
+      className="p-2 h-[34px] rounded-lg bg-gray-100 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors"
       onClick={(event) => {
         event.preventDefault();
         fileInputRef.current?.click();
@@ -489,7 +494,7 @@ function PureAttachmentsButton({
       disabled={status !== 'ready'}
       variant="ghost"
     >
-      <PaperclipIcon size={14} />
+      <UploadIcon size={16} />
     </Button>
   );
 }
@@ -505,14 +510,15 @@ function PureStopButton({
 }) {
   return (
     <Button
-      className="p-2 h-fit rounded-xl bg-red-500 text-white border-0 hover:bg-red-600 transition-colors"
+      className="p-2 h-[34px] rounded-lg bg-red-500 text-white hover:bg-red-600 transition-colors"
       onClick={(event) => {
         event.preventDefault();
         stop();
         setMessages((messages) => messages);
       }}
+      variant="ghost"
     >
-      <StopIcon size={14} />
+      <StopIcon size={16} />
     </Button>
   );
 }
@@ -530,14 +536,15 @@ function PureSendButton({
 }) {
   return (
     <Button
-      className="p-2 h-fit rounded-xl bg-blue-500 text-white border-0 hover:bg-blue-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+      className="p-2 h-[34px] rounded-lg bg-blue-500 text-white hover:bg-blue-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
       onClick={(event) => {
         event.preventDefault();
         submitForm();
       }}
       disabled={input.length === 0 || uploadQueue.length > 0}
+      variant="ghost"
     >
-      <ArrowUpIcon size={14} />
+      <GPSIcon size={16} />
     </Button>
   );
 }

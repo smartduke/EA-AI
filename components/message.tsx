@@ -3,12 +3,10 @@
 import type { UIMessage } from 'ai';
 import cx from 'classnames';
 import { AnimatePresence, motion } from 'framer-motion';
-import { memo, useState } from 'react';
+import { memo, useState, useEffect, useRef } from 'react';
 import type { Vote } from '@/lib/db/schema';
 import { DocumentToolCall, DocumentToolResult } from './document';
-import {
-  PencilEditIcon,
-} from './icons';
+import { PencilEditIcon } from './icons';
 import { Markdown } from './markdown';
 import { MessageActions } from './message-actions';
 import { PreviewAttachment } from './preview-attachment';
@@ -25,6 +23,13 @@ import type { UseChatHelpers } from '@ai-sdk/react';
 import { TabView } from './tab-view';
 import type { SearchResult } from './search-results';
 
+// Global state temporarily disabled
+/*
+// Global state to track which message is currently sticky
+let currentStickyMessageId: string | null = null;
+const stickyCallbacks = new Map<string, (isSticky: boolean) => void>();
+*/
+
 const PurePreviewMessage = ({
   chatId,
   message,
@@ -34,6 +39,8 @@ const PurePreviewMessage = ({
   reload,
   isReadonly,
   requiresScrollPadding,
+  isHomePage,
+  onMessageRef,
 }: {
   chatId: string;
   message: UIMessage;
@@ -43,14 +50,53 @@ const PurePreviewMessage = ({
   reload: UseChatHelpers['reload'];
   isReadonly: boolean;
   requiresScrollPadding: boolean;
+  isHomePage?: boolean;
+  onMessageRef?: (messageId: string, element: HTMLDivElement | null) => void;
 }) => {
   const [mode, setMode] = useState<'view' | 'edit'>('view');
+  // Temporarily disable sticky behavior
+  // const [isSticky, setIsSticky] = useState(false);
+  const messageRef = useRef<HTMLDivElement>(null);
+
+  // Sticky behavior temporarily disabled
+  /*
+  // Simple sticky behavior for user messages
+  useEffect(() => {
+    if (message.role !== 'user' || isHomePage) return;
+
+    const messageElement = messageRef.current;
+    if (!messageElement) return;
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        const entry = entries[0];
+        // Message becomes sticky when it goes out of view at the top
+        setIsSticky(!entry.isIntersecting && entry.boundingClientRect.top < 0);
+      },
+      {
+        threshold: 0,
+        rootMargin: '-60px 0px 0px 0px', // 60px offset from top
+      }
+    );
+
+    observer.observe(messageElement);
+
+    return () => {
+      observer.disconnect();
+    };
+  }, [message.role, message.id, isHomePage]);
+  */
 
   return (
     <AnimatePresence>
       <motion.div
         data-testid={`message-${message.role}`}
-        className="w-full mx-auto max-w-3xl px-4 group/message"
+        className={cn('w-full mx-auto max-w-3xl px-4 group/message', {
+          // Sticky behavior temporarily disabled
+          // 'sticky top-0 z-40 bg-background/80 backdrop-blur-md border-b border-border/50':
+          //   message.role === 'user' && isSticky && !isHomePage,
+        })}
+        ref={message.role === 'user' ? messageRef : undefined}
         initial={{ y: 5, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
         data-role={message.role}
@@ -101,8 +147,16 @@ const PurePreviewMessage = ({
                       <div
                         data-testid="message-content"
                         className={cn('flex flex-col gap-4', {
+                          // Sticky behavior temporarily disabled - always use default styling
                           'py-2 rounded-xl text-2xl font-semibold':
                             message.role === 'user',
+                          // Commented out sticky styling
+                          // 'py-2 rounded-xl text-2xl font-semibold':
+                          //   message.role === 'user' &&
+                          //   (!isSticky || isHomePage),
+                          // // Sticky user message styling - smaller font and compact layout (only on chat pages)
+                          // 'py-3 text-lg font-medium':
+                          //   message.role === 'user' && isSticky && !isHomePage,
                         })}
                       >
                         {/* Only render the text content directly for user messages */}
@@ -128,7 +182,7 @@ const PurePreviewMessage = ({
                                 setMode('edit');
                               }}
                             >
-                              <PencilEditIcon />
+                              {/* Icon removed but button functionality preserved */}
                             </Button>
                           </TooltipTrigger>
                           <TooltipContent>Edit message</TooltipContent>
@@ -256,87 +310,80 @@ const PurePreviewMessage = ({
                     }
                   });
 
+                  // Extract follow-up questions
+                  const followUpQuestions = (() => {
+                    // Look for follow-up questions in message parts
+                    const followUpPart = message.parts?.find(
+                      (part) =>
+                        part.type === 'text' &&
+                        'text' in part &&
+                        part.text.includes('---'),
+                    );
+
+                    if (followUpPart && 'text' in followUpPart) {
+                      const parts = followUpPart.text.split('---');
+                      if (parts.length > 1) {
+                        const questionsText = parts[1].trim();
+                        // Extract numbered questions [1] Question text
+                        const questions =
+                          questionsText.match(/\[\d+\][^\n]+/g) || [];
+                        return questions;
+                      }
+                    }
+                    return [];
+                  })();
+
+                  const handleQuestionSelect = (question: string) => {
+                    // Add the question as a new user message
+                    setMessages((currentMessages) => {
+                      const newMessages = [
+                        ...currentMessages,
+                        {
+                          id: generateUUID(),
+                          role: 'user' as const,
+                          content: question,
+                          parts: [{ type: 'text' as const, text: question }],
+                        } as UIMessage,
+                      ];
+
+                      // Update the last assistant message to include the follow-up questions
+                      const lastAssistantMessage = newMessages
+                        .filter((msg) => msg.role === 'assistant')
+                        .pop();
+
+                      if (lastAssistantMessage) {
+                        const textPart = lastAssistantMessage.parts?.find(
+                          (part) => part.type === 'text' && 'text' in part,
+                        );
+
+                        if (textPart && 'text' in textPart) {
+                          const parts = textPart.text.split('---');
+                          if (parts.length > 1) {
+                            // Keep the follow-up questions in the message
+                            textPart.text = `${parts[0].trim()}\n\n---\n${parts[1].trim()}`;
+                          }
+                        }
+                      }
+
+                      return newMessages;
+                    });
+                    reload();
+                  };
+
                   return (
                     <TabView
                       title={title}
                       content={content}
                       sources={sources}
+                      followUpQuestions={followUpQuestions}
+                      onSelectQuestion={handleQuestionSelect}
+                      chatId={chatId}
+                      message={message}
+                      vote={vote}
                     />
                   );
                 })()}
               </div>
-            )}
-
-            {message.role === 'assistant' && (
-              <FollowUpQuestions
-                questions={(() => {
-                  // Look for follow-up questions in message parts
-                  const followUpPart = message.parts?.find(
-                    (part) =>
-                      part.type === 'text' &&
-                      'text' in part &&
-                      part.text.includes('---'),
-                  );
-
-                  if (followUpPart && 'text' in followUpPart) {
-                    const parts = followUpPart.text.split('---');
-                    if (parts.length > 1) {
-                      const questionsText = parts[1].trim();
-                      // Extract numbered questions [1] Question text
-                      const questions =
-                        questionsText.match(/\[\d+\][^\n]+/g) || [];
-                      return questions;
-                    }
-                  }
-                  return [];
-                })()}
-                onSelectQuestion={(question) => {
-                  // Add the question as a new user message
-                  setMessages((currentMessages) => {
-                    const newMessages = [
-                      ...currentMessages,
-                      {
-                        id: generateUUID(),
-                        role: 'user' as const,
-                        content: question,
-                        parts: [{ type: 'text' as const, text: question }],
-                      } as UIMessage,
-                    ];
-
-                    // Update the last assistant message to include the follow-up questions
-                    const lastAssistantMessage = newMessages
-                      .filter((msg) => msg.role === 'assistant')
-                      .pop();
-
-                    if (lastAssistantMessage) {
-                      const textPart = lastAssistantMessage.parts?.find(
-                        (part) => part.type === 'text' && 'text' in part,
-                      );
-
-                      if (textPart && 'text' in textPart) {
-                        const parts = textPart.text.split('---');
-                        if (parts.length > 1) {
-                          // Keep the follow-up questions in the message
-                          textPart.text = `${parts[0].trim()}\n\n---\n${parts[1].trim()}`;
-                        }
-                      }
-                    }
-
-                    return newMessages;
-                  });
-                  reload();
-                }}
-              />
-            )}
-
-            {!isReadonly && (
-              <MessageActions
-                key={`action-${message.id}`}
-                chatId={chatId}
-                message={message}
-                vote={vote}
-                isLoading={isLoading}
-              />
             )}
           </div>
         </div>
@@ -352,6 +399,8 @@ export const PreviewMessage = memo(
     if (prevProps.message.id !== nextProps.message.id) return false;
     if (prevProps.requiresScrollPadding !== nextProps.requiresScrollPadding)
       return false;
+    if (prevProps.isHomePage !== nextProps.isHomePage) return false;
+    if (prevProps.onMessageRef !== nextProps.onMessageRef) return false;
     if (!equal(prevProps.message.parts, nextProps.message.parts)) return false;
     if (!equal(prevProps.vote, nextProps.vote)) return false;
 

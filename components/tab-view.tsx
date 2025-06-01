@@ -12,6 +12,11 @@ import {
   ImageIcon,
   PlayIcon,
   CrossIcon,
+  SparklesIcon,
+  ChevronDownIcon,
+  CopyIcon,
+  ThumbUpIcon,
+  ThumbDownIcon,
 } from './icons';
 import {
   Tooltip,
@@ -20,6 +25,11 @@ import {
   TooltipTrigger,
 } from '@/components/ui/tooltip';
 import Image from 'next/image';
+import { useSWRConfig } from 'swr';
+import { useCopyToClipboard } from 'usehooks-ts';
+import type { Vote } from '@/lib/db/schema';
+import type { Message } from 'ai';
+import { toast } from 'sonner';
 
 // Helper function to get favicon URL for a domain
 function getFaviconUrl(url: string): string {
@@ -81,6 +91,12 @@ interface TabViewProps {
   content: string;
   sources: ExtendedSearchResult[];
   isLoading?: boolean;
+  followUpQuestions?: string[];
+  onSelectQuestion?: (question: string) => void;
+  // Message actions props
+  chatId?: string;
+  message?: Message;
+  vote?: Vote | undefined;
 }
 
 export function TabView({
@@ -88,12 +104,21 @@ export function TabView({
   content,
   sources,
   isLoading = false,
+  followUpQuestions,
+  onSelectQuestion,
+  chatId,
+  message,
+  vote,
 }: TabViewProps) {
   const [activeTab, setActiveTab] = useState('answer');
   const [lightboxOpen, setLightboxOpen] = useState(false);
   const [lightboxImageIndex, setLightboxImageIndex] = useState(0);
   const [videoLightboxOpen, setVideoLightboxOpen] = useState(false);
   const [lightboxVideoIndex, setLightboxVideoIndex] = useState(0);
+
+  // Message actions hooks
+  const { mutate } = useSWRConfig();
+  const [_, copyToClipboard] = useCopyToClipboard();
 
   // Extract just the main content, removing follow-up questions if they exist
   const mainContent = (() => {
@@ -261,25 +286,27 @@ export function TabView({
             )}
           </TabsTrigger>
 
-          <TabsTrigger
-            value="sources"
-            className="relative px-0 py-3 min-w-0 h-auto bg-transparent hover:bg-transparent rounded-none border-0 data-[state=active]:bg-transparent data-[state=active]:shadow-none focus-visible:ring-0 focus-visible:ring-offset-0"
-          >
-            <span className="flex items-center gap-2 text-sm font-medium text-neutral-700 dark:text-neutral-300 data-[state=active]:text-neutral-900 dark:data-[state=active]:text-white">
-              <div className="text-neutral-800 dark:text-neutral-200">
-                <BoxIcon size={16} />
-              </div>
-              Sources{' '}
-              {textSources?.length > 0 && (
-                <span className="ml-1 text-sm text-neutral-500">
-                  {textSources.length}
-                </span>
+          {textSources.length > 0 && (
+            <TabsTrigger
+              value="sources"
+              className="relative px-0 py-3 min-w-0 h-auto bg-transparent hover:bg-transparent rounded-none border-0 data-[state=active]:bg-transparent data-[state=active]:shadow-none focus-visible:ring-0 focus-visible:ring-offset-0"
+            >
+              <span className="flex items-center gap-2 text-sm font-medium text-neutral-700 dark:text-neutral-300 data-[state=active]:text-neutral-900 dark:data-[state=active]:text-white">
+                <div className="text-neutral-800 dark:text-neutral-200">
+                  <BoxIcon size={16} />
+                </div>
+                Sources{' '}
+                {textSources?.length > 0 && (
+                  <span className="ml-1 text-sm text-neutral-500">
+                    {textSources.length}
+                  </span>
+                )}
+              </span>
+              {activeTab === 'sources' && (
+                <div className="absolute bottom-0 inset-x-0 h-0.5 bg-neutral-800 dark:bg-neutral-200" />
               )}
-            </span>
-            {activeTab === 'sources' && (
-              <div className="absolute bottom-0 inset-x-0 h-0.5 bg-neutral-800 dark:bg-neutral-200" />
-            )}
-          </TabsTrigger>
+            </TabsTrigger>
+          )}
 
           {imageSources.length > 0 && (
             <TabsTrigger
@@ -588,6 +615,230 @@ export function TabView({
               <div className="prose dark:prose-invert max-w-none">
                 <Markdown sources={sources}>{enhancedContent}</Markdown>
               </div>
+
+              {/* Follow-up questions */}
+              {followUpQuestions && followUpQuestions.length > 0 && (
+                <div className="flex flex-col space-y-2 my-6">
+                  {/* Left-aligned header */}
+                  <div className="flex items-center gap-2 mb-2">
+                    <div className="text-primary">
+                      <SparklesIcon size={14} />
+                    </div>
+                    <span className="text-sm font-medium text-primary/80">
+                      Follow-up questions
+                    </span>
+                  </div>
+
+                  {/* Single column questions layout */}
+                  <div className="flex flex-col space-y-1.5 w-full">
+                    {followUpQuestions.map((question, index) => {
+                      // Extract questions from the numbered format [1] Question text
+                      const match = question.match(/\[\d+\]\s*(.+)/);
+                      const formattedQuestion = match
+                        ? match[1].trim()
+                        : question;
+
+                      return (
+                        <div key={question}>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className="w-full h-auto py-1.5 px-3 rounded-lg text-left justify-between border-none hover:bg-primary/5 dark:hover:bg-primary/10 transition-all duration-150 flex items-center"
+                            onClick={() =>
+                              onSelectQuestion?.(formattedQuestion)
+                            }
+                          >
+                            <span className="text-sm text-neutral-700 dark:text-neutral-300 truncate mr-2">
+                              {formattedQuestion}
+                            </span>
+                            <ChevronDownIcon size={10} />
+                          </Button>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
+
+              {/* Message Actions */}
+              {!isLoading &&
+                message &&
+                message.role === 'assistant' &&
+                chatId && (
+                  <div className="flex flex-row gap-3 mt-6 pb-4 border-b border-neutral-200 dark:border-neutral-800">
+                    <TooltipProvider delayDuration={0}>
+                      {/* Copy Button */}
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <Button
+                            className="py-2 px-4 h-auto text-neutral-600 dark:text-neutral-400 hover:text-neutral-800 dark:hover:text-neutral-200 hover:bg-neutral-100 dark:hover:bg-neutral-800 border-neutral-200 dark:border-neutral-700 transition-all duration-200 rounded-lg"
+                            variant="outline"
+                            size="sm"
+                            onClick={async () => {
+                              const textFromParts = message.parts
+                                ?.filter((part) => part.type === 'text')
+                                .map((part) => part.text)
+                                .join('\n')
+                                .trim();
+
+                              if (!textFromParts) {
+                                toast.error("There's no text to copy!");
+                                return;
+                              }
+
+                              await copyToClipboard(textFromParts);
+                              toast.success('Copied to clipboard!');
+                            }}
+                          >
+                            <CopyIcon size={16} />
+                            <span className="ml-2 text-sm font-medium">
+                              Copy
+                            </span>
+                          </Button>
+                        </TooltipTrigger>
+                        <TooltipContent>Copy response text</TooltipContent>
+                      </Tooltip>
+
+                      {/* Upvote Button */}
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <Button
+                            data-testid="message-upvote"
+                            className={`py-2 px-4 h-auto transition-all duration-200 rounded-lg ${
+                              vote?.isUpvoted
+                                ? 'text-green-600 dark:text-green-400 bg-green-50 dark:bg-green-950 border-green-200 dark:border-green-800 hover:bg-green-100 dark:hover:bg-green-900'
+                                : 'text-neutral-600 dark:text-neutral-400 hover:text-green-600 dark:hover:text-green-400 hover:bg-green-50 dark:hover:bg-green-950 border-neutral-200 dark:border-neutral-700'
+                            }`}
+                            disabled={vote?.isUpvoted}
+                            variant="outline"
+                            size="sm"
+                            onClick={async () => {
+                              const upvote = fetch('/api/vote', {
+                                method: 'PATCH',
+                                body: JSON.stringify({
+                                  chatId,
+                                  messageId: message.id,
+                                  type: 'up',
+                                }),
+                              });
+
+                              toast.promise(upvote, {
+                                loading: 'Upvoting Response...',
+                                success: () => {
+                                  mutate<Array<Vote>>(
+                                    `/api/vote?chatId=${chatId}`,
+                                    (currentVotes) => {
+                                      if (!currentVotes) return [];
+
+                                      const votesWithoutCurrent =
+                                        currentVotes.filter(
+                                          (vote) =>
+                                            vote.messageId !== message.id,
+                                        );
+
+                                      return [
+                                        ...votesWithoutCurrent,
+                                        {
+                                          chatId,
+                                          messageId: message.id,
+                                          isUpvoted: true,
+                                        },
+                                      ];
+                                    },
+                                    { revalidate: false },
+                                  );
+
+                                  return 'Upvoted Response!';
+                                },
+                                error: 'Failed to upvote response.',
+                              });
+                            }}
+                          >
+                            <ThumbUpIcon size={16} />
+                            <span className="ml-2 text-sm font-medium">
+                              {vote?.isUpvoted ? 'Upvoted' : 'Upvote'}
+                            </span>
+                          </Button>
+                        </TooltipTrigger>
+                        <TooltipContent>
+                          {vote?.isUpvoted
+                            ? 'Response upvoted'
+                            : 'Upvote this response'}
+                        </TooltipContent>
+                      </Tooltip>
+
+                      {/* Downvote Button */}
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <Button
+                            data-testid="message-downvote"
+                            className={`py-2 px-4 h-auto transition-all duration-200 rounded-lg ${
+                              vote && !vote.isUpvoted
+                                ? 'text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-950 border-red-200 dark:border-red-800 hover:bg-red-100 dark:hover:bg-red-900'
+                                : 'text-neutral-600 dark:text-neutral-400 hover:text-red-600 dark:hover:text-red-400 hover:bg-red-50 dark:hover:bg-red-950 border-neutral-200 dark:border-neutral-700'
+                            }`}
+                            variant="outline"
+                            size="sm"
+                            disabled={vote && !vote.isUpvoted}
+                            onClick={async () => {
+                              const downvote = fetch('/api/vote', {
+                                method: 'PATCH',
+                                body: JSON.stringify({
+                                  chatId,
+                                  messageId: message.id,
+                                  type: 'down',
+                                }),
+                              });
+
+                              toast.promise(downvote, {
+                                loading: 'Downvoting Response...',
+                                success: () => {
+                                  mutate<Array<Vote>>(
+                                    `/api/vote?chatId=${chatId}`,
+                                    (currentVotes) => {
+                                      if (!currentVotes) return [];
+
+                                      const votesWithoutCurrent =
+                                        currentVotes.filter(
+                                          (vote) =>
+                                            vote.messageId !== message.id,
+                                        );
+
+                                      return [
+                                        ...votesWithoutCurrent,
+                                        {
+                                          chatId,
+                                          messageId: message.id,
+                                          isUpvoted: false,
+                                        },
+                                      ];
+                                    },
+                                    { revalidate: false },
+                                  );
+
+                                  return 'Downvoted Response!';
+                                },
+                                error: 'Failed to downvote response.',
+                              });
+                            }}
+                          >
+                            <ThumbDownIcon size={16} />
+                            <span className="ml-2 text-sm font-medium">
+                              {vote && !vote.isUpvoted
+                                ? 'Downvoted'
+                                : 'Downvote'}
+                            </span>
+                          </Button>
+                        </TooltipTrigger>
+                        <TooltipContent>
+                          {vote && !vote.isUpvoted
+                            ? 'Response downvoted'
+                            : 'Downvote this response'}
+                        </TooltipContent>
+                      </Tooltip>
+                    </TooltipProvider>
+                  </div>
+                )}
             </>
           )}
         </TabsContent>

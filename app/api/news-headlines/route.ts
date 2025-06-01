@@ -100,7 +100,7 @@ async function fetchRSSHeadlines(category: string): Promise<HeadlineType[]> {
 
       return {
         heading: cleanedTitle,
-        message: `Tell me more about: ${cleanedTitle}`,
+        message: cleanedTitle,
         pubDate: item.pubDate || new Date().toISOString(),
         link: item.link || '#',
       };
