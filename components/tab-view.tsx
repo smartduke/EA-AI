@@ -354,542 +354,499 @@ export function TabView({
         </TabsList>
 
         <TabsContent value="answer" className="space-y-4 mt-0 pt-0">
-          {/* Top sources row with no divider */}
-          {isLoading ? (
-            <>
-              {/* Skeleton for source chips */}
-              <div className="flex flex-row gap-2 flex-wrap mb-4">
-                {[1, 2, 3].map((idx) => (
-                  <div
-                    key={`source-skeleton-${idx}`}
-                    className="flex items-center gap-1.5 bg-neutral-100 dark:bg-neutral-900 px-2.5 py-1.5 rounded-full animate-pulse"
+          {/* Only show sections when they have actual content to prevent white space */}
+          {textSources && textSources.length > 0 && (
+            <div className="mb-4">
+              <div className="flex flex-row gap-2 flex-wrap">
+                <TooltipProvider delayDuration={50}>
+                  {textSources.slice(0, 5).map((result) => (
+                    <Tooltip key={`source-${result.url}`}>
+                      <TooltipTrigger asChild>
+                        <a
+                          href={result.url}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="flex items-center gap-1.5 bg-neutral-100 dark:bg-neutral-900 hover:bg-neutral-200 dark:hover:bg-neutral-800 px-2.5 py-1.5 rounded-full text-sm transition-colors"
+                        >
+                          {result.url && (
+                            <img
+                              src={
+                                result.favicon || getFaviconUrl(result.url)
+                              }
+                              alt=""
+                              width="12"
+                              height="12"
+                              className="size-3 rounded-full"
+                              onError={(e) => {
+                                e.currentTarget.style.display = 'none';
+                              }}
+                            />
+                          )}
+                          <span className="font-medium text-xs">
+                            {extractDomainName(result.url || '')}
+                          </span>
+                        </a>
+                      </TooltipTrigger>
+                      <TooltipContent
+                        side="bottom"
+                        className="max-w-[20rem]"
+                      >
+                        <div className="space-y-2">
+                          <a
+                            href={result.url}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="font-semibold text-sm text-primary hover:underline"
+                          >
+                            {result.title}
+                          </a>
+                          {result.snippet && (
+                            <p className="text-xs text-muted-foreground line-clamp-2">
+                              {result.snippet}
+                            </p>
+                          )}
+                          <div className="flex items-center gap-1.5 pt-1">
+                            {result.url && (
+                              <img
+                                src={
+                                  result.favicon || getFaviconUrl(result.url)
+                                }
+                                alt=""
+                                width="12"
+                                height="12"
+                                className="size-3 rounded-full"
+                                onError={(e) => {
+                                  e.currentTarget.style.display = 'none';
+                                }}
+                              />
+                            )}
+                            <span className="text-xs text-muted-foreground/80">
+                              {extractDomainName(result.url || '')}
+                              {result.publishedDate &&
+                                ` • ${formatPublicationDate(result.publishedDate)}`}
+                            </span>
+                          </div>
+                        </div>
+                      </TooltipContent>
+                    </Tooltip>
+                  ))}
+                </TooltipProvider>
+
+                {textSources.length > 5 && (
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="text-xs font-medium px-2.5 py-1.5 h-auto rounded-full bg-neutral-100 dark:bg-neutral-900 hover:bg-neutral-200 dark:hover:bg-neutral-800"
+                    onClick={handleViewMoreSources}
                   >
-                    <div className="w-4 h-4 rounded-full bg-neutral-200 dark:bg-neutral-700" />
-                    <div className="w-12 h-3 bg-neutral-200 dark:bg-neutral-700 rounded" />
-                  </div>
+                    +{textSources.length - 5} more
+                  </Button>
+                )}
+              </div>
+            </div>
+          )}
+
+          {/* Preview images */}
+          {imageSources && imageSources.length > 0 && (
+            <div className="mb-4">
+              <div className="flex flex-row flex-wrap gap-2 sm:flex-nowrap sm:overflow-hidden">
+                {imageSources.slice(0, 4).map((result, index) => (
+                  <button
+                    key={`answer-mobile-image-${index}-${result.url}`}
+                    type="button"
+                    onClick={() => setActiveTab('images')}
+                    className="relative shrink-0 size-20 rounded-lg overflow-hidden border border-neutral-200 dark:border-neutral-800 hover:opacity-90 transition-opacity cursor-pointer sm:hidden"
+                  >
+                    <img
+                      src={normalizeImageUrl(result.imageUrl || result.url)}
+                      alt={result.title}
+                      width="80"
+                      height="80"
+                      loading="lazy"
+                      style={{ minWidth: '100%', minHeight: '100%' }}
+                      onError={(e) => {
+                        e.currentTarget.style.backgroundColor = '#f3f4f6';
+                        e.currentTarget.style.display = 'block';
+                      }}
+                      className="size-full object-cover"
+                    />
+                    {/* Blur overlay on last image if there are more images */}
+                    {index === 3 && imageSources.length > 4 && (
+                      <div className="absolute inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center">
+                        <span className="text-white text-xs font-medium">
+                          +{imageSources.length - 4}
+                        </span>
+                      </div>
+                    )}
+                  </button>
+                ))}
+
+                {/* Desktop: Show 7 images */}
+                {imageSources.slice(0, 7).map((result, index) => (
+                  <button
+                    key={`answer-desktop-image-${index}-${result.url}`}
+                    type="button"
+                    onClick={() => setActiveTab('images')}
+                    className="relative shrink-0 size-16 md:size-20 lg:size-24 rounded-lg overflow-hidden border border-neutral-200 dark:border-neutral-800 hover:opacity-90 transition-opacity cursor-pointer hidden sm:block"
+                  >
+                    <img
+                      src={normalizeImageUrl(result.imageUrl || result.url)}
+                      alt={result.title}
+                      width="240"
+                      height="240"
+                      loading="lazy"
+                      style={{ minWidth: '100%', minHeight: '100%' }}
+                      onError={(e) => {
+                        e.currentTarget.style.backgroundColor = '#f3f4f6';
+                        e.currentTarget.style.display = 'block';
+                      }}
+                      className="size-full object-cover"
+                    />
+                    {/* Blur overlay on last image if there are more images */}
+                    {index === 6 && imageSources.length > 7 && (
+                      <div className="absolute inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center">
+                        <span className="text-white text-xs sm:text-sm font-medium">
+                          +{imageSources.length - 7}
+                        </span>
+                      </div>
+                    )}
+                  </button>
                 ))}
               </div>
+            </div>
+          )}
 
-              {/* Skeleton for paragraphs */}
-              <div className="space-y-3">
-                <div className="h-4 bg-neutral-100 dark:bg-neutral-800 rounded w-3/4 animate-pulse" />
-                <div className="h-4 bg-neutral-100 dark:bg-neutral-800 rounded w-full animate-pulse" />
-                <div className="h-4 bg-neutral-100 dark:bg-neutral-800 rounded w-5/6 animate-pulse" />
-                <div className="h-4 bg-neutral-100 dark:bg-neutral-800 rounded w-full animate-pulse" />
-                <div className="h-4 bg-neutral-100 dark:bg-neutral-800 rounded w-4/5 animate-pulse" />
-                <div className="h-4 bg-neutral-100 dark:bg-neutral-800 rounded w-full animate-pulse" />
-                <div className="h-4 bg-neutral-100 dark:bg-neutral-800 rounded w-2/3 animate-pulse" />
+          {/* Preview videos */}
+          {videoSources && videoSources.length > 0 && (
+            <div className="mb-4">
+              <div className="flex flex-row flex-wrap gap-2 sm:flex-nowrap sm:overflow-hidden">
+                {/* Mobile: Show 4 videos */}
+                {videoSources.slice(0, 4).map((result, index) => (
+                  <button
+                    key={`answer-mobile-video-${index}-${result.url}`}
+                    type="button"
+                    onClick={() => openVideoLightbox(index)}
+                    className="relative shrink-0 size-20 rounded-lg overflow-hidden border border-neutral-200 dark:border-neutral-800 hover:opacity-90 transition-opacity cursor-pointer sm:hidden"
+                  >
+                    <img
+                      src={normalizeImageUrl(
+                        result.thumbnailUrl || result.url,
+                      )}
+                      alt={result.title}
+                      width="80"
+                      height="80"
+                      loading="lazy"
+                      style={{ minWidth: '100%', minHeight: '100%' }}
+                      onError={(e) => {
+                        e.currentTarget.style.backgroundColor = '#f3f4f6';
+                        e.currentTarget.style.display = 'block';
+                      }}
+                      className="size-full object-cover"
+                    />
+                    {/* Video icon overlay */}
+                    <div className="absolute inset-0 bg-black/20 flex items-center justify-center">
+                      <div className="bg-black/70 rounded-full p-2">
+                        <div className="text-white">
+                          <PlayIcon size={14} />
+                        </div>
+                      </div>
+                    </div>
+                    {/* Blur overlay on last video if there are more videos */}
+                    {index === 3 && videoSources.length > 4 && (
+                      <div className="absolute inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center">
+                        <span className="text-white text-xs font-medium">
+                          +{videoSources.length - 4}
+                        </span>
+                      </div>
+                    )}
+                  </button>
+                ))}
+
+                {/* Desktop: Show 7 videos */}
+                {videoSources.slice(0, 7).map((result, index) => (
+                  <button
+                    key={`answer-desktop-video-${index}-${result.url}`}
+                    type="button"
+                    onClick={() => index === 6 ? setActiveTab('videos') : openVideoLightbox(index)}
+                    className="relative shrink-0 size-16 md:size-20 lg:size-24 rounded-lg overflow-hidden border border-neutral-200 dark:border-neutral-800 hover:opacity-90 transition-opacity cursor-pointer hidden sm:block"
+                  >
+                    <img
+                      src={normalizeImageUrl(
+                        result.thumbnailUrl || result.url,
+                      )}
+                      alt={result.title || 'Video result'}
+                      width="240"
+                      height="240"
+                      loading="lazy"
+                      style={{ minWidth: '100%', minHeight: '100%' }}
+                      onError={(e) => {
+                        e.currentTarget.style.backgroundColor = '#f3f4f6';
+                        e.currentTarget.style.display = 'block';
+                      }}
+                      className="size-full object-cover"
+                    />
+                    {/* Video icon overlay */}
+                    <div className="absolute inset-0 bg-black/20 flex items-center justify-center">
+                      <div className="bg-black/70 rounded-full p-2">
+                        <div className="text-white">
+                          <PlayIcon size={16} />
+                        </div>
+                      </div>
+                    </div>
+                    {/* Blur overlay on last video if there are more videos */}
+                    {index === 6 && videoSources.length > 7 && (
+                      <div className="absolute inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center">
+                        <span className="text-white text-xs sm:text-sm font-medium">
+                          +{videoSources.length - 7}
+                        </span>
+                      </div>
+                    )}
+                  </button>
+                ))}
               </div>
-            </>
-          ) : (
-            <>
-              {textSources && textSources.length > 0 && (
-                <div className="mb-4">
-                  <div className="flex flex-row gap-2 flex-wrap">
-                    <TooltipProvider delayDuration={50}>
-                      {textSources.slice(0, 5).map((result) => (
-                        <Tooltip key={`source-${result.url}`}>
-                          <TooltipTrigger asChild>
-                            <a
-                              href={result.url}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="flex items-center gap-1.5 bg-neutral-100 dark:bg-neutral-900 hover:bg-neutral-200 dark:hover:bg-neutral-800 px-2.5 py-1.5 rounded-full text-sm transition-colors"
-                            >
-                              {result.url && (
-                                <img
-                                  src={
-                                    result.favicon || getFaviconUrl(result.url)
-                                  }
-                                  alt=""
-                                  width="12"
-                                  height="12"
-                                  className="size-3 rounded-full"
-                                  onError={(e) => {
-                                    e.currentTarget.style.display = 'none';
-                                  }}
-                                />
-                              )}
-                              <span className="font-medium text-xs">
-                                {extractDomainName(result.url || '')}
-                              </span>
-                            </a>
-                          </TooltipTrigger>
-                          <TooltipContent
-                            side="bottom"
-                            className="max-w-[20rem]"
-                          >
-                            <div className="space-y-2">
-                              <a
-                                href={result.url}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="font-semibold text-sm text-primary hover:underline"
-                              >
-                                {result.title}
-                              </a>
-                              {result.snippet && (
-                                <p className="text-xs text-muted-foreground line-clamp-2">
-                                  {result.snippet}
-                                </p>
-                              )}
-                              <div className="flex items-center gap-1.5 pt-1">
-                                {result.url && (
-                                  <img
-                                    src={
-                                      result.favicon || getFaviconUrl(result.url)
-                                    }
-                                    alt=""
-                                    width="12"
-                                    height="12"
-                                    className="size-3 rounded-full"
-                                    onError={(e) => {
-                                      e.currentTarget.style.display = 'none';
-                                    }}
-                                  />
-                                )}
-                                <span className="text-xs text-muted-foreground/80">
-                                  {extractDomainName(result.url || '')}
-                                  {result.publishedDate &&
-                                    ` • ${formatPublicationDate(result.publishedDate)}`}
-                                </span>
-                              </div>
-                            </div>
-                          </TooltipContent>
-                        </Tooltip>
-                      ))}
-                    </TooltipProvider>
+            </div>
+          )}
 
-                    {textSources.length > 5 && (
+          {(() => {
+            // Show content when it exists, regardless of sources
+            if (enhancedContent && enhancedContent.trim().length > 0) {
+              return (
+                <div className="prose dark:prose-invert max-w-none">
+                  <Markdown sources={sources}>{enhancedContent}</Markdown>
+                </div>
+              );
+            }
+            return null;
+          })()}
+
+          {/* Follow-up questions */}
+          {followUpQuestions && followUpQuestions.length > 0 && (
+            <div className="flex flex-col space-y-2 my-6">
+              {/* Left-aligned header */}
+              <div className="flex items-center gap-2 mb-2">
+                <div className="text-primary">
+                  <SparklesIcon size={14} />
+                </div>
+                <span className="text-sm font-medium text-primary/80">
+                  Follow-up questions
+                </span>
+              </div>
+
+              {/* Single column questions layout */}
+              <div className="flex flex-col space-y-1.5 w-full">
+                {followUpQuestions.map((question, index) => {
+                  // Extract questions from the numbered format [1] Question text
+                  const match = question.match(/\[\d+\]\s*(.+)/);
+                  const formattedQuestion = match
+                    ? match[1].trim()
+                    : question;
+
+                  return (
+                    <div key={question}>
                       <Button
                         variant="ghost"
                         size="sm"
-                        className="text-xs font-medium px-2.5 py-1.5 h-auto rounded-full bg-neutral-100 dark:bg-neutral-900 hover:bg-neutral-200 dark:hover:bg-neutral-800"
-                        onClick={handleViewMoreSources}
+                        className="w-full h-auto py-1.5 px-3 rounded-lg text-left justify-between border-none hover:bg-primary/5 dark:hover:bg-primary/10 transition-all duration-150 flex items-center"
+                        onClick={() =>
+                          onSelectQuestion?.(formattedQuestion)
+                        }
                       >
-                        +{textSources.length - 5} more
+                        <span className="text-sm text-neutral-700 dark:text-neutral-300 truncate mr-2">
+                          {formattedQuestion}
+                        </span>
+                        <ChevronDownIcon size={10} />
                       </Button>
-                    )}
-                  </div>
-                </div>
-              )}
-
-              {/* Preview images */}
-              {imageSources && imageSources.length > 0 && (
-                <div className="mb-4">
-                  <div className="flex flex-row flex-wrap gap-2 sm:flex-nowrap sm:overflow-hidden">
-                    {imageSources.slice(0, 4).map((result, index) => (
-                      <button
-                        key={`answer-mobile-image-${index}-${result.url}`}
-                        type="button"
-                        onClick={() => setActiveTab('images')}
-                        className="relative shrink-0 size-20 rounded-lg overflow-hidden border border-neutral-200 dark:border-neutral-800 hover:opacity-90 transition-opacity cursor-pointer sm:hidden"
-                      >
-                        <img
-                          src={normalizeImageUrl(result.imageUrl || result.url)}
-                          alt={result.title}
-                          width="80"
-                          height="80"
-                          loading="lazy"
-                          style={{ minWidth: '100%', minHeight: '100%' }}
-                          onError={(e) => {
-                            e.currentTarget.style.backgroundColor = '#f3f4f6';
-                            e.currentTarget.style.display = 'block';
-                          }}
-                          className="size-full object-cover"
-                        />
-                        {/* Blur overlay on last image if there are more images */}
-                        {index === 3 && imageSources.length > 4 && (
-                          <div className="absolute inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center">
-                            <span className="text-white text-xs font-medium">
-                              +{imageSources.length - 4}
-                            </span>
-                          </div>
-                        )}
-                      </button>
-                    ))}
-
-                    {/* Desktop: Show 7 images */}
-                    {imageSources.slice(0, 7).map((result, index) => (
-                      <button
-                        key={`answer-desktop-image-${index}-${result.url}`}
-                        type="button"
-                        onClick={() => setActiveTab('images')}
-                        className="relative shrink-0 size-16 md:size-20 lg:size-24 rounded-lg overflow-hidden border border-neutral-200 dark:border-neutral-800 hover:opacity-90 transition-opacity cursor-pointer hidden sm:block"
-                      >
-                        <img
-                          src={normalizeImageUrl(result.imageUrl || result.url)}
-                          alt={result.title}
-                          width="240"
-                          height="240"
-                          loading="lazy"
-                          style={{ minWidth: '100%', minHeight: '100%' }}
-                          onError={(e) => {
-                            e.currentTarget.style.backgroundColor = '#f3f4f6';
-                            e.currentTarget.style.display = 'block';
-                          }}
-                          className="size-full object-cover"
-                        />
-                        {/* Blur overlay on last image if there are more images */}
-                        {index === 6 && imageSources.length > 7 && (
-                          <div className="absolute inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center">
-                            <span className="text-white text-xs sm:text-sm font-medium">
-                              +{imageSources.length - 7}
-                            </span>
-                          </div>
-                        )}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-              )}
-
-              {/* Preview videos */}
-              {videoSources && videoSources.length > 0 && (
-                <div className="mb-4">
-                  <div className="flex flex-row flex-wrap gap-2 sm:flex-nowrap sm:overflow-hidden">
-                    {/* Mobile: Show 4 videos */}
-                    {videoSources.slice(0, 4).map((result, index) => (
-                      <button
-                        key={`answer-mobile-video-${index}-${result.url}`}
-                        type="button"
-                        onClick={() => openVideoLightbox(index)}
-                        className="relative shrink-0 size-20 rounded-lg overflow-hidden border border-neutral-200 dark:border-neutral-800 hover:opacity-90 transition-opacity cursor-pointer sm:hidden"
-                      >
-                        <img
-                          src={normalizeImageUrl(
-                            result.thumbnailUrl || result.url,
-                          )}
-                          alt={result.title}
-                          width="80"
-                          height="80"
-                          loading="lazy"
-                          style={{ minWidth: '100%', minHeight: '100%' }}
-                          onError={(e) => {
-                            e.currentTarget.style.backgroundColor = '#f3f4f6';
-                            e.currentTarget.style.display = 'block';
-                          }}
-                          className="size-full object-cover"
-                        />
-                        {/* Video icon overlay */}
-                        <div className="absolute inset-0 bg-black/20 flex items-center justify-center">
-                          <div className="bg-black/70 rounded-full p-2">
-                            <div className="text-white">
-                              <PlayIcon size={14} />
-                            </div>
-                          </div>
-                        </div>
-                        {/* Blur overlay on last video if there are more videos */}
-                        {index === 3 && videoSources.length > 4 && (
-                          <div className="absolute inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center">
-                            <span className="text-white text-xs font-medium">
-                              +{videoSources.length - 4}
-                            </span>
-                          </div>
-                        )}
-                      </button>
-                    ))}
-
-                    {/* Desktop: Show 7 videos */}
-                    {videoSources.slice(0, 7).map((result, index) => (
-                      <button
-                        key={`answer-desktop-video-${index}-${result.url}`}
-                        type="button"
-                        onClick={() => index === 6 ? setActiveTab('videos') : openVideoLightbox(index)}
-                        className="relative shrink-0 size-16 md:size-20 lg:size-24 rounded-lg overflow-hidden border border-neutral-200 dark:border-neutral-800 hover:opacity-90 transition-opacity cursor-pointer hidden sm:block"
-                      >
-                        <img
-                          src={normalizeImageUrl(
-                            result.thumbnailUrl || result.url,
-                          )}
-                          alt={result.title || 'Video result'}
-                          width="240"
-                          height="240"
-                          loading="lazy"
-                          style={{ minWidth: '100%', minHeight: '100%' }}
-                          onError={(e) => {
-                            e.currentTarget.style.backgroundColor = '#f3f4f6';
-                            e.currentTarget.style.display = 'block';
-                          }}
-                          className="size-full object-cover"
-                        />
-                        {/* Video icon overlay */}
-                        <div className="absolute inset-0 bg-black/20 flex items-center justify-center">
-                          <div className="bg-black/70 rounded-full p-2">
-                            <div className="text-white">
-                              <PlayIcon size={16} />
-                            </div>
-                          </div>
-                        </div>
-                        {/* Blur overlay on last video if there are more videos */}
-                        {index === 6 && videoSources.length > 7 && (
-                          <div className="absolute inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center">
-                            <span className="text-white text-xs sm:text-sm font-medium">
-                              +{videoSources.length - 7}
-                            </span>
-                          </div>
-                        )}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-              )}
-
-              <div className="prose dark:prose-invert max-w-none">
-                <Markdown sources={sources}>{enhancedContent}</Markdown>
-              </div>
-
-              {/* Follow-up questions */}
-              {followUpQuestions && followUpQuestions.length > 0 && (
-                <div className="flex flex-col space-y-2 my-6">
-                  {/* Left-aligned header */}
-                  <div className="flex items-center gap-2 mb-2">
-                    <div className="text-primary">
-                      <SparklesIcon size={14} />
                     </div>
-                    <span className="text-sm font-medium text-primary/80">
-                      Follow-up questions
-                    </span>
-                  </div>
-
-                  {/* Single column questions layout */}
-                  <div className="flex flex-col space-y-1.5 w-full">
-                    {followUpQuestions.map((question, index) => {
-                      // Extract questions from the numbered format [1] Question text
-                      const match = question.match(/\[\d+\]\s*(.+)/);
-                      const formattedQuestion = match
-                        ? match[1].trim()
-                        : question;
-
-                      return (
-                        <div key={question}>
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            className="w-full h-auto py-1.5 px-3 rounded-lg text-left justify-between border-none hover:bg-primary/5 dark:hover:bg-primary/10 transition-all duration-150 flex items-center"
-                            onClick={() =>
-                              onSelectQuestion?.(formattedQuestion)
-                            }
-                          >
-                            <span className="text-sm text-neutral-700 dark:text-neutral-300 truncate mr-2">
-                              {formattedQuestion}
-                            </span>
-                            <ChevronDownIcon size={10} />
-                          </Button>
-                        </div>
-                      );
-                    })}
-                  </div>
-                </div>
-              )}
-
-              {/* Message Actions */}
-              {!isLoading &&
-                message &&
-                message.role === 'assistant' &&
-                chatId && (
-                  <div className="flex flex-row gap-3 mt-6 pb-4 border-b border-neutral-200 dark:border-neutral-800">
-                    <TooltipProvider delayDuration={0}>
-                      {/* Copy Button */}
-                      <Tooltip>
-                        <TooltipTrigger asChild>
-                          <Button
-                            className="py-2 px-4 h-auto text-neutral-600 dark:text-neutral-400 hover:text-neutral-800 dark:hover:text-neutral-200 hover:bg-neutral-100 dark:hover:bg-neutral-800 border-neutral-200 dark:border-neutral-700 transition-all duration-200 rounded-lg"
-                            variant="outline"
-                            size="sm"
-                            onClick={async () => {
-                              const textFromParts = message.parts
-                                ?.filter((part) => part.type === 'text')
-                                .map((part) => part.text)
-                                .join('\n')
-                                .trim();
-
-                              if (!textFromParts) {
-                                toast.error("There's no text to copy!");
-                                return;
-                              }
-
-                              await copyToClipboard(textFromParts);
-                              toast.success('Copied to clipboard!');
-                            }}
-                          >
-                            <CopyIcon size={16} />
-                            <span className="ml-2 text-sm font-medium">
-                              Copy
-                            </span>
-                          </Button>
-                        </TooltipTrigger>
-                        <TooltipContent>Copy response text</TooltipContent>
-                      </Tooltip>
-
-                      {/* Upvote Button */}
-                      <Tooltip>
-                        <TooltipTrigger asChild>
-                          <Button
-                            data-testid="message-upvote"
-                            className={`py-2 px-4 h-auto transition-all duration-200 rounded-lg ${
-                              vote?.isUpvoted
-                                ? 'text-green-600 dark:text-green-400 bg-green-50 dark:bg-green-950 border-green-200 dark:border-green-800 hover:bg-green-100 dark:hover:bg-green-900'
-                                : 'text-neutral-600 dark:text-neutral-400 hover:text-green-600 dark:hover:text-green-400 hover:bg-green-50 dark:hover:bg-green-950 border-neutral-200 dark:border-neutral-700'
-                            }`}
-                            disabled={vote?.isUpvoted}
-                            variant="outline"
-                            size="sm"
-                            onClick={async () => {
-                              const upvote = fetch('/api/vote', {
-                                method: 'PATCH',
-                                body: JSON.stringify({
-                                  chatId,
-                                  messageId: message.id,
-                                  type: 'up',
-                                }),
-                              });
-
-                              toast.promise(upvote, {
-                                loading: 'Upvoting Response...',
-                                success: () => {
-                                  mutate<Array<Vote>>(
-                                    `/api/vote?chatId=${chatId}`,
-                                    (currentVotes) => {
-                                      if (!currentVotes) return [];
-
-                                      const votesWithoutCurrent =
-                                        currentVotes.filter(
-                                          (vote) =>
-                                            vote.messageId !== message.id,
-                                        );
-
-                                      return [
-                                        ...votesWithoutCurrent,
-                                        {
-                                          chatId,
-                                          messageId: message.id,
-                                          isUpvoted: true,
-                                        },
-                                      ];
-                                    },
-                                    { revalidate: false },
-                                  );
-
-                                  return 'Upvoted Response!';
-                                },
-                                error: 'Failed to upvote response.',
-                              });
-                            }}
-                          >
-                            <ThumbUpIcon size={16} />
-                            <span className="ml-2 text-sm font-medium">
-                              {vote?.isUpvoted ? 'Upvoted' : 'Upvote'}
-                            </span>
-                          </Button>
-                        </TooltipTrigger>
-                        <TooltipContent>
-                          {vote?.isUpvoted
-                            ? 'Response upvoted'
-                            : 'Upvote this response'}
-                        </TooltipContent>
-                      </Tooltip>
-
-                      {/* Downvote Button */}
-                      <Tooltip>
-                        <TooltipTrigger asChild>
-                          <Button
-                            data-testid="message-downvote"
-                            className={`py-2 px-4 h-auto transition-all duration-200 rounded-lg ${
-                              vote && !vote.isUpvoted
-                                ? 'text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-950 border-red-200 dark:border-red-800 hover:bg-red-100 dark:hover:bg-red-900'
-                                : 'text-neutral-600 dark:text-neutral-400 hover:text-red-600 dark:hover:text-red-400 hover:bg-red-50 dark:hover:bg-red-950 border-neutral-200 dark:border-neutral-700'
-                            }`}
-                            variant="outline"
-                            size="sm"
-                            disabled={vote && !vote.isUpvoted}
-                            onClick={async () => {
-                              const downvote = fetch('/api/vote', {
-                                method: 'PATCH',
-                                body: JSON.stringify({
-                                  chatId,
-                                  messageId: message.id,
-                                  type: 'down',
-                                }),
-                              });
-
-                              toast.promise(downvote, {
-                                loading: 'Downvoting Response...',
-                                success: () => {
-                                  mutate<Array<Vote>>(
-                                    `/api/vote?chatId=${chatId}`,
-                                    (currentVotes) => {
-                                      if (!currentVotes) return [];
-
-                                      const votesWithoutCurrent =
-                                        currentVotes.filter(
-                                          (vote) =>
-                                            vote.messageId !== message.id,
-                                        );
-
-                                      return [
-                                        ...votesWithoutCurrent,
-                                        {
-                                          chatId,
-                                          messageId: message.id,
-                                          isUpvoted: false,
-                                        },
-                                      ];
-                                    },
-                                    { revalidate: false },
-                                  );
-
-                                  return 'Downvoted Response!';
-                                },
-                                error: 'Failed to downvote response.',
-                              });
-                            }}
-                          >
-                            <ThumbDownIcon size={16} />
-                            <span className="ml-2 text-sm font-medium">
-                              {vote && !vote.isUpvoted
-                                ? 'Downvoted'
-                                : 'Downvote'}
-                            </span>
-                          </Button>
-                        </TooltipTrigger>
-                        <TooltipContent>
-                          {vote && !vote.isUpvoted
-                            ? 'Response downvoted'
-                            : 'Downvote this response'}
-                        </TooltipContent>
-                      </Tooltip>
-                    </TooltipProvider>
-                  </div>
-                )}
-            </>
+                  );
+                })}
+              </div>
+            </div>
           )}
+
+          {/* Message Actions */}
+          {message &&
+            message.role === 'assistant' &&
+            chatId &&
+            (content.trim().length > 0 || sources.length > 0) && (
+              <div className="flex flex-row gap-3 mt-6 pb-4 border-b border-neutral-200 dark:border-neutral-800">
+                <TooltipProvider delayDuration={0}>
+                  {/* Copy Button */}
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Button
+                        className="py-2 px-4 h-auto text-neutral-600 dark:text-neutral-400 hover:text-neutral-800 dark:hover:text-neutral-200 hover:bg-neutral-100 dark:hover:bg-neutral-800 border-neutral-200 dark:border-neutral-700 transition-all duration-200 rounded-lg"
+                        variant="outline"
+                        size="sm"
+                        onClick={async () => {
+                          const textFromParts = message.parts
+                            ?.filter((part) => part.type === 'text')
+                            .map((part) => part.text)
+                            .join('\n')
+                            .trim();
+
+                          if (!textFromParts) {
+                            toast.error("There's no text to copy!");
+                            return;
+                          }
+
+                          await copyToClipboard(textFromParts);
+                          toast.success('Copied to clipboard!');
+                        }}
+                      >
+                        <CopyIcon size={16} />
+                        <span className="ml-2 text-sm font-medium">
+                          Copy
+                        </span>
+                      </Button>
+                    </TooltipTrigger>
+                    <TooltipContent>Copy response text</TooltipContent>
+                  </Tooltip>
+
+                  {/* Upvote Button */}
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Button
+                        data-testid="message-upvote"
+                        className={`py-2 px-4 h-auto transition-all duration-200 rounded-lg ${
+                          vote?.isUpvoted
+                            ? 'text-green-600 dark:text-green-400 bg-green-50 dark:bg-green-950 border-green-200 dark:border-green-800 hover:bg-green-100 dark:hover:bg-green-900'
+                            : 'text-neutral-600 dark:text-neutral-400 hover:text-green-600 dark:hover:text-green-400 hover:bg-green-50 dark:hover:bg-green-950 border-neutral-200 dark:border-neutral-700'
+                        }`}
+                        disabled={vote?.isUpvoted}
+                        variant="outline"
+                        size="sm"
+                        onClick={async () => {
+                          const upvote = fetch('/api/vote', {
+                            method: 'PATCH',
+                            body: JSON.stringify({
+                              chatId,
+                              messageId: message.id,
+                              type: 'up',
+                            }),
+                          });
+
+                          toast.promise(upvote, {
+                            loading: 'Upvoting Response...',
+                            success: () => {
+                              mutate<Array<Vote>>(
+                                `/api/vote?chatId=${chatId}`,
+                                (currentVotes) => {
+                                  if (!currentVotes) return [];
+
+                                  const votesWithoutCurrent =
+                                    currentVotes.filter(
+                                      (vote) =>
+                                        vote.messageId !== message.id,
+                                    );
+
+                                  return [
+                                    ...votesWithoutCurrent,
+                                    {
+                                      chatId,
+                                      messageId: message.id,
+                                      isUpvoted: true,
+                                    },
+                                  ];
+                                },
+                                { revalidate: false },
+                              );
+
+                              return 'Upvoted Response!';
+                            },
+                            error: 'Failed to upvote response.',
+                          });
+                        }}
+                      >
+                        <ThumbUpIcon size={16} />
+                        <span className="ml-2 text-sm font-medium">
+                          {vote?.isUpvoted ? 'Upvoted' : 'Upvote'}
+                        </span>
+                      </Button>
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      {vote?.isUpvoted
+                        ? 'Response upvoted'
+                        : 'Upvote this response'}
+                    </TooltipContent>
+                  </Tooltip>
+
+                  {/* Downvote Button */}
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Button
+                        data-testid="message-downvote"
+                        className={`py-2 px-4 h-auto transition-all duration-200 rounded-lg ${
+                          vote && !vote.isUpvoted
+                            ? 'text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-950 border-red-200 dark:border-red-800 hover:bg-red-100 dark:hover:bg-red-900'
+                            : 'text-neutral-600 dark:text-neutral-400 hover:text-red-600 dark:hover:text-red-400 hover:bg-red-50 dark:hover:bg-red-950 border-neutral-200 dark:border-neutral-700'
+                        }`}
+                        variant="outline"
+                        size="sm"
+                        disabled={vote && !vote.isUpvoted}
+                        onClick={async () => {
+                          const downvote = fetch('/api/vote', {
+                            method: 'PATCH',
+                            body: JSON.stringify({
+                              chatId,
+                              messageId: message.id,
+                              type: 'down',
+                            }),
+                          });
+
+                          toast.promise(downvote, {
+                            loading: 'Downvoting Response...',
+                            success: () => {
+                              mutate<Array<Vote>>(
+                                `/api/vote?chatId=${chatId}`,
+                                (currentVotes) => {
+                                  if (!currentVotes) return [];
+
+                                  const votesWithoutCurrent =
+                                    currentVotes.filter(
+                                      (vote) =>
+                                        vote.messageId !== message.id,
+                                    );
+
+                                  return [
+                                    ...votesWithoutCurrent,
+                                    {
+                                      chatId,
+                                      messageId: message.id,
+                                      isUpvoted: false,
+                                    },
+                                  ];
+                                },
+                                { revalidate: false },
+                              );
+
+                              return 'Downvoted Response!';
+                            },
+                            error: 'Failed to downvote response.',
+                          });
+                        }}
+                      >
+                        <ThumbDownIcon size={16} />
+                        <span className="ml-2 text-sm font-medium">
+                          {vote && !vote.isUpvoted
+                            ? 'Downvoted'
+                            : 'Downvote'}
+                        </span>
+                      </Button>
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      {vote && !vote.isUpvoted
+                        ? 'Response downvoted'
+                        : 'Downvote this response'}
+                    </TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
+              </div>
+            )}
         </TabsContent>
 
         <TabsContent value="sources" className="space-y-4 mt-0 pt-0">
           <div className="flex flex-col space-y-4">
-            {isLoading ? (
-              // Skeleton for sources tab
-              <div className="flex flex-col gap-4 w-full">
-                {[1, 2, 3].map((idx) => (
-                  <div
-                    key={`source-detail-skeleton-${idx}`}
-                    className="flex gap-3 p-3 border border-neutral-200 dark:border-neutral-800 rounded-lg"
-                  >
-                    <div className="flex items-center justify-center rounded-full bg-neutral-100 dark:bg-neutral-800 size-7 animate-pulse" />
-                    <div className="flex-1 space-y-2">
-                      <div className="flex items-center gap-2 mb-1.5">
-                        <div className="size-4 rounded-full bg-neutral-200 dark:bg-neutral-700 animate-pulse" />
-                        <div className="w-24 h-3 bg-neutral-200 dark:bg-neutral-700 rounded animate-pulse" />
-                      </div>
-                      <div className="h-4 bg-neutral-100 dark:bg-neutral-800 rounded w-3/4 animate-pulse" />
-                      <div className="h-3 bg-neutral-100 dark:bg-neutral-800 rounded w-full animate-pulse" />
-                      <div className="h-3 bg-neutral-100 dark:bg-neutral-800 rounded w-5/6 animate-pulse" />
-                    </div>
-                  </div>
-                ))}
-              </div>
-            ) : textSources && textSources.length > 0 ? (
+            {textSources && textSources.length > 0 ? (
               <div className="flex flex-col gap-4 w-full">
                 {textSources.map((result, i) => (
                   <div
@@ -956,17 +913,7 @@ export function TabView({
         {/* Images Tab */}
         <TabsContent value="images" className="space-y-4 mt-0 pt-0">
           <div className="flex flex-col space-y-4">
-            {isLoading ? (
-              // Skeleton for images tab
-              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4 w-full">
-                {[1, 2, 3, 4, 5, 6].map((idx) => (
-                  <div
-                    key={`image-skeleton-${idx}`}
-                    className="aspect-square rounded-lg bg-neutral-100 dark:bg-neutral-800 animate-pulse overflow-hidden"
-                  />
-                ))}
-              </div>
-            ) : imageSources && imageSources.length > 0 ? (
+            {imageSources && imageSources.length > 0 ? (
               <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4 w-full">
                 {imageSources.map((result, index) => (
                   <button
@@ -1028,17 +975,7 @@ export function TabView({
         {/* Videos Tab */}
         <TabsContent value="videos" className="space-y-4 mt-0 pt-0">
           <div className="flex flex-col space-y-4">
-            {isLoading ? (
-              // Skeleton for videos tab
-              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4 w-full">
-                {[1, 2, 3, 4, 5, 6].map((idx) => (
-                  <div
-                    key={`video-skeleton-${idx}`}
-                    className="aspect-video rounded-lg bg-neutral-100 dark:bg-neutral-800 animate-pulse overflow-hidden"
-                  />
-                ))}
-              </div>
-            ) : videoSources && videoSources.length > 0 ? (
+            {videoSources && videoSources.length > 0 ? (
               <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 w-full">
                 {videoSources.map((result, index) => (
                   <button

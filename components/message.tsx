@@ -22,6 +22,7 @@ import { FollowUpQuestions } from './follow-up-questions';
 import type { UseChatHelpers } from '@ai-sdk/react';
 import { TabView } from './tab-view';
 import type { SearchResult } from './search-results';
+import { PipelineLoader } from './pipeline-loader';
 
 // Global state temporarily disabled
 /*
@@ -276,9 +277,17 @@ const PurePreviewMessage = ({
             })}
 
             {message.role === 'assistant' && (
-              <div
+              <motion.div
                 data-testid="message-content"
                 className="flex flex-col gap-4"
+                initial={{ y: 10, opacity: 0 }}
+                animate={{ y: 0, opacity: 1 }}
+                transition={{ 
+                  duration: 0.6, 
+                  ease: [0.23, 1, 0.32, 1],  // Smooth easing
+                  opacity: { duration: 0.4 },
+                  y: { duration: 0.6 }
+                }}
               >
                 {(() => {
                   // Extract sources from any webSearch tool calls
@@ -375,6 +384,7 @@ const PurePreviewMessage = ({
                       title={title}
                       content={content}
                       sources={sources}
+                      isLoading={isLoading}
                       followUpQuestions={followUpQuestions}
                       onSelectQuestion={handleQuestionSelect}
                       chatId={chatId}
@@ -383,7 +393,7 @@ const PurePreviewMessage = ({
                     />
                   );
                 })()}
-              </div>
+              </motion.div>
             )}
           </div>
         </div>
@@ -409,22 +419,23 @@ export const PreviewMessage = memo(
 );
 
 export const ThinkingMessage = () => {
-  const role = 'assistant';
-
   return (
     <motion.div
       data-testid="message-assistant-loading"
-      className="w-full mx-auto max-w-3xl px-4 group/message min-h-96"
+      className="w-full mx-auto max-w-3xl px-4 group/message"
       initial={{ y: 5, opacity: 0 }}
       animate={{ y: 0, opacity: 1, transition: { delay: 0.2 } }}
-      data-role={role}
+      exit={{ 
+        y: -5, 
+        opacity: 0, 
+        transition: { 
+          duration: 0.3,
+          ease: [0.23, 1, 0.32, 1]
+        }
+      }}
+      data-role="assistant"
     >
-      <div className="flex gap-4 w-full">
-        <div className="flex flex-col gap-2 w-full">
-          {/* Use the TabView with isLoading=true */}
-          <TabView title="" content="" sources={[]} isLoading={true} />
-        </div>
-      </div>
+      <PipelineLoader />
     </motion.div>
   );
 };

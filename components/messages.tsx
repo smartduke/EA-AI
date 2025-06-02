@@ -1,11 +1,11 @@
 import type { UIMessage } from 'ai';
 import { PreviewMessage, ThinkingMessage } from './message';
 import { Greeting } from './greeting';
-import { memo, useState, useEffect, useRef } from 'react';
+import { memo, } from 'react';
 import type { Vote } from '@/lib/db/schema';
 import equal from 'fast-deep-equal';
 import type { UseChatHelpers } from '@ai-sdk/react';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import { useMessages } from '@/hooks/use-messages';
 
 interface MessagesProps {
@@ -39,8 +39,29 @@ function PureMessages({
     status,
   });
 
-  const isThinking = status === 'submitted';
+  // Simple, clean loading logic
+  const isLoading = status === 'submitted' || status === 'streaming';
   const isHomePage = messages.length === 0;
+
+  // Filter out incomplete assistant messages during loading
+  const displayMessages = isLoading ? 
+    messages.filter(msg => {
+      if (msg.role !== 'assistant') return true;
+      
+      // Only show assistant messages that have substantial content
+      const textPart = msg.parts?.find(part => part.type === 'text');
+      const hasSubstantialText = textPart && 'text' in textPart && 
+        textPart.text.trim().length > 30; // Reduced threshold for smoother transition
+      
+      return hasSubstantialText;
+    }) : 
+    messages;
+
+  // Show ThinkingMessage only when loading AND no substantial assistant content is displayed
+  const shouldShowThinking = isLoading && (
+    displayMessages.length === 0 || 
+    displayMessages[displayMessages.length - 1]?.role !== 'assistant'
+  );
 
   return (
     <div
@@ -54,12 +75,12 @@ function PureMessages({
     >
       {messages.length === 0 && <Greeting />}
 
-      {messages.map((message, index) => (
+      {displayMessages.map((message, index) => (
         <PreviewMessage
           key={message.id}
           chatId={chatId}
           message={message}
-          isLoading={status === 'streaming' && messages.length - 1 === index}
+          isLoading={false} // Never pass loading to individual messages
           vote={
             votes
               ? votes.find((vote) => vote.messageId === message.id)
@@ -69,14 +90,18 @@ function PureMessages({
           reload={reload}
           isReadonly={isReadonly}
           requiresScrollPadding={
-            hasSentMessage && index === messages.length - 1
+            hasSentMessage && index === displayMessages.length - 1
           }
           isHomePage={isHomePage}
           onMessageRef={() => {}}
         />
       ))}
 
-      {isThinking && <ThinkingMessage />}
+      {shouldShowThinking && (
+        <AnimatePresence>
+          <ThinkingMessage />
+        </AnimatePresence>
+      )}
 
       <motion.div
         ref={messagesEndRef}

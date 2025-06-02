@@ -7,7 +7,6 @@ import {
   Cloud,
   CloudRain,
   Snowflake,
-  Thermometer,
 } from 'lucide-react';
 
 interface WeatherData {
