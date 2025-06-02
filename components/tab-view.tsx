@@ -488,6 +488,14 @@ export function TabView({
                         <img
                           src={normalizeImageUrl(result.imageUrl || result.url)}
                           alt={result.title}
+                          width="80"
+                          height="80"
+                          loading="lazy"
+                          style={{ minWidth: '100%', minHeight: '100%' }}
+                          onError={(e) => {
+                            e.currentTarget.style.backgroundColor = '#f3f4f6';
+                            e.currentTarget.style.display = 'block';
+                          }}
                           className="size-full object-cover"
                         />
                         {/* Blur overlay on last image if there are more images */}
@@ -511,16 +519,16 @@ export function TabView({
                       >
                         <img
                           src={normalizeImageUrl(result.imageUrl || result.url)}
-                          alt={result.title || 'Image result'}
-                          width="400"
-                          height="400"
+                          alt={result.title}
+                          width="240"
+                          height="240"
                           loading="lazy"
                           style={{ minWidth: '100%', minHeight: '100%' }}
                           onError={(e) => {
                             e.currentTarget.style.backgroundColor = '#f3f4f6';
                             e.currentTarget.style.display = 'block';
                           }}
-                          className="size-full object-cover group-hover:scale-105 transition-transform"
+                          className="size-full object-cover"
                         />
                         {/* Blur overlay on last image if there are more images */}
                         {index === 6 && imageSources.length > 7 && (
@@ -540,8 +548,8 @@ export function TabView({
               {videoSources && videoSources.length > 0 && (
                 <div className="mb-4">
                   <div className="flex flex-row flex-wrap gap-2 sm:flex-nowrap sm:overflow-hidden">
-                    {/* Mobile: Show 3 videos */}
-                    {videoSources.slice(0, 3).map((result, index) => (
+                    {/* Mobile: Show 4 videos */}
+                    {videoSources.slice(0, 4).map((result, index) => (
                       <button
                         key={`answer-mobile-video-${index}-${result.url}`}
                         type="button"
@@ -553,66 +561,72 @@ export function TabView({
                             result.thumbnailUrl || result.url,
                           )}
                           alt={result.title}
-                          width={80}
-                          height={80}
+                          width="80"
+                          height="80"
+                          loading="lazy"
+                          style={{ minWidth: '100%', minHeight: '100%' }}
+                          onError={(e) => {
+                            e.currentTarget.style.backgroundColor = '#f3f4f6';
+                            e.currentTarget.style.display = 'block';
+                          }}
                           className="size-full object-cover"
                         />
-                        {/* Play button overlay */}
+                        {/* Video icon overlay */}
                         <div className="absolute inset-0 bg-black/20 flex items-center justify-center">
-                          <div className="bg-black/60 rounded-full p-2">
+                          <div className="bg-black/70 rounded-full p-2">
                             <div className="text-white">
-                              <PlayIcon size={16} />
+                              <PlayIcon size={14} />
                             </div>
                           </div>
                         </div>
                         {/* Blur overlay on last video if there are more videos */}
-                        {index === 2 && videoSources.length > 3 && (
+                        {index === 3 && videoSources.length > 4 && (
                           <div className="absolute inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center">
                             <span className="text-white text-xs font-medium">
-                              +{videoSources.length - 3}
+                              +{videoSources.length - 4}
                             </span>
                           </div>
                         )}
                       </button>
                     ))}
 
-                    {/* Desktop: Show 5 videos */}
-                    {videoSources.slice(0, 5).map((result, index) => (
+                    {/* Desktop: Show 7 videos */}
+                    {videoSources.slice(0, 7).map((result, index) => (
                       <button
                         key={`answer-desktop-video-${index}-${result.url}`}
                         type="button"
-                        onClick={() => openVideoLightbox(index)}
+                        onClick={() => index === 6 ? setActiveTab('videos') : openVideoLightbox(index)}
                         className="relative shrink-0 size-16 md:size-20 lg:size-24 rounded-lg overflow-hidden border border-neutral-200 dark:border-neutral-800 hover:opacity-90 transition-opacity cursor-pointer hidden sm:block"
                       >
-                        <div className="relative aspect-video bg-neutral-50 dark:bg-neutral-900 overflow-hidden">
-                          <img
-                            src={normalizeImageUrl(
-                              result.thumbnailUrl || result.url,
-                            )}
-                            alt={result.title || 'Video result'}
-                            width="400"
-                            height="225"
-                            loading="lazy"
-                            style={{ minWidth: '100%', minHeight: '100%' }}
-                            onError={(e) => {
-                              e.currentTarget.style.backgroundColor = '#f3f4f6';
-                              e.currentTarget.style.display = 'block';
-                            }}
-                            className="size-full object-cover group-hover:scale-105 transition-transform"
-                          />
-                        </div>
-                        {/* Play button overlay */}
-                        <div className="absolute inset-0 bg-black/20 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
-                          <div className="bg-black/80 rounded-full p-3">
+                        <img
+                          src={normalizeImageUrl(
+                            result.thumbnailUrl || result.url,
+                          )}
+                          alt={result.title || 'Video result'}
+                          width="240"
+                          height="240"
+                          loading="lazy"
+                          style={{ minWidth: '100%', minHeight: '100%' }}
+                          onError={(e) => {
+                            e.currentTarget.style.backgroundColor = '#f3f4f6';
+                            e.currentTarget.style.display = 'block';
+                          }}
+                          className="size-full object-cover"
+                        />
+                        {/* Video icon overlay */}
+                        <div className="absolute inset-0 bg-black/20 flex items-center justify-center">
+                          <div className="bg-black/70 rounded-full p-2">
                             <div className="text-white">
-                              <PlayIcon size={24} />
+                              <PlayIcon size={16} />
                             </div>
                           </div>
                         </div>
-                        {/* Duration badge */}
-                        {result.duration && result.duration !== 'Unknown' && (
-                          <div className="absolute bottom-2 right-2 bg-black/80 text-white text-xs px-2 py-1 rounded">
-                            {result.duration}
+                        {/* Blur overlay on last video if there are more videos */}
+                        {index === 6 && videoSources.length > 7 && (
+                          <div className="absolute inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center">
+                            <span className="text-white text-xs sm:text-sm font-medium">
+                              +{videoSources.length - 7}
+                            </span>
                           </div>
                         )}
                       </button>
@@ -1336,3 +1350,6 @@ export function TabView({
     </div>
   );
 }
+
+
+
