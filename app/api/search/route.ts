@@ -349,10 +349,8 @@ async function fetchFromSearxNG(query: string): Promise<SearchResult[]> {
             imageUrl = '';
           }
 
-          // Proxy the image URL
-          if (imageUrl) {
-            imageUrl = getProxiedImageUrl(imageUrl);
-          }
+          // Use original image URL directly instead of proxying
+          // Note: Keep favicon proxying for security and reliability
 
           if (title && url) {
             // Extract domain from URL

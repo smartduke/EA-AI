@@ -1,6 +1,8 @@
 import { type NextRequest, NextResponse } from 'next/server';
 import crypto from 'node:crypto';
 
+// IMAGE PROXY - Currently used only for favicons, not for search result images
+// Search result images now use their original URLs directly
 // Maximum file size for images (5MB)
 const MAX_FILE_SIZE = 5 * 1024 * 1024;
 

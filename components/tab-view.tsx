@@ -397,13 +397,13 @@ export function TabView({
                               className="flex items-center gap-1.5 bg-neutral-100 dark:bg-neutral-900 hover:bg-neutral-200 dark:hover:bg-neutral-800 px-2.5 py-1.5 rounded-full text-sm transition-colors"
                             >
                               {result.url && (
-                                <Image
+                                <img
                                   src={
                                     result.favicon || getFaviconUrl(result.url)
                                   }
                                   alt=""
-                                  width={12}
-                                  height={12}
+                                  width="12"
+                                  height="12"
                                   className="size-3 rounded-full"
                                   onError={(e) => {
                                     e.currentTarget.style.display = 'none';
@@ -435,14 +435,13 @@ export function TabView({
                               )}
                               <div className="flex items-center gap-1.5 pt-1">
                                 {result.url && (
-                                  <Image
+                                  <img
                                     src={
-                                      result.favicon ||
-                                      getFaviconUrl(result.url)
+                                      result.favicon || getFaviconUrl(result.url)
                                     }
                                     alt=""
-                                    width={12}
-                                    height={12}
+                                    width="12"
+                                    height="12"
                                     className="size-3 rounded-full"
                                     onError={(e) => {
                                       e.currentTarget.style.display = 'none';
@@ -486,11 +485,9 @@ export function TabView({
                         onClick={() => setActiveTab('images')}
                         className="relative shrink-0 size-20 rounded-lg overflow-hidden border border-neutral-200 dark:border-neutral-800 hover:opacity-90 transition-opacity cursor-pointer sm:hidden"
                       >
-                        <Image
+                        <img
                           src={normalizeImageUrl(result.imageUrl || result.url)}
                           alt={result.title}
-                          width={80}
-                          height={80}
                           className="size-full object-cover"
                         />
                         {/* Blur overlay on last image if there are more images */}
@@ -512,12 +509,18 @@ export function TabView({
                         onClick={() => setActiveTab('images')}
                         className="relative shrink-0 size-16 md:size-20 lg:size-24 rounded-lg overflow-hidden border border-neutral-200 dark:border-neutral-800 hover:opacity-90 transition-opacity cursor-pointer hidden sm:block"
                       >
-                        <Image
+                        <img
                           src={normalizeImageUrl(result.imageUrl || result.url)}
-                          alt={result.title}
-                          width={240}
-                          height={240}
-                          className="size-full object-cover"
+                          alt={result.title || 'Image result'}
+                          width="400"
+                          height="400"
+                          loading="lazy"
+                          style={{ minWidth: '100%', minHeight: '100%' }}
+                          onError={(e) => {
+                            e.currentTarget.style.backgroundColor = '#f3f4f6';
+                            e.currentTarget.style.display = 'block';
+                          }}
+                          className="size-full object-cover group-hover:scale-105 transition-transform"
                         />
                         {/* Blur overlay on last image if there are more images */}
                         {index === 6 && imageSources.length > 7 && (
@@ -545,7 +548,7 @@ export function TabView({
                         onClick={() => openVideoLightbox(index)}
                         className="relative shrink-0 size-20 rounded-lg overflow-hidden border border-neutral-200 dark:border-neutral-800 hover:opacity-90 transition-opacity cursor-pointer sm:hidden"
                       >
-                        <Image
+                        <img
                           src={normalizeImageUrl(
                             result.thumbnailUrl || result.url,
                           )}
@@ -581,29 +584,35 @@ export function TabView({
                         onClick={() => openVideoLightbox(index)}
                         className="relative shrink-0 size-16 md:size-20 lg:size-24 rounded-lg overflow-hidden border border-neutral-200 dark:border-neutral-800 hover:opacity-90 transition-opacity cursor-pointer hidden sm:block"
                       >
-                        <Image
-                          src={normalizeImageUrl(
-                            result.thumbnailUrl || result.url,
-                          )}
-                          alt={result.title}
-                          width={240}
-                          height={240}
-                          className="size-full object-cover"
-                        />
+                        <div className="relative aspect-video bg-neutral-50 dark:bg-neutral-900 overflow-hidden">
+                          <img
+                            src={normalizeImageUrl(
+                              result.thumbnailUrl || result.url,
+                            )}
+                            alt={result.title || 'Video result'}
+                            width="400"
+                            height="225"
+                            loading="lazy"
+                            style={{ minWidth: '100%', minHeight: '100%' }}
+                            onError={(e) => {
+                              e.currentTarget.style.backgroundColor = '#f3f4f6';
+                              e.currentTarget.style.display = 'block';
+                            }}
+                            className="size-full object-cover group-hover:scale-105 transition-transform"
+                          />
+                        </div>
                         {/* Play button overlay */}
-                        <div className="absolute inset-0 bg-black/20 flex items-center justify-center">
-                          <div className="bg-black/60 rounded-full p-2">
+                        <div className="absolute inset-0 bg-black/20 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                          <div className="bg-black/80 rounded-full p-3">
                             <div className="text-white">
-                              <PlayIcon size={16} />
+                              <PlayIcon size={24} />
                             </div>
                           </div>
                         </div>
-                        {/* Blur overlay on last video if there are more videos */}
-                        {index === 4 && videoSources.length > 5 && (
-                          <div className="absolute inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center">
-                            <span className="text-white text-xs sm:text-sm font-medium">
-                              +{videoSources.length - 5}
-                            </span>
+                        {/* Duration badge */}
+                        {result.duration && result.duration !== 'Unknown' && (
+                          <div className="absolute bottom-2 right-2 bg-black/80 text-white text-xs px-2 py-1 rounded">
+                            {result.duration}
                           </div>
                         )}
                       </button>
@@ -879,11 +888,13 @@ export function TabView({
                     <div className="flex-1 overflow-hidden">
                       <div className="flex items-center gap-2 mb-1.5">
                         {result.url && (
-                          <Image
-                            src={result.favicon || getFaviconUrl(result.url)}
+                          <img
+                            src={
+                              result.favicon || getFaviconUrl(result.url)
+                            }
                             alt=""
-                            width={12}
-                            height={12}
+                            width="12"
+                            height="12"
                             className="size-3 rounded-full"
                             onError={(e) => {
                               e.currentTarget.style.display = 'none';
@@ -951,10 +962,17 @@ export function TabView({
                     className="group flex flex-col border border-neutral-200 dark:border-neutral-800 rounded-lg overflow-hidden hover:border-neutral-300 dark:hover:border-neutral-700 transition-colors cursor-pointer"
                   >
                     <div className="relative aspect-square bg-neutral-50 dark:bg-neutral-900 overflow-hidden">
-                      <Image
+                      <img
                         src={normalizeImageUrl(result.imageUrl || result.url)}
                         alt={result.title || 'Image result'}
-                        fill
+                        width="400"
+                        height="400"
+                        loading="lazy"
+                        style={{ minWidth: '100%', minHeight: '100%' }}
+                        onError={(e) => {
+                          e.currentTarget.style.backgroundColor = '#f3f4f6';
+                          e.currentTarget.style.display = 'block';
+                        }}
                         className="size-full object-cover group-hover:scale-105 transition-transform"
                       />
                     </div>
@@ -964,11 +982,13 @@ export function TabView({
                       </p>
                       <div className="flex items-center gap-1.5 mt-1">
                         {result.url && (
-                          <Image
-                            src={result.favicon || getFaviconUrl(result.url)}
+                          <img
+                            src={
+                              result.favicon || getFaviconUrl(result.url)
+                            }
                             alt=""
-                            width={12}
-                            height={12}
+                            width="12"
+                            height="12"
                             className="size-3 rounded-full"
                             onError={(e) => {
                               e.currentTarget.style.display = 'none';
@@ -1014,12 +1034,19 @@ export function TabView({
                     className="group flex flex-col border border-neutral-200 dark:border-neutral-800 rounded-lg overflow-hidden hover:border-neutral-300 dark:hover:border-neutral-700 transition-colors cursor-pointer"
                   >
                     <div className="relative aspect-video bg-neutral-50 dark:bg-neutral-900 overflow-hidden">
-                      <Image
+                      <img
                         src={normalizeImageUrl(
                           result.thumbnailUrl || result.url,
                         )}
                         alt={result.title || 'Video result'}
-                        fill
+                        width="400"
+                        height="225"
+                        loading="lazy"
+                        style={{ minWidth: '100%', minHeight: '100%' }}
+                        onError={(e) => {
+                          e.currentTarget.style.backgroundColor = '#f3f4f6';
+                          e.currentTarget.style.display = 'block';
+                        }}
                         className="size-full object-cover group-hover:scale-105 transition-transform"
                       />
                       {/* Play button overlay */}
@@ -1132,14 +1159,12 @@ export function TabView({
             className="relative max-w-[90vw] max-h-[90vh] flex flex-col items-center"
             onClick={(e) => e.stopPropagation()}
           >
-            <Image
+            <img
               src={normalizeImageUrl(
                 imageSources[lightboxImageIndex].imageUrl ||
                   imageSources[lightboxImageIndex].url,
               )}
               alt={imageSources[lightboxImageIndex].title || 'Image'}
-              width={800}
-              height={600}
               className="max-w-full max-h-[80vh] object-contain rounded-lg"
             />
 
@@ -1150,15 +1175,15 @@ export function TabView({
               </h3>
               <div className="flex items-center gap-2">
                 {imageSources[lightboxImageIndex].url && (
-                  <Image
+                  <img
                     src={
                       imageSources[lightboxImageIndex].favicon ||
                       getFaviconUrl(imageSources[lightboxImageIndex].url)
                     }
                     alt=""
-                    width={16}
-                    height={16}
-                    className="size-4 rounded-full"
+                    width="12"
+                    height="12"
+                    className="size-3 rounded-full"
                     onError={(e) => {
                       e.currentTarget.style.display = 'none';
                     }}
