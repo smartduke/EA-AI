@@ -29,6 +29,8 @@ export const myProvider = isTestEnvironment
         'artifact-model': artifactModel,
         'openai-model': openaiModel,
         'gpt-4o-mini': openaiModel,
+        'gpt-4.1': openaiModel,
+        'gpt-4.1-mini': openaiModel,
       },
     })
   : customProvider({
@@ -42,6 +44,8 @@ export const myProvider = isTestEnvironment
         'artifact-model': xai('grok-2-1212'),
         'openai-model': openai('gpt-4o-mini'),
         'gpt-4o-mini': openai('gpt-4o-mini'),
+        'gpt-4.1': openai('gpt-4o'),
+        'gpt-4.1-mini': openai('gpt-4o-mini'),
       },
       imageModels: {
         'small-model': xai.image('grok-2-image'),

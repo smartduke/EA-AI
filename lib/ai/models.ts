@@ -23,4 +23,14 @@ export const chatModels: Array<ChatModel> = [
     description:
       'Smaller, faster version of GPT-4o with excellent capabilities',
   },
+  {
+    id: 'gpt-4.1',
+    name: 'GPT-4o',
+    description: 'Advanced OpenAI model with enhanced reasoning and multimodal capabilities',
+  },
+  {
+    id: 'gpt-4.1-mini',
+    name: 'GPT-4o-mini (Enhanced)',
+    description: 'GPT-4o-mini with enhanced prompt for balanced performance',
+  },
 ];
