@@ -303,21 +303,21 @@ async function fetchFromSearxNG(query: string): Promise<SearchResult[]> {
             query,
             'general',
             SEARXNG_CONFIG.engines,
-            SEARXNG_CONFIG.resultsCount,
+            8, // Max 8 sources for regular search
           ),
           makeSearchRequest(
             searxngBaseUrl,
             query,
             'images',
             SEARXNG_CONFIG.imageEngines,
-            SEARXNG_CONFIG.imageResultsCount,
+            15, // Fetch extra to account for filtering, target max 10 images
           ),
           makeSearchRequest(
             searxngBaseUrl,
             query,
             'videos',
             SEARXNG_CONFIG.videoEngines,
-            SEARXNG_CONFIG.videoResultsCount,
+            15, // Fetch extra to account for filtering, target max 10 videos
           ),
         ]);
 
@@ -326,39 +326,20 @@ async function fetchFromSearxNG(query: string): Promise<SearchResult[]> {
       const imageResults = processImageResults(imageResultsRaw);
       const videoResults = processVideoResults(videoResultsRaw);
 
-      // Ensure proper balance of results
+      // Ensure proper balance of results for regular search
       const combinedResults: SearchResult[] = [];
 
-      // Get at least 10 text results if available
-      const textResultsToInclude = Math.min(10, textResults.length);
+      // Get text results for 3-4 paragraphs (8 sources max)
+      const textResultsToInclude = Math.min(8, textResults.length);
       combinedResults.push(...textResults.slice(0, textResultsToInclude));
 
-      // Get up to 20 image results, but don't exceed our limit
-      const maxImages = Math.min(20, imageResults.length);
+      // Get up to 10 image results (user requirement)
+      const maxImages = Math.min(10, imageResults.length);
       combinedResults.push(...imageResults.slice(0, maxImages));
 
-      // Get up to 15 video results, but don't exceed our limit
-      const maxVideos = Math.min(15, videoResults.length);
+      // Get up to 10 video results (user requirement)
+      const maxVideos = Math.min(10, videoResults.length);
       combinedResults.push(...videoResults.slice(0, maxVideos));
-
-      // If we have room for more text results, include them
-      if (
-        combinedResults.length < SEARXNG_CONFIG.totalResultsLimit &&
-        textResults.length > textResultsToInclude
-      ) {
-        const remainingSpace =
-          SEARXNG_CONFIG.totalResultsLimit - combinedResults.length;
-        const additionalTextResults = Math.min(
-          remainingSpace,
-          textResults.length - textResultsToInclude,
-        );
-        combinedResults.push(
-          ...textResults.slice(
-            textResultsToInclude,
-            textResultsToInclude + additionalTextResults,
-          ),
-        );
-      }
 
       console.log(
         `Found ${textResults.length} text results, ${imageResults.length} image results, and ${videoResults.length} video results, returning ${combinedResults.length} combined results (with ${combinedResults.filter((r) => r.type === 'image').length} images and ${combinedResults.filter((r) => r.type === 'video').length} videos)`,
@@ -439,3 +420,154 @@ export const webSearch = tool({
     }
   },
 });
+
+export const deepWebSearch = tool({
+  description:
+    'Perform comprehensive deep web search for extensive research with 30-50 results using SearXNG',
+  parameters: z.object({
+    query: z.string().describe('The search query to use for deep research'),
+  }),
+  execute: async ({ query }): Promise<SearchResponse> => {
+    console.log(`🔍 Performing DEEP web search for: "${query}"`);
+
+    try {
+      if (!query || query.trim() === '') {
+        throw new Error('Search query cannot be empty');
+      }
+
+      // Enhanced configuration for deep search
+      const deepSearchResults = await fetchDeepSearchResults(query);
+
+      return {
+        results: deepSearchResults,
+        query,
+        timestamp: new Date().toISOString(),
+        message:
+          deepSearchResults.length > 0
+            ? `Found ${deepSearchResults.length} comprehensive results for deep research on "${query}"`
+            : `No results found for deep search on "${query}"`,
+      };
+    } catch (error: any) {
+      console.error(`❌ Deep web search error:`, error);
+
+      // Return empty results with a descriptive error
+      return {
+        results: [],
+        query: query || '',
+        timestamp: new Date().toISOString(),
+        error: error?.message || 'An error occurred during the deep search',
+        message: `Unable to get deep search results: ${error?.message || 'An unknown error occurred'}. Please verify that SearXNG is properly configured and running.`,
+      };
+    }
+  },
+});
+
+/**
+ * Fetches comprehensive search results for deep search mode (30-50 results)
+ */
+async function fetchDeepSearchResults(query: string): Promise<SearchResult[]> {
+  if (!searxngBaseUrl) {
+    throw new Error(
+      'No SearXNG instance available. Please ensure SearXNG is running.',
+    );
+  }
+
+  let lastError = null;
+
+  // Implement retry logic for deep search
+  for (let attempt = 0; attempt < SEARXNG_CONFIG.retryCount; attempt++) {
+    try {
+      // If not the first attempt, wait before retrying
+      if (attempt > 0) {
+        await new Promise((resolve) =>
+          setTimeout(resolve, SEARXNG_CONFIG.retryDelay),
+        );
+        console.log(
+          `🔄 Deep search retry attempt ${attempt + 1} for: "${query}"`,
+        );
+      }
+
+      // Enhanced search requests for deep search - get more results
+      const [textResultsRaw, imageResultsRaw, videoResultsRaw] =
+        await Promise.all([
+          makeSearchRequest(
+            searxngBaseUrl,
+            query,
+            'general',
+            SEARXNG_CONFIG.engines,
+            25, // Fetch extra for deep search to ensure 20 sources
+          ),
+          makeSearchRequest(
+            searxngBaseUrl,
+            query,
+            'images',
+            SEARXNG_CONFIG.imageEngines,
+            30, // Fetch extra to account for filtering, target 20 images
+          ),
+          makeSearchRequest(
+            searxngBaseUrl,
+            query,
+            'videos',
+            SEARXNG_CONFIG.videoEngines,
+            30, // Fetch extra to account for filtering, target 20 videos
+          ),
+        ]);
+
+      // Process results into standardized format
+      const textResults = processTextResults(textResultsRaw);
+      const imageResults = processImageResults(imageResultsRaw);
+      const videoResults = processVideoResults(videoResultsRaw);
+
+      // For deep search, provide comprehensive coverage
+      const combinedResults: SearchResult[] = [];
+
+      // Include up to 20 text sources for comprehensive analysis
+      const textResultsToInclude = Math.min(20, textResults.length);
+      combinedResults.push(...textResults.slice(0, textResultsToInclude));
+
+      // Add up to 20 images for deep search
+      const maxImages = Math.min(20, imageResults.length);
+      combinedResults.push(...imageResults.slice(0, maxImages));
+
+      // Add up to 20 videos for deep search
+      const maxVideos = Math.min(20, videoResults.length);
+      combinedResults.push(...videoResults.slice(0, maxVideos));
+
+      console.log(
+        `🔍 Deep search found ${textResults.length} text results, ${imageResults.length} image results, and ${videoResults.length} video results, returning ${combinedResults.length} comprehensive results for deep analysis`,
+      );
+
+      if (combinedResults.length === 0) {
+        console.log(`⚠️ No usable results found from deep search for "${query}"`);
+        return [];
+      }
+
+      return combinedResults;
+    } catch (error: any) {
+      console.error(
+        `❌ Deep search error (attempt ${attempt + 1}/${SEARXNG_CONFIG.retryCount}):`,
+        error.message,
+      );
+      lastError = error;
+
+      // If this is the last attempt, continue to the error handling below
+      if (attempt === SEARXNG_CONFIG.retryCount - 1) {
+        break;
+      }
+
+      // If the error is an AbortError (timeout), try with increased timeout
+      if (error.name === 'AbortError') {
+        SEARXNG_CONFIG.timeout += 5000; // Increase timeout for next attempts
+        console.log(
+          `⏱️ Increased timeout to ${SEARXNG_CONFIG.timeout}ms for deep search next attempt`,
+        );
+      }
+    }
+  }
+
+  // If we've exhausted all retries, throw the last error
+  throw (
+    lastError ||
+    new Error('Failed to fetch deep search results after multiple attempts')
+  );
+}

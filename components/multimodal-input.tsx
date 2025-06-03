@@ -22,6 +22,7 @@ import { Button } from './ui/button';
 import { Textarea } from './ui/textarea';
 import { NewsCategoryTabs } from './news-categories-tabs';
 import { ModelSelector } from './model-selector';
+import { SearchModeSelector, type SearchMode } from './search-mode-selector';
 import equal from 'fast-deep-equal';
 import type { UseChatHelpers } from '@ai-sdk/react';
 import { AnimatePresence, motion } from 'framer-motion';
@@ -65,6 +66,12 @@ function PureMultimodalInput({
 }) {
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const { width } = useWindowSize();
+
+  // Search mode state management
+  const [selectedSearchMode, setSelectedSearchMode] = useLocalStorage<SearchMode>(
+    'search-mode',
+    'search'
+  );
 
   useEffect(() => {
     if (textareaRef.current) {
@@ -323,6 +330,12 @@ function PureMultimodalInput({
                 className="p-2 h-[34px] text-xs"
                 compact={true}
               />
+              <SearchModeSelector
+                selectedSearchMode={selectedSearchMode}
+                onSearchModeChange={setSelectedSearchMode}
+                className="p-2 h-[34px] text-xs"
+                compact={true}
+              />
               <AttachmentsButton fileInputRef={fileInputRef} status={status} />
             </div>
 
@@ -437,6 +450,12 @@ function PureMultimodalInput({
               <ModelSelector
                 session={session}
                 selectedModelId={selectedModelId}
+                className="p-2 h-[34px] text-xs"
+                compact={true}
+              />
+              <SearchModeSelector
+                selectedSearchMode={selectedSearchMode}
+                onSearchModeChange={setSelectedSearchMode}
                 className="p-2 h-[34px] text-xs"
                 compact={true}
               />

@@ -4,6 +4,7 @@ import {
   createDataStream,
   smoothStream,
   streamText,
+  tool,
 } from 'ai';
 import { auth, type UserType } from '@/app/(auth)/auth';
 import { type RequestHints, systemPrompt } from '@/lib/ai/prompts';
@@ -23,7 +24,7 @@ import { createDocument } from '@/lib/ai/tools/create-document';
 import { updateDocument } from '@/lib/ai/tools/update-document';
 import { requestSuggestions } from '@/lib/ai/tools/request-suggestions';
 import { getWeather } from '@/lib/ai/tools/get-weather';
-import { webSearch } from '@/lib/ai/tools/web-search';
+import { webSearch, deepWebSearch } from '@/lib/ai/tools/web-search';
 import { isProductionEnvironment } from '@/lib/constants';
 import { myProvider } from '@/lib/ai/providers';
 import { entitlementsByUserType } from '@/lib/ai/entitlements';
@@ -35,6 +36,7 @@ import {
 } from 'resumable-stream';
 import { after } from 'next/server';
 import type { Chat } from '@/lib/db/schema';
+import { z } from 'zod';
 
 export const maxDuration = 60;
 
@@ -72,7 +74,7 @@ export async function POST(request: Request) {
   }
 
   try {
-    const { id, message, selectedChatModel, selectedVisibilityType } =
+    const { id, message, selectedChatModel, selectedVisibilityType, selectedSearchMode } =
       requestBody;
 
     const session = await auth();
@@ -154,12 +156,20 @@ export async function POST(request: Request) {
         try {
           const result = streamText({
             model: myProvider.languageModel(selectedChatModel),
-            system: systemPrompt({ selectedChatModel, requestHints }),
+            system: systemPrompt({ selectedChatModel, requestHints, selectedSearchMode }),
             messages,
             maxSteps: 5,
             experimental_activeTools:
               selectedChatModel === 'chat-model-reasoning'
                 ? []
+                : selectedSearchMode === 'deep-search'
+                ? [
+                    'getWeather',
+                    'createDocument',
+                    'updateDocument',
+                    'requestSuggestions',
+                    'deepWebSearch',
+                  ]
                 : [
                     'getWeather',
                     'createDocument',
@@ -177,7 +187,8 @@ export async function POST(request: Request) {
                 session,
                 dataStream,
               }),
-              webSearch,
+              webSearch: webSearch,
+              deepWebSearch: deepWebSearch,
             },
             onFinish: async ({ response }) => {
               if (session.user?.id) {

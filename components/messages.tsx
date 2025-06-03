@@ -1,12 +1,25 @@
 import type { UIMessage } from 'ai';
 import { PreviewMessage, ThinkingMessage } from './message';
 import { Greeting } from './greeting';
-import { memo, } from 'react';
+import { memo, useState, useEffect } from 'react';
 import type { Vote } from '@/lib/db/schema';
 import equal from 'fast-deep-equal';
 import type { UseChatHelpers } from '@ai-sdk/react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useMessages } from '@/hooks/use-messages';
+import { ResearchPipeline } from './research-pipeline';
+
+interface ResearchPhase {
+  id: string;
+  status: 'pending' | 'active' | 'completed';
+  title: string;
+  queries?: string[];
+  sources?: Array<{
+    name: string;
+    domain: string;
+    url: string;
+  }>;
+}
 
 interface MessagesProps {
   chatId: string;
@@ -38,6 +51,44 @@ function PureMessages({
     chatId,
     status,
   });
+
+  // Research pipeline state
+  const [researchPhases, setResearchPhases] = useState<ResearchPhase[]>([]);
+  const [showResearchPipeline, setShowResearchPipeline] = useState(false);
+
+  // Listen for research pipeline updates from data stream
+  useEffect(() => {
+    const handleStorageChange = (e: StorageEvent) => {
+      if (e.key === `research-pipeline-${chatId}`) {
+        try {
+          const data = JSON.parse(e.newValue || '{}');
+          if (data.type === 'research-pipeline') {
+            setResearchPhases(data.data.phases);
+            setShowResearchPipeline(true);
+          } else if (data.type === 'research-pipeline-update') {
+            setResearchPhases(prev => prev.map(phase => 
+              phase.id === data.data.phaseId 
+                ? { ...phase, ...data.data }
+                : phase
+            ));
+          }
+        } catch (error) {
+          console.error('Error parsing research pipeline data:', error);
+        }
+      }
+    };
+
+    window.addEventListener('storage', handleStorageChange);
+    return () => window.removeEventListener('storage', handleStorageChange);
+  }, [chatId]);
+
+  // Hide research pipeline when response is complete
+  useEffect(() => {
+    if (status === 'ready' && showResearchPipeline) {
+      // Hide pipeline after a delay
+      setTimeout(() => setShowResearchPipeline(false), 3000);
+    }
+  }, [status, showResearchPipeline]);
 
   // Simple, clean loading logic
   const isLoading = status === 'submitted' || status === 'streaming';
@@ -96,6 +147,12 @@ function PureMessages({
           onMessageRef={() => {}}
         />
       ))}
+
+      {/* Research Pipeline for Deep Search */}
+      <ResearchPipeline 
+        isVisible={showResearchPipeline}
+        phases={researchPhases}
+      />
 
       {shouldShowThinking && (
         <AnimatePresence>

@@ -309,7 +309,8 @@ const PurePreviewMessage = ({
                       content = part.text;
                     } else if (
                       part.type === 'tool-invocation' &&
-                      part.toolInvocation?.toolName === 'webSearch' &&
+                      (part.toolInvocation?.toolName === 'webSearch' ||
+                       part.toolInvocation?.toolName === 'deepWebSearch') &&
                       part.toolInvocation?.state === 'result'
                     ) {
                       const results = part.toolInvocation.result?.results;
