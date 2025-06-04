@@ -83,21 +83,21 @@ export function sanitizeText(text: string) {
  * Priority: NEXT_PUBLIC_SITE_URL > NEXT_PUBLIC_VERCEL_URL > window.location.origin (fallback)
  */
 export function getSiteUrl(): string {
-  // Check for explicit site URL first
+  // Check for explicit site URL first (custom domain override)
   if (process.env.NEXT_PUBLIC_SITE_URL) {
     return process.env.NEXT_PUBLIC_SITE_URL;
   }
 
-  // Check for Vercel URL (automatic in Vercel deployments)
+  // Check for Vercel URL (automatic in Vercel deployments with system env vars exposed)
   if (process.env.NEXT_PUBLIC_VERCEL_URL) {
     return `https://${process.env.NEXT_PUBLIC_VERCEL_URL}`;
   }
 
-  // Fallback to current origin (for development)
+  // Fallback to current origin (for development and edge cases)
   if (typeof window !== 'undefined') {
     return window.location.origin;
   }
 
-  // Last resort fallback
+  // Last resort fallback for SSR without window
   return 'http://localhost:3000';
 }
