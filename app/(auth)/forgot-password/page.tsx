@@ -54,9 +54,9 @@ export default function ForgotPasswordPage() {
       <div className="flex h-dvh w-screen items-start pt-12 md:pt-0 md:items-center justify-center bg-background">
         <div className="w-full max-w-md overflow-hidden rounded-2xl flex flex-col gap-12">
           <div className="flex flex-col items-center justify-center gap-4 px-4 text-center sm:px-16">
-            <div className="w-12 h-12 bg-green-100 dark:bg-green-900/20 rounded-full flex items-center justify-center">
+            <div className="size-12 bg-green-100 dark:bg-green-900/20 rounded-full flex items-center justify-center">
               <svg
-                className="w-6 h-6 text-green-600 dark:text-green-400"
+                className="size-6 text-green-600 dark:text-green-400"
                 fill="none"
                 stroke="currentColor"
                 viewBox="0 0 24 24"
@@ -73,11 +73,11 @@ export default function ForgotPasswordPage() {
               Check Your Email
             </h3>
             <p className="text-sm text-gray-500 dark:text-zinc-400">
-              We've sent a password reset link to <strong>{email}</strong>.
+              We&apos;ve sent a password reset link to <strong>{email}</strong>.
               Click the link in the email to reset your password.
             </p>
             <p className="text-xs text-gray-400 dark:text-zinc-500">
-              Didn't receive an email? Check your spam folder or try again.
+              Didn&apos;t receive an email? Check your spam folder or try again.
             </p>
           </div>
           <div className="px-4 sm:px-16">
@@ -101,8 +101,8 @@ export default function ForgotPasswordPage() {
             Forgot Password
           </h3>
           <p className="text-sm text-gray-500 dark:text-zinc-400">
-            Enter your email address and we'll send you a link to reset your
-            password
+            Enter your email address and we&apos;ll send you a link to reset
+            your password
           </p>
         </div>
         <Form
