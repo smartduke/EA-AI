@@ -9,7 +9,18 @@ import { useSidebar } from './ui/sidebar';
 import { memo } from 'react';
 import { Tooltip, TooltipContent, TooltipTrigger } from './ui/tooltip';
 import { type VisibilityType, VisibilitySelector } from './visibility-selector';
-import type { Session } from 'next-auth';
+
+interface SessionUser {
+  id: string;
+  email?: string;
+  name?: string;
+  image?: string;
+}
+
+interface Session {
+  user: SessionUser;
+  expires: string;
+}
 
 function PureChatHeader({
   chatId,
