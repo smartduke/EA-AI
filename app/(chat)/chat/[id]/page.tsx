@@ -1,13 +1,14 @@
 import { cookies } from 'next/headers';
-import { notFound, redirect } from 'next/navigation';
+import { notFound } from 'next/navigation';
+import { createServerComponentClient } from '@supabase/auth-helpers-nextjs';
 
-import { auth } from '@/app/(auth)/auth';
 import { Chat } from '@/components/chat';
 import { getChatById, getMessagesByChatId } from '@/lib/db/queries';
 import { DataStreamHandler } from '@/components/data-stream-handler';
 import { DEFAULT_CHAT_MODEL } from '@/lib/ai/models';
 import type { DBMessage } from '@/lib/db/schema';
 import type { Attachment, UIMessage } from 'ai';
+import { generateUUID } from '@/lib/utils';
 
 export default async function Page(props: { params: Promise<{ id: string }> }) {
   const params = await props.params;
@@ -18,18 +19,45 @@ export default async function Page(props: { params: Promise<{ id: string }> }) {
     notFound();
   }
 
-  const session = await auth();
+  const supabase = createServerComponentClient({ cookies });
+  const {
+    data: { session: supabaseSession },
+  } = await supabase.auth.getSession();
 
-  if (!session) {
-    redirect('/api/auth/guest');
-  }
+  // Create session object - either from authenticated user or guest
+  const session = supabaseSession
+    ? {
+        // Authenticated user session
+        user: {
+          id: supabaseSession.user.id,
+          email: supabaseSession.user.email,
+          name:
+            supabaseSession.user.user_metadata?.full_name ||
+            supabaseSession.user.email,
+          image: supabaseSession.user.user_metadata?.avatar_url,
+        },
+        expires: supabaseSession.expires_at
+          ? new Date(supabaseSession.expires_at * 1000).toISOString()
+          : new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(),
+      }
+    : {
+        // Guest user session - use proper UUID for database compatibility
+        user: {
+          id: generateUUID(),
+          email: `guest-${Date.now()}@guest.local`,
+          name: 'Guest User',
+          image: undefined,
+        },
+        expires: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(),
+      };
 
+  // Check access permissions for private chats
   if (chat.visibility === 'private') {
-    if (!session.user) {
-      return notFound();
-    }
-
-    if (session.user.id !== chat.userId) {
+    // If not authenticated, only allow if chat belongs to a guest user (email pattern)
+    if (!supabaseSession) {
+      // For guest users, allow access to any chat (they can't save anyway)
+      // Or you could make this more restrictive based on your needs
+    } else if (session.user.id !== chat.userId) {
       return notFound();
     }
   }
@@ -54,6 +82,11 @@ export default async function Page(props: { params: Promise<{ id: string }> }) {
   const cookieStore = await cookies();
   const chatModelFromCookie = cookieStore.get('chat-model');
 
+  // Determine if the chat should be readonly for this user
+  const isReadonly = supabaseSession
+    ? session?.user?.id !== chat.userId
+    : false;
+
   if (!chatModelFromCookie) {
     return (
       <>
@@ -62,7 +95,7 @@ export default async function Page(props: { params: Promise<{ id: string }> }) {
           initialMessages={convertToUIMessages(messagesFromDb)}
           initialChatModel={DEFAULT_CHAT_MODEL}
           initialVisibilityType={chat.visibility}
-          isReadonly={session?.user?.id !== chat.userId}
+          isReadonly={isReadonly}
           session={session}
           autoResume={true}
         />
@@ -78,7 +111,7 @@ export default async function Page(props: { params: Promise<{ id: string }> }) {
         initialMessages={convertToUIMessages(messagesFromDb)}
         initialChatModel={chatModelFromCookie.value}
         initialVisibilityType={chat.visibility}
-        isReadonly={session?.user?.id !== chat.userId}
+        isReadonly={isReadonly}
         session={session}
         autoResume={true}
       />

@@ -2,9 +2,10 @@
 
 import { ChevronUp } from 'lucide-react';
 import Image from 'next/image';
-import type { User } from 'next-auth';
-import { signOut, useSession } from 'next-auth/react';
+import { useRouter } from 'next/navigation';
 import { useTheme } from 'next-themes';
+import { createSupabaseBrowserClient } from '@/lib/supabase/client';
+import { guestEmailPattern } from '@/lib/constants';
 
 import {
   DropdownMenu,
@@ -18,53 +19,78 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
 } from '@/components/ui/sidebar';
-import { useRouter } from 'next/navigation';
 import { toast } from './toast';
 import { LoaderIcon } from './icons';
-import { guestRegex } from '@/lib/constants';
+
+interface User {
+  id: string;
+  email?: string;
+  image?: string;
+}
 
 export function SidebarUserNav({ user }: { user: User }) {
   const router = useRouter();
-  const { data, status } = useSession();
   const { setTheme, theme } = useTheme();
+  const supabase = createSupabaseBrowserClient();
 
-  const isGuest = guestRegex.test(data?.user?.email ?? '');
+  // Check if user is guest
+  const isGuest = guestEmailPattern.test(user.email ?? '');
+
+  const handleSignOut = async () => {
+    try {
+      const { error } = await supabase.auth.signOut();
+      if (error) {
+        toast({
+          type: 'error',
+          description: error.message,
+        });
+        return;
+      }
+      router.refresh();
+      router.push('/');
+    } catch (error) {
+      toast({
+        type: 'error',
+        description: 'An error occurred while signing out.',
+      });
+    }
+  };
+
+  const handleLogin = () => {
+    router.push('/login');
+  };
 
   return (
     <SidebarMenu>
-      <SidebarMenuItem>
+      <SidebarMenuItem className="flex items-center justify-between p-0">
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            {status === 'loading' ? (
-              <SidebarMenuButton className="data-[state=open]:bg-sidebar-accent bg-background data-[state=open]:text-sidebar-accent-foreground h-10 justify-between">
-                <div className="flex flex-row gap-2">
-                  <div className="size-6 bg-zinc-500/30 rounded-full animate-pulse" />
-                  <span className="bg-zinc-500/30 text-transparent rounded-md animate-pulse">
-                    Loading auth status
-                  </span>
+            <SidebarMenuButton
+              data-testid="user-nav-button"
+              className="h-12 w-full justify-between px-2"
+            >
+              <div className="flex items-center gap-2 overflow-hidden">
+                <div className="flex h-6 w-6 shrink-0 select-none items-center justify-center overflow-hidden rounded-full bg-background/10">
+                  {user?.image ? (
+                    <Image
+                      src={user.image}
+                      alt={user.email ?? ''}
+                      width={24}
+                      height={24}
+                      className="aspect-square h-full w-full"
+                    />
+                  ) : (
+                    <div className="flex h-full w-full items-center justify-center rounded-full bg-muted text-xs uppercase text-muted-foreground">
+                      {isGuest ? 'G' : (user?.email?.charAt(0) ?? '?')}
+                    </div>
+                  )}
                 </div>
-                <div className="animate-spin text-zinc-500">
-                  <LoaderIcon />
+                <div className="truncate text-sm" data-testid="user-email">
+                  {isGuest ? 'Guest' : (user?.email ?? 'anonymous@example.com')}
                 </div>
-              </SidebarMenuButton>
-            ) : (
-              <SidebarMenuButton
-                data-testid="user-nav-button"
-                className="data-[state=open]:bg-sidebar-accent bg-background data-[state=open]:text-sidebar-accent-foreground h-10"
-              >
-                <Image
-                  src={`https://avatar.vercel.sh/${user.email}`}
-                  alt={user.email ?? 'User Avatar'}
-                  width={24}
-                  height={24}
-                  className="rounded-full"
-                />
-                <span data-testid="user-email" className="truncate">
-                  {isGuest ? 'Guest' : user?.email}
-                </span>
-                <ChevronUp className="ml-auto" />
-              </SidebarMenuButton>
-            )}
+              </div>
+              <ChevronUp className="h-4 w-4 shrink-0 rotate-180" />
+            </SidebarMenuButton>
           </DropdownMenuTrigger>
           <DropdownMenuContent
             data-testid="user-nav-menu"
@@ -83,25 +109,7 @@ export function SidebarUserNav({ user }: { user: User }) {
               <button
                 type="button"
                 className="w-full cursor-pointer"
-                onClick={() => {
-                  if (status === 'loading') {
-                    toast({
-                      type: 'error',
-                      description:
-                        'Checking authentication status, please try again!',
-                    });
-
-                    return;
-                  }
-
-                  if (isGuest) {
-                    router.push('/login');
-                  } else {
-                    signOut({
-                      redirectTo: '/',
-                    });
-                  }
-                }}
+                onClick={isGuest ? handleLogin : handleSignOut}
               >
                 {isGuest ? 'Login to your account' : 'Sign out'}
               </button>

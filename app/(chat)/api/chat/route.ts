@@ -6,7 +6,7 @@ import {
   streamText,
   tool,
 } from 'ai';
-import { auth, type UserType } from '@/app/(auth)/auth';
+import { auth } from '@/lib/supabase/auth';
 import { type RequestHints, systemPrompt } from '@/lib/ai/prompts';
 import {
   createStreamId,
@@ -27,7 +27,7 @@ import { getWeather } from '@/lib/ai/tools/get-weather';
 import { webSearch, deepWebSearch } from '@/lib/ai/tools/web-search';
 import { isProductionEnvironment } from '@/lib/constants';
 import { myProvider } from '@/lib/ai/providers';
-import { entitlementsByUserType } from '@/lib/ai/entitlements';
+import { entitlementsByUserType, type UserType } from '@/lib/ai/entitlements';
 import { postRequestBodySchema, type PostRequestBody } from './schema';
 import { geolocation } from '@vercel/functions';
 import {
@@ -74,19 +74,36 @@ export async function POST(request: Request) {
   }
 
   try {
-    const { id, message, selectedChatModel, selectedVisibilityType, selectedSearchMode } =
-      requestBody;
+    const {
+      id,
+      message,
+      selectedChatModel,
+      selectedVisibilityType,
+      selectedSearchMode,
+    } = requestBody;
 
     const session = await auth();
 
-    if (!session?.user) {
-      return new Response('Unauthorized', { status: 401 });
-    }
+    // Create guest session if no authenticated session exists
+    const effectiveSession = session || {
+      user: {
+        id: generateUUID(),
+        email: `guest-${Date.now()}@guest.local`,
+        name: 'Guest User',
+        image: undefined,
+      },
+      expires: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(),
+    };
 
-    const userType: UserType = session.user.type;
+    // Determine user type based on email pattern (guest emails contain @guest.local)
+    const userType: UserType = effectiveSession.user.email?.includes(
+      '@guest.local',
+    )
+      ? 'guest'
+      : 'regular';
 
     const messageCount = await getMessageCountByUserId({
-      id: session.user.id,
+      id: effectiveSession.user.id,
       differenceInHours: 24,
     });
 
@@ -108,12 +125,12 @@ export async function POST(request: Request) {
 
       await saveChat({
         id,
-        userId: session.user.id,
+        userId: effectiveSession.user.id,
         title,
         visibility: selectedVisibilityType,
       });
     } else {
-      if (chat.userId !== session.user.id) {
+      if (chat.userId !== effectiveSession.user.id) {
         return new Response('Forbidden', { status: 403 });
       }
     }
@@ -156,42 +173,52 @@ export async function POST(request: Request) {
         try {
           const result = streamText({
             model: myProvider.languageModel(selectedChatModel),
-            system: systemPrompt({ selectedChatModel, requestHints, selectedSearchMode }),
+            system: systemPrompt({
+              selectedChatModel,
+              requestHints,
+              selectedSearchMode,
+            }),
             messages,
             maxSteps: 5,
             experimental_activeTools:
               selectedChatModel === 'chat-model-reasoning'
                 ? []
                 : selectedSearchMode === 'deep-search'
-                ? [
-                    'getWeather',
-                    'createDocument',
-                    'updateDocument',
-                    'requestSuggestions',
-                    'deepWebSearch',
-                  ]
-                : [
-                    'getWeather',
-                    'createDocument',
-                    'updateDocument',
-                    'requestSuggestions',
-                    'webSearch',
-                  ],
+                  ? [
+                      'getWeather',
+                      'createDocument',
+                      'updateDocument',
+                      'requestSuggestions',
+                      'deepWebSearch',
+                    ]
+                  : [
+                      'getWeather',
+                      'createDocument',
+                      'updateDocument',
+                      'requestSuggestions',
+                      'webSearch',
+                    ],
             experimental_transform: smoothStream({ chunking: 'word' }),
             experimental_generateMessageId: generateUUID,
             tools: {
               getWeather,
-              createDocument: createDocument({ session, dataStream }),
-              updateDocument: updateDocument({ session, dataStream }),
+              createDocument: createDocument({
+                session: effectiveSession,
+                dataStream,
+              }),
+              updateDocument: updateDocument({
+                session: effectiveSession,
+                dataStream,
+              }),
               requestSuggestions: requestSuggestions({
-                session,
+                session: effectiveSession,
                 dataStream,
               }),
               webSearch: webSearch,
               deepWebSearch: deepWebSearch,
             },
             onFinish: async ({ response }) => {
-              if (session.user?.id) {
+              if (effectiveSession.user?.id) {
                 try {
                   const assistantId = getTrailingMessageId({
                     messages: response.messages.filter(
@@ -285,9 +312,16 @@ export async function GET(request: Request) {
 
   const session = await auth();
 
-  if (!session?.user) {
-    return new Response('Unauthorized', { status: 401 });
-  }
+  // Create guest session if no authenticated session exists
+  const effectiveSession = session || {
+    user: {
+      id: generateUUID(),
+      email: `guest-${Date.now()}@guest.local`,
+      name: 'Guest User',
+      image: undefined,
+    },
+    expires: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(),
+  };
 
   let chat: Chat;
 
@@ -301,7 +335,13 @@ export async function GET(request: Request) {
     return new Response('Not found', { status: 404 });
   }
 
-  if (chat.visibility === 'private' && chat.userId !== session.user.id) {
+  // For guest users, allow access to any chat (they can't save anyway)
+  // For authenticated users, enforce privacy rules
+  if (
+    chat.visibility === 'private' &&
+    session &&
+    chat.userId !== effectiveSession.user.id
+  ) {
     return new Response('Forbidden', { status: 403 });
   }
 
@@ -339,6 +379,7 @@ export async function DELETE(request: Request) {
 
   const session = await auth();
 
+  // Only authenticated users can delete chats
   if (!session?.user?.id) {
     return new Response('Unauthorized', { status: 401 });
   }
@@ -347,15 +388,14 @@ export async function DELETE(request: Request) {
     const chat = await getChatById({ id });
 
     if (chat.userId !== session.user.id) {
-      return new Response('Forbidden', { status: 403 });
+      return new Response('Unauthorized', { status: 401 });
     }
 
-    const deletedChat = await deleteChatById({ id });
+    await deleteChatById({ id });
 
-    return Response.json(deletedChat, { status: 200 });
+    return new Response('Chat deleted', { status: 200 });
   } catch (error) {
-    console.error(error);
-    return new Response('An error occurred while processing your request!', {
+    return new Response('An error occurred while deleting the chat', {
       status: 500,
     });
   }

@@ -1,10 +1,21 @@
 import { z } from 'zod';
-import type { Session } from 'next-auth';
 import { type DataStreamWriter, streamObject, tool } from 'ai';
 import { getDocumentById, saveSuggestions } from '@/lib/db/queries';
 import type { Suggestion } from '@/lib/db/schema';
 import { generateUUID } from '@/lib/utils';
 import { myProvider } from '../providers';
+
+interface SessionUser {
+  id: string;
+  email?: string;
+  name?: string;
+  image?: string;
+}
+
+interface Session {
+  user: SessionUser;
+  expires: string;
+}
 
 interface RequestSuggestionsProps {
   session: Session;

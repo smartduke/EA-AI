@@ -8,6 +8,7 @@ export const isTestEnvironment = Boolean(
     process.env.CI_PLAYWRIGHT,
 );
 
-export const guestRegex = /^guest-\d+$/;
+// Pattern to identify guest users by their email format
+export const guestEmailPattern = /@guest\.local$/;
 
 export const DUMMY_PASSWORD = generateDummyPassword();

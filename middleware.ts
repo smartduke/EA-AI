@@ -1,9 +1,10 @@
 import { NextResponse, type NextRequest } from 'next/server';
-import { getToken } from 'next-auth/jwt';
-import { guestRegex, isDevelopmentEnvironment } from './lib/constants';
+import { createMiddlewareClient } from '@supabase/auth-helpers-nextjs';
+import { isDevelopmentEnvironment } from './lib/constants';
 
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
+  const response = NextResponse.next();
 
   /*
    * Playwright starts the dev server and requires a 200 status to
@@ -13,31 +14,26 @@ export async function middleware(request: NextRequest) {
     return new Response('pong', { status: 200 });
   }
 
-  if (pathname.startsWith('/api/auth')) {
-    return NextResponse.next();
+  // Skip middleware for API routes - let them handle their own auth
+  if (pathname.startsWith('/api/')) {
+    return response;
   }
 
-  const token = await getToken({
-    req: request,
-    secret: process.env.AUTH_SECRET,
-    secureCookie: !isDevelopmentEnvironment,
-  });
+  // Create Supabase client for auth (only for non-API routes)
+  const supabase = createMiddlewareClient({ req: request, res: response });
 
-  if (!token) {
-    const redirectUrl = encodeURIComponent(request.url);
+  // Refresh session if expired - required for Server Components
+  const {
+    data: { session },
+  } = await supabase.auth.getSession();
 
-    return NextResponse.redirect(
-      new URL(`/api/auth/guest?redirectUrl=${redirectUrl}`, request.url),
-    );
-  }
-
-  const isGuest = guestRegex.test(token?.email ?? '');
-
-  if (token && !isGuest && ['/login', '/register'].includes(pathname)) {
+  // If session exists and trying to access auth pages, redirect to home
+  if (session && ['/login', '/register'].includes(pathname)) {
     return NextResponse.redirect(new URL('/', request.url));
   }
 
-  return NextResponse.next();
+  // Allow all users (authenticated and guest) to access the app
+  return response;
 }
 
 export const config = {

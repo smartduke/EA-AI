@@ -29,7 +29,18 @@ import { AnimatePresence, motion } from 'framer-motion';
 import { ArrowDown } from 'lucide-react';
 import { useScrollToBottom } from '@/hooks/use-scroll-to-bottom';
 import type { VisibilityType } from './visibility-selector';
-import type { Session } from 'next-auth';
+
+interface SessionUser {
+  id: string;
+  email?: string;
+  name?: string;
+  image?: string;
+}
+
+interface Session {
+  user: SessionUser;
+  expires: string;
+}
 
 function PureMultimodalInput({
   chatId,
@@ -68,10 +79,8 @@ function PureMultimodalInput({
   const { width } = useWindowSize();
 
   // Search mode state management
-  const [selectedSearchMode, setSelectedSearchMode] = useLocalStorage<SearchMode>(
-    'search-mode',
-    'search'
-  );
+  const [selectedSearchMode, setSelectedSearchMode] =
+    useLocalStorage<SearchMode>('search-mode', 'search');
 
   useEffect(() => {
     if (textareaRef.current) {

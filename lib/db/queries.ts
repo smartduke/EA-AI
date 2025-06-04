@@ -16,7 +16,6 @@ import { drizzle } from 'drizzle-orm/postgres-js';
 import postgres from 'postgres';
 
 import {
-  user,
   chat,
   type User,
   document,
@@ -30,51 +29,14 @@ import {
 } from './schema';
 import type { ArtifactKind } from '@/components/artifact';
 import { generateUUID } from '../utils';
-import { generateHashedPassword } from './utils';
 import type { VisibilityType } from '@/components/visibility-selector';
-
-// Optionally, if not using email/pass login, you can
-// use the Drizzle adapter for Auth.js / NextAuth
-// https://authjs.dev/reference/adapter/drizzle
 
 // biome-ignore lint: Forbidden non-null assertion.
 const client = postgres(process.env.POSTGRES_URL!);
 const db = drizzle(client);
 
-export async function getUser(email: string): Promise<Array<User>> {
-  try {
-    return await db.select().from(user).where(eq(user.email, email));
-  } catch (error) {
-    console.error('Failed to get user from database');
-    throw error;
-  }
-}
-
-export async function createUser(email: string, password: string) {
-  const hashedPassword = generateHashedPassword(password);
-
-  try {
-    return await db.insert(user).values({ email, password: hashedPassword });
-  } catch (error) {
-    console.error('Failed to create user in database');
-    throw error;
-  }
-}
-
-export async function createGuestUser() {
-  const email = `guest-${Date.now()}`;
-  const password = generateHashedPassword(generateUUID());
-
-  try {
-    return await db.insert(user).values({ email, password }).returning({
-      id: user.id,
-      email: user.email,
-    });
-  } catch (error) {
-    console.error('Failed to create guest user in database');
-    throw error;
-  }
-}
+// User management is now handled by Supabase
+// Removed getUser, createUser, createGuestUser functions
 
 export async function saveChat({
   id,
@@ -105,7 +67,6 @@ export async function deleteChatById({ id }: { id: string }) {
   try {
     await db.delete(vote).where(eq(vote.chatId, id));
     await db.delete(message).where(eq(message.chatId, id));
-    await db.delete(stream).where(eq(stream.chatId, id));
 
     const [chatsDeleted] = await db
       .delete(chat)
@@ -277,17 +238,21 @@ export async function saveDocument({
   userId: string;
 }) {
   try {
+    await db.insert(document).values({
+      id,
+      title,
+      kind,
+      content,
+      userId,
+      createdAt: new Date(),
+    });
+
     return await db
-      .insert(document)
-      .values({
-        id,
-        title,
-        kind,
-        content,
-        userId,
-        createdAt: new Date(),
-      })
-      .returning();
+      .select()
+      .from(document)
+      .where(eq(document.id, id))
+      .orderBy(desc(document.createdAt))
+      .limit(1);
   } catch (error) {
     console.error('Failed to save document in database');
     throw error;
@@ -477,6 +442,62 @@ export async function getMessageCountByUserId({
   }
 }
 
+export async function getStreamById({ id }: { id: string }) {
+  try {
+    const [selectedStream] = await db
+      .select()
+      .from(stream)
+      .where(eq(stream.id, id));
+
+    return selectedStream;
+  } catch (error) {
+    console.error('Failed to get stream by id from database');
+    throw error;
+  }
+}
+
+export async function saveStream({
+  id,
+  userId,
+  object,
+}: {
+  id: string;
+  userId: string;
+  object: any;
+}) {
+  try {
+    const now = new Date();
+    return await db.insert(stream).values({
+      id,
+      userId,
+      object,
+      createdAt: now,
+      updatedAt: now,
+    });
+  } catch (error) {
+    console.error('Failed to save stream in database');
+    throw error;
+  }
+}
+
+export async function updateStream({
+  id,
+  object,
+}: {
+  id: string;
+  object: any;
+}) {
+  try {
+    return await db
+      .update(stream)
+      .set({ object, updatedAt: new Date() })
+      .where(eq(stream.id, id));
+  } catch (error) {
+    console.error('Failed to update stream in database');
+    throw error;
+  }
+}
+
 export async function createStreamId({
   streamId,
   chatId,
@@ -485,27 +506,31 @@ export async function createStreamId({
   chatId: string;
 }) {
   try {
-    await db
-      .insert(stream)
-      .values({ id: streamId, chatId, createdAt: new Date() });
+    const now = new Date();
+    await db.insert(stream).values({
+      id: streamId,
+      userId: generateUUID(),
+      object: { chatId },
+      createdAt: now,
+      updatedAt: now,
+    });
   } catch (error) {
-    console.error('Failed to create stream id in database');
+    console.error('Failed to create stream ID in database', error);
     throw error;
   }
 }
 
 export async function getStreamIdsByChatId({ chatId }: { chatId: string }) {
   try {
-    const streamIds = await db
+    const streams = await db
       .select({ id: stream.id })
       .from(stream)
-      .where(eq(stream.chatId, chatId))
-      .orderBy(desc(stream.createdAt))
-      .execute();
+      .where(eq(stream.object, { chatId }))
+      .orderBy(asc(stream.createdAt));
 
-    return streamIds.map(({ id }) => id);
+    return streams.map((s) => s.id);
   } catch (error) {
-    console.error('Failed to get stream ids by chat id from database');
+    console.error('Failed to get stream IDs by chat ID from database', error);
     throw error;
   }
 }

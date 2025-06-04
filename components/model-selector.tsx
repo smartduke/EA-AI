@@ -15,8 +15,20 @@ import { cn } from '@/lib/utils';
 
 import { CheckCircleFillIcon, ChevronDownIcon } from './icons';
 import { LayoutGrid } from 'lucide-react';
-import { entitlementsByUserType } from '@/lib/ai/entitlements';
-import type { Session } from 'next-auth';
+import { entitlementsByUserType, type UserType } from '@/lib/ai/entitlements';
+import { guestEmailPattern } from '@/lib/constants';
+
+interface SessionUser {
+  id: string;
+  email?: string;
+  name?: string;
+  image?: string;
+}
+
+interface Session {
+  user: SessionUser;
+  expires: string;
+}
 
 export function ModelSelector({
   session,
@@ -32,7 +44,10 @@ export function ModelSelector({
   const [optimisticModelId, setOptimisticModelId] =
     useOptimistic(selectedModelId);
 
-  const userType = session.user.type;
+  // Determine user type based on email pattern (guest emails contain @guest.local)
+  const userType: UserType = guestEmailPattern.test(session.user.email ?? '')
+    ? 'guest'
+    : 'regular';
   const { availableChatModelIds } = entitlementsByUserType[userType];
 
   const availableChatModels = chatModels.filter((chatModel) =>
@@ -49,65 +64,55 @@ export function ModelSelector({
 
   return (
     <DropdownMenu open={open} onOpenChange={setOpen}>
-      <DropdownMenuTrigger
-        asChild
-        className={cn(
-          'w-fit data-[state=open]:bg-accent data-[state=open]:text-accent-foreground',
-          className,
-        )}
-      >
+      <DropdownMenuTrigger asChild>
         <Button
-          data-testid="model-selector"
           variant="outline"
-          className="md:px-2 md:h-[34px]"
+          className={cn(
+            'md:px-2 md:h-fit max-w-fit border-dashed justify-start items-center gap-2 md:justify-center font-medium',
+            className,
+          )}
         >
+          <div className="text-xs text-muted-foreground">Model</div>
+
           {compact ? (
-            <LayoutGrid className="size-4" />
+            <LayoutGrid size={16} />
           ) : (
-            <>
-              {selectedChatModel?.name}
+            <div className="flex items-center gap-2">
+              <div className="text-xs font-medium">
+                {selectedChatModel?.name}
+              </div>
               <ChevronDownIcon />
-            </>
+            </div>
           )}
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="start" className="min-w-[300px]">
-        {availableChatModels.map((chatModel) => {
-          const { id } = chatModel;
+        {availableChatModels.map((chatModel) => (
+          <DropdownMenuItem
+            key={chatModel.id}
+            onSelect={() => {
+              setOptimisticModelId(chatModel.id);
 
-          return (
-            <DropdownMenuItem
-              data-testid={`model-selector-item-${id}`}
-              key={id}
-              onSelect={() => {
-                setOpen(false);
-
-                startTransition(() => {
-                  setOptimisticModelId(id);
-                  saveChatModelAsCookie(id);
-                });
-              }}
-              data-active={id === optimisticModelId}
-              asChild
-            >
-              <button
-                type="button"
-                className="gap-4 group/item flex flex-row justify-between items-center w-full"
-              >
-                <div className="flex flex-col gap-1 items-start">
-                  <div>{chatModel.name}</div>
-                  <div className="text-xs text-muted-foreground">
-                    {chatModel.description}
-                  </div>
+              startTransition(() => {
+                saveChatModelAsCookie(chatModel.id);
+              });
+            }}
+            className="gap-4 group/item"
+            data-active={chatModel.id === optimisticModelId}
+          >
+            <div className="flex flex-col gap-1 items-start">
+              <div className="font-medium">{chatModel.name}</div>
+              {chatModel.description && (
+                <div className="text-xs text-muted-foreground">
+                  {chatModel.description}
                 </div>
-
-                <div className="text-foreground dark:text-foreground opacity-0 group-data-[active=true]/item:opacity-100">
-                  <CheckCircleFillIcon />
-                </div>
-              </button>
-            </DropdownMenuItem>
-          );
-        })}
+              )}
+            </div>
+            <div className="ml-auto opacity-0 group-data-[active=true]/item:opacity-100">
+              <CheckCircleFillIcon />
+            </div>
+          </DropdownMenuItem>
+        ))}
       </DropdownMenuContent>
     </DropdownMenu>
   );

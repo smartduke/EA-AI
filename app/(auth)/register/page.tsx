@@ -2,52 +2,61 @@
 
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { useActionState, useEffect, useState } from 'react';
-
+import { useState } from 'react';
+import { toast } from '@/components/toast';
 import { AuthForm } from '@/components/auth-form';
 import { SubmitButton } from '@/components/submit-button';
-
-import { register, type RegisterActionState } from '../actions';
-import { toast } from '@/components/toast';
-import { useSession } from 'next-auth/react';
+import { createSupabaseBrowserClient } from '@/lib/supabase/client';
 
 export default function Page() {
   const router = useRouter();
-
   const [email, setEmail] = useState('');
   const [isSuccessful, setIsSuccessful] = useState(false);
 
-  const [state, formAction] = useActionState<RegisterActionState, FormData>(
-    register,
-    {
-      status: 'idle',
-    },
-  );
+  const handleSubmit = async (formData: FormData) => {
+    try {
+      const supabase = createSupabaseBrowserClient();
+      const email = formData.get('email') as string;
+      const password = formData.get('password') as string;
 
-  const { update: updateSession } = useSession();
+      setEmail(email);
 
-  useEffect(() => {
-    if (state.status === 'user_exists') {
-      toast({ type: 'error', description: 'Account already exists!' });
-    } else if (state.status === 'failed') {
-      toast({ type: 'error', description: 'Failed to create account!' });
-    } else if (state.status === 'invalid_data') {
-      toast({
-        type: 'error',
-        description: 'Failed validating your submission!',
+      const { error } = await supabase.auth.signUp({
+        email,
+        password,
+        options: {
+          emailRedirectTo: `${window.location.origin}/auth/callback`,
+        },
       });
-    } else if (state.status === 'success') {
-      toast({ type: 'success', description: 'Account created successfully!' });
+
+      if (error) {
+        if (error.message.includes('already registered')) {
+          toast({
+            type: 'error',
+            description: 'Account already exists!',
+          });
+        } else {
+          toast({
+            type: 'error',
+            description: error.message,
+          });
+        }
+        return;
+      }
 
       setIsSuccessful(true);
-      updateSession();
+      toast({
+        type: 'success',
+        description: 'Account created successfully! Please check your email to verify your account.',
+      });
       router.refresh();
+      router.push('/');
+    } catch (error) {
+      toast({
+        type: 'error',
+        description: 'An error occurred during registration.',
+      });
     }
-  }, [state]);
-
-  const handleSubmit = (formData: FormData) => {
-    setEmail(formData.get('email') as string);
-    formAction(formData);
   };
 
   return (

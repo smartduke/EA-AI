@@ -15,11 +15,22 @@ import { useArtifactSelector } from '@/hooks/use-artifact';
 import { unstable_serialize } from 'swr/infinite';
 import { getChatHistoryPaginationKey } from './sidebar-history';
 import { toast } from './toast';
-import type { Session } from 'next-auth';
 import { useSearchParams } from 'next/navigation';
 import { useChatVisibility } from '@/hooks/use-chat-visibility';
 import { useLocalStorage } from 'usehooks-ts';
 import type { SearchMode } from './search-mode-selector';
+
+interface SessionUser {
+  id: string;
+  email?: string;
+  name?: string;
+  image?: string;
+}
+
+interface Session {
+  user: SessionUser;
+  expires: string;
+}
 
 export function Chat({
   id,
@@ -46,7 +57,10 @@ export function Chat({
   });
 
   // Search mode state management
-  const [selectedSearchMode] = useLocalStorage<SearchMode>('search-mode', 'search');
+  const [selectedSearchMode] = useLocalStorage<SearchMode>(
+    'search-mode',
+    'search',
+  );
 
   const {
     messages,
