@@ -46,8 +46,9 @@ export function SidebarUserNav({ user }: { user: User }) {
         });
         return;
       }
-      router.refresh();
-      router.push('/');
+
+      // Force a complete page reload to clear all cached state
+      window.location.href = '/';
     } catch (error) {
       toast({
         type: 'error',
