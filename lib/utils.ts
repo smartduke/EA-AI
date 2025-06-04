@@ -80,24 +80,29 @@ export function sanitizeText(text: string) {
 
 /**
  * Get the correct site URL for both development and production environments
- * Priority: NEXT_PUBLIC_SITE_URL > NEXT_PUBLIC_VERCEL_URL > window.location.origin (fallback)
+ * This function prioritizes environment variables over dynamic detection for reliability
  */
 export function getSiteUrl(): string {
-  // Check for explicit site URL first (custom domain override)
+  // 1. Check for explicit site URL override (highest priority)
   if (process.env.NEXT_PUBLIC_SITE_URL) {
     return process.env.NEXT_PUBLIC_SITE_URL;
   }
 
-  // Check for Vercel URL (automatic in Vercel deployments with system env vars exposed)
+  // 2. Check for Vercel URL (client-side)
   if (process.env.NEXT_PUBLIC_VERCEL_URL) {
     return `https://${process.env.NEXT_PUBLIC_VERCEL_URL}`;
   }
 
-  // Fallback to current origin (for development and edge cases)
+  // 3. Check for Vercel URL (server-side system env)
+  if (process.env.VERCEL_URL) {
+    return `https://${process.env.VERCEL_URL}`;
+  }
+
+  // 4. For client-side, use current location
   if (typeof window !== 'undefined') {
     return window.location.origin;
   }
 
-  // Last resort fallback for SSR without window
+  // 5. Development fallback
   return 'http://localhost:3000';
 }

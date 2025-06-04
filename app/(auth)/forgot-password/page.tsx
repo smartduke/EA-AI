@@ -25,6 +25,20 @@ export default function ForgotPasswordPage() {
 
       const siteUrl = getSiteUrl();
 
+      // Debug logging to see what URL is being used
+      console.log('=== FORGOT PASSWORD DEBUG ===');
+      console.log('Environment variables:');
+      console.log('- NEXT_PUBLIC_SITE_URL:', process.env.NEXT_PUBLIC_SITE_URL);
+      console.log(
+        '- NEXT_PUBLIC_VERCEL_URL:',
+        process.env.NEXT_PUBLIC_VERCEL_URL,
+      );
+      console.log('- VERCEL_URL:', process.env.VERCEL_URL);
+      console.log('- NODE_ENV:', process.env.NODE_ENV);
+      console.log('Final site URL used:', siteUrl);
+      console.log('Reset URL will be:', `${siteUrl}/reset-password`);
+      console.log('============================');
+
       const { error } = await supabase.auth.resetPasswordForEmail(email, {
         redirectTo: `${siteUrl}/reset-password`,
       });
