@@ -7,6 +7,7 @@ import { SubmitButton } from '@/components/submit-button';
 import { createSupabaseBrowserClient } from '@/lib/supabase/client';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { getSiteUrl } from '@/lib/utils';
 import Form from 'next/form';
 
 export default function ForgotPasswordPage() {
@@ -22,8 +23,10 @@ export default function ForgotPasswordPage() {
 
       setEmail(email);
 
+      const siteUrl = getSiteUrl();
+
       const { error } = await supabase.auth.resetPasswordForEmail(email, {
-        redirectTo: `${window.location.origin}/reset-password`,
+        redirectTo: `${siteUrl}/reset-password`,
       });
 
       if (error) {

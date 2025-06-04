@@ -77,3 +77,27 @@ export function getTrailingMessageId({
 export function sanitizeText(text: string) {
   return text.replace('<has_function_call>', '');
 }
+
+/**
+ * Get the correct site URL for both development and production environments
+ * Priority: NEXT_PUBLIC_SITE_URL > NEXT_PUBLIC_VERCEL_URL > window.location.origin (fallback)
+ */
+export function getSiteUrl(): string {
+  // Check for explicit site URL first
+  if (process.env.NEXT_PUBLIC_SITE_URL) {
+    return process.env.NEXT_PUBLIC_SITE_URL;
+  }
+
+  // Check for Vercel URL (automatic in Vercel deployments)
+  if (process.env.NEXT_PUBLIC_VERCEL_URL) {
+    return `https://${process.env.NEXT_PUBLIC_VERCEL_URL}`;
+  }
+
+  // Fallback to current origin (for development)
+  if (typeof window !== 'undefined') {
+    return window.location.origin;
+  }
+
+  // Last resort fallback
+  return 'http://localhost:3000';
+}

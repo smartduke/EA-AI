@@ -7,6 +7,7 @@ import { toast } from '@/components/toast';
 import { AuthForm } from '@/components/auth-form';
 import { SubmitButton } from '@/components/submit-button';
 import { createSupabaseBrowserClient } from '@/lib/supabase/client';
+import { getSiteUrl } from '@/lib/utils';
 
 export default function Page() {
   const router = useRouter();
@@ -21,11 +22,13 @@ export default function Page() {
 
       setEmail(email);
 
+      const siteUrl = getSiteUrl();
+
       const { error } = await supabase.auth.signUp({
         email,
         password,
         options: {
-          emailRedirectTo: `${window.location.origin}/auth/callback`,
+          emailRedirectTo: `${siteUrl}/auth/callback`,
         },
       });
 
@@ -47,7 +50,8 @@ export default function Page() {
       setIsSuccessful(true);
       toast({
         type: 'success',
-        description: 'Account created successfully! Please check your email to verify your account.',
+        description:
+          'Account created successfully! Please check your email to verify your account.',
       });
       router.refresh();
       router.push('/');
