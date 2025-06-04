@@ -1,1 +1,3 @@
-ALTER TABLE "Document" ADD PRIMARY KEY ("id");
+-- This migration is redundant as Document table already has a primary key
+-- Commenting out to prevent deployment error: "multiple primary keys for table Document are not allowed"
+-- ALTER TABLE "Document" ADD PRIMARY KEY ("id");
