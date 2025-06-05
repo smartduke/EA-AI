@@ -43,7 +43,7 @@ import {
   getUserSubscription,
 } from '@/lib/services/subscription';
 
-export const maxDuration = 120;
+export const maxDuration = 60;
 
 let globalStreamContext: ResumableStreamContext | null = null;
 
