@@ -17,6 +17,52 @@ import {
 import { useEffect, useState, useCallback } from 'react';
 import { Button } from './ui/button';
 
+// Country code to country name mapping
+const COUNTRY_NAMES: Record<string, string> = {
+  US: 'United States',
+  GB: 'United Kingdom',
+  CA: 'Canada',
+  AU: 'Australia',
+  IN: 'India',
+  DE: 'Germany',
+  FR: 'France',
+  ES: 'Spain',
+  IT: 'Italy',
+  JP: 'Japan',
+  KR: 'South Korea',
+  CN: 'China',
+  BR: 'Brazil',
+  MX: 'Mexico',
+  RU: 'Russia',
+  NL: 'Netherlands',
+  SE: 'Sweden',
+  NO: 'Norway',
+  DK: 'Denmark',
+  FI: 'Finland',
+  BE: 'Belgium',
+  CH: 'Switzerland',
+  AT: 'Austria',
+  IE: 'Ireland',
+  NZ: 'New Zealand',
+  ZA: 'South Africa',
+  SG: 'Singapore',
+  HK: 'Hong Kong',
+  TW: 'Taiwan',
+};
+
+// Function to get country name from country code or return as-is if already a name
+const getCountryName = (countryCodeOrName?: string): string => {
+  if (!countryCodeOrName) return '';
+
+  // If it's a 2-letter code, try to convert it
+  if (countryCodeOrName.length === 2) {
+    return COUNTRY_NAMES[countryCodeOrName.toUpperCase()] || countryCodeOrName;
+  }
+
+  // If it's already a country name, return as-is
+  return countryCodeOrName;
+};
+
 // Define the props for the component
 interface NewsCategoryTabsProps {
   onSelectMessageAction: (message: string) => void;
@@ -191,13 +237,13 @@ export function NewsCategoryTabs({
                   userLocation.country &&
                   userLocation.country !== 'US'
                 ) {
-                  return userLocation.country;
+                  return getCountryName(userLocation.country);
                 } else if (
                   category.id === 'COUNTRY' &&
                   userLocation.country &&
                   userLocation.country !== 'US'
                 ) {
-                  return userLocation.country;
+                  return getCountryName(userLocation.country);
                 }
                 return category.label;
               };
@@ -226,7 +272,7 @@ export function NewsCategoryTabs({
                     userLocation.country &&
                     userLocation.country !== 'US' && (
                       <span className="text-xs opacity-75">
-                        ({userLocation.country})
+                        ({getCountryName(userLocation.country)})
                       </span>
                     )}
                   {isLoading[category.id] && isActive && (
@@ -244,7 +290,7 @@ export function NewsCategoryTabs({
             <MapPin className="size-3" />
             <span>
               News for {userLocation.city ? `${userLocation.city}, ` : ''}
-              {userLocation.country}
+              {getCountryName(userLocation.country)}
             </span>
           </div>
         )}
