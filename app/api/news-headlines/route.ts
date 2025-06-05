@@ -340,10 +340,14 @@ async function enhanceHeadlines(
       const batch = headlines.slice(i, i + batchSize);
       const originalHeadlines = batch.map((h) => h.heading);
 
+      const headlinesList = originalHeadlines
+        .map((h, idx) => `${idx + 1}. ${h}`)
+        .join('\n');
+
       const prompt = `You are an expert news headline writer. Your task is to rewrite these news headlines to be more engaging and clickable while preserving their original meaning and factual accuracy. Make them more compelling but not sensationalized.
 
 Original headlines:
-${originalHeadlines.map((h, idx) => `${idx + 1}. ${h}`).join('\n')}
+${headlinesList}
 
 Please provide enhanced versions that are:
 - More engaging and interesting

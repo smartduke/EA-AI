@@ -11,6 +11,9 @@ export async function auth(): Promise<AdaptedSession> {
     return null;
   }
 
+  // Note: NextJS 15 cookie warnings are expected with @supabase/auth-helpers-nextjs@0.9.0
+  // These warnings don't affect functionality but indicate the library needs updating
+  // for full NextJS 15 compatibility. The warnings can be safely ignored for now.
   const supabase = createRouteHandlerClient({ cookies });
 
   try {
