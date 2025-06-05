@@ -9,6 +9,7 @@ import { useSidebar } from './ui/sidebar';
 import { memo } from 'react';
 import { Tooltip, TooltipContent, TooltipTrigger } from './ui/tooltip';
 import { type VisibilityType, VisibilitySelector } from './visibility-selector';
+import { WeatherSnippet } from './weather-snippet';
 
 interface SessionUser {
   id: string;
@@ -43,7 +44,7 @@ function PureChatHeader({
   const { width: windowWidth } = useWindowSize();
 
   return (
-    <header className="flex sticky top-0 py-1.5 items-center px-2 md:px-2 gap-2 bg-transparent z-10">
+    <header className="flex sticky top-0 py-1.5 items-start px-2 md:px-2 gap-2 bg-transparent z-10">
       <SidebarToggle />
 
       {(!open || windowWidth < 768) && (
@@ -51,7 +52,7 @@ function PureChatHeader({
           <TooltipTrigger asChild>
             <Button
               variant="outline"
-              className="order-2 md:order-1 md:px-2 px-2 md:h-fit ml-auto md:ml-0"
+              className="md:px-2 px-2 md:h-fit"
               onClick={() => {
                 router.push('/');
                 router.refresh();
@@ -72,6 +73,13 @@ function PureChatHeader({
           selectedVisibilityType={selectedVisibilityType}
           className="ml-auto"
         />
+      )}
+
+      {/* Show weather snippet only on home page */}
+      {isHomePage && (
+        <div className="ml-auto">
+          <WeatherSnippet />
+        </div>
       )}
     </header>
   );

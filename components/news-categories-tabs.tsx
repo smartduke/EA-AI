@@ -16,6 +16,7 @@ import {
 } from 'lucide-react';
 import { useEffect, useState, useCallback } from 'react';
 import { Button } from './ui/button';
+import { motion } from 'framer-motion';
 
 // Country code to country name mapping
 const COUNTRY_NAMES: Record<string, string> = {
@@ -217,145 +218,173 @@ export function NewsCategoryTabs({
 
   return (
     <div className={cn('w-full', className)}>
-      {/* Horizontal scroll tabs with hidden scrollbar and scroll indicators */}
-      <div className="relative mb-6">
-        {/* Gradient fade indicator at the right edge */}
-        <div className="absolute right-0 top-0 bottom-0 w-8 bg-gradient-to-l from-white dark:from-gray-900 to-transparent pointer-events-none z-10" />
+      {/* Modern iOS-style pill tabs */}
+      <div className="relative mb-3">
+        {/* Background container for pill effect */}
+        <div className="bg-gray-100/80 dark:bg-gray-800/80 backdrop-blur-sm rounded-2xl p-1.5 border border-gray-200/50 dark:border-gray-700/50">
+          <div className="flex overflow-x-auto scrollbar-hide">
+            <div className="flex gap-1 min-w-max">
+              {CATEGORIES.map((category) => {
+                const IconComponent = category.icon;
+                const isActive = activeCategory === category.id;
 
-        <div className="flex overflow-x-auto scrollbar-hide">
-          <div className="flex gap-3 min-w-max pr-8">
-            {CATEGORIES.map((category) => {
-              const IconComponent = category.icon;
-              const isActive = activeCategory === category.id;
-
-              // Dynamic label for Local category
-              const getLabel = () => {
-                if (category.id === 'LOCAL' && userLocation.city) {
-                  return userLocation.city;
-                } else if (
-                  category.id === 'LOCAL' &&
-                  userLocation.country &&
-                  userLocation.country !== 'US'
-                ) {
-                  return getCountryName(userLocation.country);
-                } else if (
-                  category.id === 'COUNTRY' &&
-                  userLocation.country &&
-                  userLocation.country !== 'US'
-                ) {
-                  return getCountryName(userLocation.country);
-                }
-                return category.label;
-              };
-
-              return (
-                <Button
-                  key={category.id}
-                  variant={isActive ? 'default' : 'outline'}
-                  size="sm"
-                  className={cn(
-                    'flex items-center gap-2 text-sm font-medium transition-all duration-200 whitespace-nowrap shadow-sm',
-                    isActive
-                      ? 'bg-gradient-to-r from-blue-600 to-blue-500 text-white hover:from-blue-700 hover:to-blue-600 shadow-md border-0'
-                      : 'bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-750 hover:border-gray-300 dark:hover:border-gray-600 hover:shadow-md',
-                  )}
-                  onClick={() => {
-                    setActiveCategory(category.id);
-                    if (userLocation.country) {
-                      fetchCategoryHeadlines(category.id);
-                    }
-                  }}
-                >
-                  <IconComponent className="size-4" />
-                  <span className="font-medium">{getLabel()}</span>
-                  {category.id === 'LOCAL' &&
+                // Dynamic label for Local category
+                const getLabel = () => {
+                  if (category.id === 'LOCAL' && userLocation.city) {
+                    return userLocation.city;
+                  } else if (
+                    category.id === 'LOCAL' &&
                     userLocation.country &&
-                    userLocation.country !== 'US' && (
-                      <span className="text-xs opacity-75">
-                        ({getCountryName(userLocation.country)})
-                      </span>
+                    userLocation.country !== 'US'
+                  ) {
+                    return getCountryName(userLocation.country);
+                  } else if (
+                    category.id === 'COUNTRY' &&
+                    userLocation.country &&
+                    userLocation.country !== 'US'
+                  ) {
+                    return getCountryName(userLocation.country);
+                  }
+                  return category.label;
+                };
+
+                return (
+                  <button
+                    key={category.id}
+                    type="button"
+                    className={cn(
+                      'flex items-center gap-2 px-3 py-2 rounded-xl text-sm font-medium transition-all duration-300 whitespace-nowrap relative overflow-hidden',
+                      isActive
+                        ? 'bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 shadow-lg shadow-black/10 dark:shadow-black/20 scale-100'
+                        : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200 hover:bg-white/50 dark:hover:bg-gray-700/50 scale-95 hover:scale-100',
                     )}
-                  {isLoading[category.id] && isActive && (
-                    <Loader2 className="size-3 animate-spin ml-1" />
-                  )}
-                </Button>
-              );
-            })}
+                    onClick={() => {
+                      setActiveCategory(category.id);
+                      if (userLocation.country) {
+                        fetchCategoryHeadlines(category.id);
+                      }
+                    }}
+                  >
+                    {/* Active background animation */}
+                    {isActive && (
+                      <motion.div
+                        layoutId="activeTab"
+                        className="absolute inset-0 bg-gradient-to-r from-blue-500/10 to-purple-500/10 dark:from-blue-400/10 dark:to-purple-400/10 rounded-xl"
+                        transition={{
+                          type: 'spring',
+                          stiffness: 300,
+                          damping: 30,
+                        }}
+                      />
+                    )}
+
+                    {/* Icon with animation */}
+                    <IconComponent
+                      className={cn(
+                        'size-4 transition-all duration-300 relative z-10',
+                        isActive
+                          ? 'text-blue-600 dark:text-blue-400 scale-110'
+                          : 'scale-100',
+                      )}
+                    />
+
+                    {/* Label */}
+                    <span className="font-medium relative z-10">
+                      {getLabel()}
+                    </span>
+
+                    {/* Country indicator for Local */}
+                    {category.id === 'LOCAL' &&
+                      userLocation.country &&
+                      userLocation.country !== 'US' && (
+                        <span className="text-xs opacity-60 relative z-10">
+                          ({getCountryName(userLocation.country)})
+                        </span>
+                      )}
+
+                    {/* Loading indicator */}
+                    {isLoading[category.id] && isActive && (
+                      <Loader2 className="size-3 animate-spin ml-1 relative z-10" />
+                    )}
+                  </button>
+                );
+              })}
+            </div>
           </div>
         </div>
-
-        {/* Location indicator */}
-        {userLocation.country && (
-          <div className="mt-2 flex items-center gap-1 text-xs text-muted-foreground">
-            <MapPin className="size-3" />
-            <span>
-              News for {userLocation.city ? `${userLocation.city}, ` : ''}
-              {getCountryName(userLocation.country)}
-            </span>
-          </div>
-        )}
       </div>
 
-      {/* Premium headlines section */}
-      <div className="relative min-h-[300px]">
+      {/* Compact Headlines Section */}
+      <div className="relative min-h-[200px]">
         {CATEGORIES.map((category) => (
           <div
             key={category.id}
             className={cn(
-              'absolute inset-0 transition-opacity duration-200',
+              'absolute inset-0 transition-all duration-300',
               activeCategory === category.id
-                ? 'opacity-100 pointer-events-auto'
-                : 'opacity-0 pointer-events-none',
+                ? 'opacity-100 pointer-events-auto translate-y-0'
+                : 'opacity-0 pointer-events-none translate-y-2',
             )}
           >
             {isLoading[category.id] ? (
-              // Premium Loading State
-              <div className="space-y-3">
-                {Array.from({ length: 3 }).map((_, i) => (
-                  <div
+              // Compact Loading State
+              <div className="space-y-1.5">
+                {Array.from({ length: 4 }).map((_, i) => (
+                  <motion.div
                     key={`loading-${category.id}-${i}`}
-                    className="py-3 px-3 bg-gray-50/50 dark:bg-gray-800/50 rounded-lg border border-gray-100 dark:border-gray-700/50"
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: i * 0.05 }}
+                    className="py-2 px-3 bg-white/60 dark:bg-gray-900/60 backdrop-blur-sm rounded-lg border border-gray-200/30 dark:border-gray-700/30"
                   >
-                    <div className="h-4 bg-gradient-to-r from-gray-200 to-gray-100 dark:from-gray-700 dark:to-gray-600 rounded animate-pulse w-3/4" />
-                  </div>
+                    <div className="flex items-center gap-2">
+                      <div className="size-1.5 bg-gradient-to-r from-blue-400 to-purple-400 rounded-full animate-pulse" />
+                      <div className="h-3 bg-gradient-to-r from-gray-200 to-gray-100 dark:from-gray-700 dark:to-gray-600 rounded animate-pulse w-2/3" />
+                    </div>
+                  </motion.div>
                 ))}
               </div>
             ) : headlines[category.id]?.length > 0 ? (
-              // Premium headlines
-              <div className="space-y-0">
+              // Compact Headlines
+              <div className="space-y-1">
                 {headlines[category.id].map(
                   (headline: HeadlineType, i: number) => (
-                    <button
+                    <motion.button
                       key={`${category.id}-${headline.link}-${i}`}
+                      initial={{ opacity: 0, y: 10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ delay: i * 0.03, duration: 0.2 }}
                       type="button"
-                      className="w-full text-left py-2 px-3 text-sm text-gray-800 dark:text-gray-200 hover:text-blue-700 dark:hover:text-blue-300 transition-all duration-200 rounded-lg hover:bg-gray-50/80 dark:hover:bg-gray-800/60 hover:shadow-sm border border-transparent hover:border-gray-200 dark:hover:border-gray-700 group"
+                      className="w-full text-left py-2 px-3 bg-white/60 dark:bg-gray-900/60 backdrop-blur-sm rounded-lg border border-gray-200/30 dark:border-gray-700/30 hover:border-blue-200 dark:hover:border-blue-700/40 hover:bg-white/80 dark:hover:bg-gray-900/80 transition-all duration-200 group"
                       onClick={async () => {
                         onSelectMessageAction(headline.message);
                       }}
                     >
                       <div className="flex items-center gap-2">
-                        <Search className="size-3 text-blue-600 dark:text-blue-400 flex-shrink-0" />
-                        <span className="font-medium leading-relaxed group-hover:text-blue-700 dark:group-hover:text-blue-300 flex-1">
+                        <div className="size-1.5 bg-gradient-to-r from-blue-500 to-purple-500 rounded-full flex-shrink-0 group-hover:scale-110 transition-transform duration-200" />
+                        <span className="text-xs font-medium text-gray-900 dark:text-gray-100 group-hover:text-blue-700 dark:group-hover:text-blue-300 transition-colors duration-200 line-clamp-1">
                           {headline.heading}
                         </span>
                       </div>
-                    </button>
+                    </motion.button>
                   ),
                 )}
               </div>
             ) : (
-              // Premium Empty State
-              <div className="py-12 text-center">
-                <div className="inline-flex items-center justify-center w-12 h-12 bg-gray-100 dark:bg-gray-800 rounded-full mb-4 shadow-sm">
-                  <div className="w-6 h-6 bg-gradient-to-r from-gray-300 to-gray-200 dark:from-gray-600 dark:to-gray-500 rounded animate-pulse" />
+              // Compact Empty State
+              <motion.div
+                initial={{ opacity: 0, scale: 0.95 }}
+                animate={{ opacity: 1, scale: 1 }}
+                transition={{ duration: 0.3 }}
+                className="py-8 text-center"
+              >
+                <div className="inline-flex items-center justify-center w-10 h-10 bg-gray-100 dark:bg-gray-800 rounded-xl mb-3">
+                  <div className="w-4 h-4 bg-gradient-to-r from-gray-300 to-gray-200 dark:from-gray-600 dark:to-gray-500 rounded animate-pulse" />
                 </div>
-                <p className="text-gray-500 dark:text-gray-400 text-sm font-medium">
+                <p className="text-gray-500 dark:text-gray-400 text-sm">
                   No headlines available
                 </p>
-                <p className="text-gray-400 dark:text-gray-500 text-xs mt-1">
-                  Check back later for updates
-                </p>
-              </div>
+              </motion.div>
             )}
           </div>
         ))}

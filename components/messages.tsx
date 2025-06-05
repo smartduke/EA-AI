@@ -30,6 +30,7 @@ interface MessagesProps {
   reload: UseChatHelpers['reload'];
   isReadonly: boolean;
   isArtifactVisible: boolean;
+  onPromptSelect?: (prompt: string) => void;
 }
 
 function PureMessages({
@@ -40,6 +41,7 @@ function PureMessages({
   setMessages,
   reload,
   isReadonly,
+  onPromptSelect,
 }: MessagesProps) {
   const {
     containerRef: messagesContainerRef,
@@ -66,11 +68,13 @@ function PureMessages({
             setResearchPhases(data.data.phases);
             setShowResearchPipeline(true);
           } else if (data.type === 'research-pipeline-update') {
-            setResearchPhases(prev => prev.map(phase => 
-              phase.id === data.data.phaseId 
-                ? { ...phase, ...data.data }
-                : phase
-            ));
+            setResearchPhases((prev) =>
+              prev.map((phase) =>
+                phase.id === data.data.phaseId
+                  ? { ...phase, ...data.data }
+                  : phase,
+              ),
+            );
           }
         } catch (error) {
           console.error('Error parsing research pipeline data:', error);
@@ -95,24 +99,24 @@ function PureMessages({
   const isHomePage = messages.length === 0;
 
   // Filter out incomplete assistant messages during loading
-  const displayMessages = isLoading ? 
-    messages.filter(msg => {
-      if (msg.role !== 'assistant') return true;
-      
-      // Only show assistant messages that have substantial content
-      const textPart = msg.parts?.find(part => part.type === 'text');
-      const hasSubstantialText = textPart && 'text' in textPart && 
-        textPart.text.trim().length > 30; // Reduced threshold for smoother transition
-      
-      return hasSubstantialText;
-    }) : 
-    messages;
+  const displayMessages = isLoading
+    ? messages.filter((msg) => {
+        if (msg.role !== 'assistant') return true;
+
+        // Only show assistant messages that have substantial content
+        const textPart = msg.parts?.find((part) => part.type === 'text');
+        const hasSubstantialText =
+          textPart && 'text' in textPart && textPart.text.trim().length > 30; // Reduced threshold for smoother transition
+
+        return hasSubstantialText;
+      })
+    : messages;
 
   // Show ThinkingMessage only when loading AND no substantial assistant content is displayed
-  const shouldShowThinking = isLoading && (
-    displayMessages.length === 0 || 
-    displayMessages[displayMessages.length - 1]?.role !== 'assistant'
-  );
+  const shouldShowThinking =
+    isLoading &&
+    (displayMessages.length === 0 ||
+      displayMessages[displayMessages.length - 1]?.role !== 'assistant');
 
   return (
     <div
@@ -124,7 +128,7 @@ function PureMessages({
       }`}
       suppressHydrationWarning
     >
-      {messages.length === 0 && <Greeting />}
+      {messages.length === 0 && <Greeting onPromptSelect={onPromptSelect} />}
 
       {displayMessages.map((message, index) => (
         <PreviewMessage
@@ -149,7 +153,7 @@ function PureMessages({
       ))}
 
       {/* Research Pipeline for Deep Search */}
-      <ResearchPipeline 
+      <ResearchPipeline
         isVisible={showResearchPipeline}
         phases={researchPhases}
       />
@@ -162,7 +166,6 @@ function PureMessages({
 
       <motion.div
         ref={messagesEndRef}
-        className="shrink-0 min-w-[24px] min-h-[12px]"
         onViewportLeave={onViewportLeave}
         onViewportEnter={onViewportEnter}
       />
