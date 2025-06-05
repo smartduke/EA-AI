@@ -1,7 +1,8 @@
 'use client';
 
-import { ChevronUp } from 'lucide-react';
+import { ChevronUp, User as UserIcon } from 'lucide-react';
 import Image from 'next/image';
+import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useTheme } from 'next-themes';
 import { createSupabaseBrowserClient } from '@/lib/supabase/client';
@@ -30,7 +31,7 @@ interface User {
 
 export function SidebarUserNav({ user }: { user: User }) {
   const router = useRouter();
-  const { setTheme, theme } = useTheme();
+  const { theme, setTheme } = useTheme();
   const supabase = createSupabaseBrowserClient();
 
   // Check if user is guest
@@ -98,6 +99,20 @@ export function SidebarUserNav({ user }: { user: User }) {
             side="top"
             className="w-[--radix-popper-anchor-width]"
           >
+            {!isGuest && (
+              <>
+                <DropdownMenuItem asChild>
+                  <Link
+                    href="/profile"
+                    className="flex items-center gap-2 cursor-pointer"
+                  >
+                    <UserIcon className="h-4 w-4" />
+                    Profile
+                  </Link>
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
+              </>
+            )}
             <DropdownMenuItem
               data-testid="user-nav-item-theme"
               className="cursor-pointer"

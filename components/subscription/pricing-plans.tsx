@@ -13,15 +13,18 @@ import { Badge } from '@/components/ui/badge';
 import { Check, Star } from 'lucide-react';
 import { SUBSCRIPTION_CONFIG } from '@/lib/config/subscription';
 import { PaymentModal } from './payment-modal';
+import Link from 'next/link';
 
 interface PricingPlansProps {
   currentPlan?: string;
   isLoading?: boolean;
+  isAuthenticated?: boolean;
 }
 
 export function PricingPlans({
   currentPlan = 'free',
   isLoading = false,
+  isAuthenticated = true,
 }: PricingPlansProps) {
   const [paymentModal, setPaymentModal] = useState<{
     isOpen: boolean;
@@ -47,8 +50,12 @@ export function PricingPlans({
         'Chat history',
       ],
       popular: false,
-      buttonText: currentPlan === 'free' ? 'Current Plan' : 'Get Started',
-      disabled: currentPlan === 'free',
+      buttonText: isAuthenticated
+        ? currentPlan === 'free'
+          ? 'Current Plan'
+          : 'Get Started'
+        : 'Continue Free Plan',
+      disabled: isAuthenticated && currentPlan === 'free',
     },
     {
       name: SUBSCRIPTION_CONFIG.PRO_PLAN.NAME,
@@ -65,8 +72,12 @@ export function PricingPlans({
         'Export conversations',
       ],
       popular: true,
-      buttonText: currentPlan === 'pro' ? 'Current Plan' : 'Upgrade to Pro',
-      disabled: currentPlan === 'pro',
+      buttonText: isAuthenticated
+        ? currentPlan === 'pro'
+          ? 'Current Plan'
+          : 'Upgrade to Pro'
+        : 'Upgrade to Pro',
+      disabled: isAuthenticated && currentPlan === 'pro',
     },
   ];
 
@@ -147,14 +158,26 @@ export function PricingPlans({
                 </ul>
 
                 {plan.type === 'free' ? (
-                  <Button
-                    className="w-full"
-                    variant={plan.disabled ? 'secondary' : 'default'}
-                    disabled={plan.disabled || isLoading}
-                  >
-                    {plan.buttonText}
-                  </Button>
-                ) : (
+                  isAuthenticated ? (
+                    <Button
+                      className="w-full"
+                      variant={plan.disabled ? 'secondary' : 'default'}
+                      disabled={plan.disabled || isLoading}
+                    >
+                      {plan.buttonText}
+                    </Button>
+                  ) : (
+                    <Link href="/login">
+                      <Button
+                        className="w-full"
+                        variant="default"
+                        disabled={isLoading}
+                      >
+                        {plan.buttonText}
+                      </Button>
+                    </Link>
+                  )
+                ) : isAuthenticated ? (
                   <div className="space-y-2">
                     <Button
                       className="w-full"
@@ -174,6 +197,27 @@ export function PricingPlans({
                         Yearly Plan (Save 20%)
                       </Button>
                     )}
+                  </div>
+                ) : (
+                  <div className="space-y-2">
+                    <Link href="/login">
+                      <Button
+                        className="w-full"
+                        variant="default"
+                        disabled={isLoading}
+                      >
+                        Monthly Plan
+                      </Button>
+                    </Link>
+                    <Link href="/login">
+                      <Button
+                        className="w-full"
+                        variant="outline"
+                        disabled={isLoading}
+                      >
+                        Yearly Plan (Save 20%)
+                      </Button>
+                    </Link>
                   </div>
                 )}
               </CardContent>
