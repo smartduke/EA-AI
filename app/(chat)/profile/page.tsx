@@ -1,31 +1,77 @@
-import { redirect } from 'next/navigation';
-import { createServerComponentClient } from '@supabase/auth-helpers-nextjs';
-import { cookies } from 'next/headers';
+'use client';
+
+import { useEffect, useState } from 'react';
+import { useRouter } from 'next/navigation';
+import { createSupabaseBrowserClient } from '@/lib/supabase/client';
 import { ProfileForm } from '@/components/profile/profile-form';
 import { SubscriptionManager } from '@/components/profile/subscription-manager';
-import { auth } from '@/lib/supabase/auth';
+import type { User } from '@supabase/auth-helpers-nextjs';
 
-export const metadata = {
-  title: 'Profile - InfoxAI',
-  description: 'Manage your profile and subscription settings',
-};
+export default function ProfilePage() {
+  const [user, setUser] = useState<User | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const router = useRouter();
 
-export default async function ProfilePage() {
-  const session = await auth();
+  useEffect(() => {
+    const checkAuth = async () => {
+      const supabase = createSupabaseBrowserClient();
 
-  if (!session?.user) {
-    redirect('/login');
+      try {
+        const {
+          data: { session },
+          error: sessionError,
+        } = await supabase.auth.getSession();
+
+        if (sessionError) {
+          console.error('Session error:', sessionError);
+          router.push('/login');
+          return;
+        }
+
+        if (!session?.user) {
+          router.push('/login');
+          return;
+        }
+
+        // Get full user data
+        const {
+          data: { user: userData },
+          error: userError,
+        } = await supabase.auth.getUser();
+
+        if (userError || !userData) {
+          console.error('User data error:', userError);
+          router.push('/login');
+          return;
+        }
+
+        setUser(userData);
+      } catch (error) {
+        console.error('Auth check error:', error);
+        router.push('/login');
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    checkAuth();
+  }, [router]);
+
+  if (isLoading) {
+    return (
+      <div className="container mx-auto px-4 py-8 max-w-4xl">
+        <div className="flex items-center justify-center min-h-screen">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-primary mx-auto" />
+            <p className="mt-4 text-muted-foreground">Loading profile...</p>
+          </div>
+        </div>
+      </div>
+    );
   }
 
-  // Get full user data with metadata from Supabase
-  const supabase = createServerComponentClient({ cookies });
-  const {
-    data: { user },
-    error,
-  } = await supabase.auth.getUser();
-
-  if (error || !user) {
-    redirect('/login');
+  if (!user) {
+    return null; // Will redirect to login
   }
 
   return (
