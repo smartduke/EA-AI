@@ -35,18 +35,20 @@ export default function Page() {
       }
 
       setIsSuccessful(true);
-      router.refresh();
+
+      // Wait a bit for the session to propagate
+      await new Promise((resolve) => setTimeout(resolve, 500));
 
       // Check if there's a return URL parameter
       const urlParams = new URLSearchParams(window.location.search);
       const returnUrl = urlParams.get('returnUrl');
 
       if (returnUrl) {
-        // Redirect to the return URL
-        router.push(returnUrl);
+        // Use window.location.href for full page reload to refresh server session
+        window.location.href = returnUrl;
       } else {
-        // Default redirect to home page
-        router.push('/');
+        // Use window.location.href for full page reload to refresh server session
+        window.location.href = '/';
       }
     } catch (error) {
       toast({
