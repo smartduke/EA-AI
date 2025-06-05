@@ -57,9 +57,12 @@ export function GuestLimitDialog({
   };
 
   const handleCancel = () => {
-    // Close dialog and redirect to home page
+    // Close dialog first
     onClose();
-    router.push('/');
+    // Use window.location.href for more reliable navigation in production
+    setTimeout(() => {
+      window.location.href = '/';
+    }, 50);
   };
 
   return (

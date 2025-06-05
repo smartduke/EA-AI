@@ -197,7 +197,16 @@ export function UsageLimitDialog({
         )}
 
         <DialogFooter className="gap-2 sm:gap-2">
-          <Button variant="outline" onClick={onClose}>
+          <Button
+            variant="outline"
+            onClick={() => {
+              onClose();
+              // Use window.location.href for reliable navigation in production
+              setTimeout(() => {
+                window.location.href = '/';
+              }, 50);
+            }}
+          >
             Cancel
           </Button>
           {(requiresLogin || requiresUpgrade || requiresContact) && (
