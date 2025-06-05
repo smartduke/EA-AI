@@ -12,6 +12,7 @@ import {
   Trophy,
   Heart,
   Search,
+  Flag,
 } from 'lucide-react';
 import { useEffect, useState, useCallback } from 'react';
 import { Button } from './ui/button';
@@ -37,9 +38,18 @@ type HeadlineType = {
   link: string;
 };
 
+// Define user location type
+type UserLocation = {
+  country?: string;
+  city?: string;
+  latitude?: number;
+  longitude?: number;
+};
+
 // Define news categories with icons
 const CATEGORIES: Category[] = [
   { id: 'LOCAL', label: 'Local', icon: MapPin },
+  { id: 'COUNTRY', label: 'Country', icon: Flag },
   { id: 'WORLD', label: 'World', icon: Globe },
   { id: 'BUSINESS', label: 'Business', icon: Briefcase },
   { id: 'TECHNOLOGY', label: 'Technology', icon: Smartphone },
@@ -64,6 +74,35 @@ export function NewsCategoryTabs({
     });
     return loadingState;
   });
+  const [userLocation, setUserLocation] = useState<UserLocation>({});
+
+  // Function to get user's location from the app's existing geolocation
+  const getUserLocation = useCallback(async () => {
+    try {
+      // Use the app's existing geolocation API
+      const response = await fetch('/api/geolocation');
+      if (response.ok) {
+        const locationData = await response.json();
+
+        setUserLocation({
+          country: locationData.country || 'US',
+          city: locationData.city,
+        });
+
+        console.log('📍 User location from app:', {
+          country: locationData.country,
+          city: locationData.city,
+        });
+      } else {
+        // Fallback to US if geolocation fails
+        setUserLocation({ country: 'US' });
+      }
+    } catch (error) {
+      console.error('Error getting user location:', error);
+      // Default to US if location detection fails
+      setUserLocation({ country: 'US' });
+    }
+  }, []);
 
   // Function to fetch headlines for a specific category
   const fetchCategoryHeadlines = useCallback(
@@ -75,8 +114,12 @@ export function NewsCategoryTabs({
       setIsLoading((prev) => ({ ...prev, [category]: true }));
       try {
         const baseUrl = window.location.origin;
+        const countryParam = userLocation.country
+          ? `&country=${userLocation.country}`
+          : '';
+        const cityParam = userLocation.city ? `&city=${userLocation.city}` : '';
         const response = await fetch(
-          `${baseUrl}/api/news-headlines?category=${category}`,
+          `${baseUrl}/api/news-headlines?category=${category}${countryParam}${cityParam}`,
           {
             cache: 'no-store',
           },
@@ -102,20 +145,29 @@ export function NewsCategoryTabs({
         setIsLoading((prev) => ({ ...prev, [category]: false }));
       }
     },
-    [headlines],
+    [headlines, userLocation.country, userLocation.city],
   );
 
-  // Initial fetch for the first active category
+  // Get user location on mount
   useEffect(() => {
-    fetchCategoryHeadlines(activeCategory);
-  }, [activeCategory, fetchCategoryHeadlines]);
+    getUserLocation();
+  }, [getUserLocation]);
 
-  // Load headlines for all categories on mount
+  // Initial fetch for the first active category when location is available
   useEffect(() => {
-    CATEGORIES.forEach((category) => {
-      fetchCategoryHeadlines(category.id);
-    });
-  }, [fetchCategoryHeadlines]);
+    if (userLocation.country) {
+      fetchCategoryHeadlines(activeCategory);
+    }
+  }, [activeCategory, fetchCategoryHeadlines, userLocation.country]);
+
+  // Load headlines for all categories when location is available
+  useEffect(() => {
+    if (userLocation.country) {
+      CATEGORIES.forEach((category) => {
+        fetchCategoryHeadlines(category.id);
+      });
+    }
+  }, [fetchCategoryHeadlines, userLocation.country]);
 
   return (
     <div className={cn('w-full', className)}>
@@ -130,6 +182,26 @@ export function NewsCategoryTabs({
               const IconComponent = category.icon;
               const isActive = activeCategory === category.id;
 
+              // Dynamic label for Local category
+              const getLabel = () => {
+                if (category.id === 'LOCAL' && userLocation.city) {
+                  return userLocation.city;
+                } else if (
+                  category.id === 'LOCAL' &&
+                  userLocation.country &&
+                  userLocation.country !== 'US'
+                ) {
+                  return userLocation.country;
+                } else if (
+                  category.id === 'COUNTRY' &&
+                  userLocation.country &&
+                  userLocation.country !== 'US'
+                ) {
+                  return userLocation.country;
+                }
+                return category.label;
+              };
+
               return (
                 <Button
                   key={category.id}
@@ -143,11 +215,20 @@ export function NewsCategoryTabs({
                   )}
                   onClick={() => {
                     setActiveCategory(category.id);
-                    fetchCategoryHeadlines(category.id);
+                    if (userLocation.country) {
+                      fetchCategoryHeadlines(category.id);
+                    }
                   }}
                 >
                   <IconComponent className="size-4" />
-                  <span className="font-medium">{category.label}</span>
+                  <span className="font-medium">{getLabel()}</span>
+                  {category.id === 'LOCAL' &&
+                    userLocation.country &&
+                    userLocation.country !== 'US' && (
+                      <span className="text-xs opacity-75">
+                        ({userLocation.country})
+                      </span>
+                    )}
                   {isLoading[category.id] && isActive && (
                     <Loader2 className="size-3 animate-spin ml-1" />
                   )}
@@ -156,6 +237,17 @@ export function NewsCategoryTabs({
             })}
           </div>
         </div>
+
+        {/* Location indicator */}
+        {userLocation.country && (
+          <div className="mt-2 flex items-center gap-1 text-xs text-muted-foreground">
+            <MapPin className="size-3" />
+            <span>
+              News for {userLocation.city ? `${userLocation.city}, ` : ''}
+              {userLocation.country}
+            </span>
+          </div>
+        )}
       </div>
 
       {/* Premium headlines section */}

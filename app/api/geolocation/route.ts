@@ -1,4 +1,5 @@
-import { type NextRequest, NextResponse } from 'next/server';
+import type { NextRequest } from 'next/server';
+import { NextResponse } from 'next/server';
 import { geolocation } from '@vercel/functions';
 
 interface GeoLocation {
@@ -12,8 +13,15 @@ interface GeoLocation {
 
 export async function GET(request: NextRequest) {
   try {
-    // Use Vercel's geolocation function for accurate location detection
+    // Get user location using Vercel's geolocation function
     const { longitude, latitude, city, country } = geolocation(request);
+
+    console.log('🌍 Geolocation API called:', {
+      country,
+      city,
+      latitude,
+      longitude,
+    });
 
     // Get the client's IP address from headers for reference
     const forwardedFor = request.headers.get('x-forwarded-for');
@@ -53,17 +61,14 @@ export async function GET(request: NextRequest) {
       isDefaultLocation: false,
     } as GeoLocation);
   } catch (error) {
-    console.error('Error fetching geolocation data:', error);
+    console.error('Error in geolocation API:', error);
 
-    // Return default data on error
+    // Fallback to US if geolocation fails
     return NextResponse.json({
-      ip: request.headers.get('x-forwarded-for') || '127.0.0.1',
-      country: 'India',
-      city: 'New Delhi',
-      region: 'Delhi',
-      latitude: 28.6139,
-      longitude: 77.209,
-      isDefaultLocation: true,
+      country: 'US',
+      city: null,
+      latitude: undefined,
+      longitude: undefined,
     });
   }
 }
