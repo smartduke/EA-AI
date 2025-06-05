@@ -43,12 +43,23 @@ const SEARXNG_CONFIG = {
   ),
   language: process.env.SEARXNG_LANGUAGE || 'all',
   format: 'json', // Use JSON format
-  resultsCount: Number.parseInt(process.env.SEARXNG_RESULTS_COUNT || '10'),
+  // Regular search configuration
+  resultsCount: Number.parseInt(process.env.SEARXNG_RESULTS_COUNT || '8'),
   imageResultsCount: Number.parseInt(
-    process.env.SEARXNG_IMAGE_RESULTS_COUNT || '20',
+    process.env.SEARXNG_IMAGE_RESULTS_COUNT || '10',
   ),
   videoResultsCount: Number.parseInt(
-    process.env.SEARXNG_VIDEO_RESULTS_COUNT || '15',
+    process.env.SEARXNG_VIDEO_RESULTS_COUNT || '10',
+  ),
+  // Deep search specific configuration - separate from regular search
+  deepSearchTextCount: Number.parseInt(
+    process.env.SEARXNG_DEEP_TEXT_COUNT || '20',
+  ),
+  deepSearchImageCount: Number.parseInt(
+    process.env.SEARXNG_DEEP_IMAGE_COUNT || '20',
+  ),
+  deepSearchVideoCount: Number.parseInt(
+    process.env.SEARXNG_DEEP_VIDEO_COUNT || '20',
   ),
   totalResultsLimit: Number.parseInt(
     process.env.SEARXNG_TOTAL_RESULTS_LIMIT || '40',
@@ -463,7 +474,7 @@ export const deepWebSearch = tool({
 });
 
 /**
- * Fetches comprehensive search results for deep search mode (30-50 results)
+ * Fetches comprehensive search results for deep search mode (20 text, 20 images, 20 videos)
  */
 async function fetchDeepSearchResults(query: string): Promise<SearchResult[]> {
   if (!searxngBaseUrl) {
@@ -487,7 +498,7 @@ async function fetchDeepSearchResults(query: string): Promise<SearchResult[]> {
         );
       }
 
-      // Enhanced search requests for deep search - get more results
+      // Enhanced search requests for deep search - use dedicated deep search counts
       const [textResultsRaw, imageResultsRaw, videoResultsRaw] =
         await Promise.all([
           makeSearchRequest(
@@ -495,21 +506,21 @@ async function fetchDeepSearchResults(query: string): Promise<SearchResult[]> {
             query,
             'general',
             SEARXNG_CONFIG.engines,
-            25, // Fetch extra for deep search to ensure 20 sources
+            SEARXNG_CONFIG.deepSearchTextCount + 5, // Fetch extra to ensure target count after filtering
           ),
           makeSearchRequest(
             searxngBaseUrl,
             query,
             'images',
             SEARXNG_CONFIG.imageEngines,
-            30, // Fetch extra to account for filtering, target 20 images
+            SEARXNG_CONFIG.deepSearchImageCount + 10, // Fetch extra to account for filtering
           ),
           makeSearchRequest(
             searxngBaseUrl,
             query,
             'videos',
             SEARXNG_CONFIG.videoEngines,
-            30, // Fetch extra to account for filtering, target 20 videos
+            SEARXNG_CONFIG.deepSearchVideoCount + 10, // Fetch extra to account for filtering
           ),
         ]);
 
@@ -518,28 +529,46 @@ async function fetchDeepSearchResults(query: string): Promise<SearchResult[]> {
       const imageResults = processImageResults(imageResultsRaw);
       const videoResults = processVideoResults(videoResultsRaw);
 
-      // For deep search, provide comprehensive coverage
+      // For deep search, provide comprehensive coverage with EXACT counts
       const combinedResults: SearchResult[] = [];
 
-      // Include up to 20 text sources for comprehensive analysis
-      const textResultsToInclude = Math.min(20, textResults.length);
+      // Include EXACTLY 20 text sources for deep analysis (20-25 paragraph requirement)
+      const textResultsToInclude = Math.min(
+        SEARXNG_CONFIG.deepSearchTextCount,
+        textResults.length,
+      );
       combinedResults.push(...textResults.slice(0, textResultsToInclude));
 
-      // Add up to 20 images for deep search
-      const maxImages = Math.min(20, imageResults.length);
+      // Add EXACTLY 20 images for deep search (user requirement)
+      const maxImages = Math.min(
+        SEARXNG_CONFIG.deepSearchImageCount,
+        imageResults.length,
+      );
       combinedResults.push(...imageResults.slice(0, maxImages));
 
-      // Add up to 20 videos for deep search
-      const maxVideos = Math.min(20, videoResults.length);
+      // Add EXACTLY 20 videos for deep search (user requirement)
+      const maxVideos = Math.min(
+        SEARXNG_CONFIG.deepSearchVideoCount,
+        videoResults.length,
+      );
       combinedResults.push(...videoResults.slice(0, maxVideos));
 
       console.log(
-        `🔍 Deep search found ${textResults.length} text results, ${imageResults.length} image results, and ${videoResults.length} video results, returning ${combinedResults.length} comprehensive results for deep analysis`,
+        `🔍 Deep search found ${textResults.length} text results, ${imageResults.length} image results, and ${videoResults.length} video results, returning EXACTLY ${combinedResults.length} comprehensive results (${textResultsToInclude} texts, ${maxImages} images, ${maxVideos} videos) for deep analysis`,
       );
 
       if (combinedResults.length === 0) {
-        console.log(`⚠️ No usable results found from deep search for "${query}"`);
+        console.log(
+          `⚠️ No usable results found from deep search for "${query}"`,
+        );
         return [];
+      }
+
+      // Deep search MUST return comprehensive results to support 20-25 paragraph responses
+      if (textResultsToInclude < 10) {
+        console.warn(
+          `⚠️ Deep search only found ${textResultsToInclude} text sources, may impact response quality`,
+        );
       }
 
       return combinedResults;
@@ -555,11 +584,11 @@ async function fetchDeepSearchResults(query: string): Promise<SearchResult[]> {
         break;
       }
 
-      // If the error is an AbortError (timeout), try with increased timeout
+      // If the error is an AbortError (timeout), try with increased timeout for deep search
       if (error.name === 'AbortError') {
-        SEARXNG_CONFIG.timeout += 5000; // Increase timeout for next attempts
+        SEARXNG_CONFIG.timeout += 10000; // Increase timeout more for deep search
         console.log(
-          `⏱️ Increased timeout to ${SEARXNG_CONFIG.timeout}ms for deep search next attempt`,
+          `⏱️ Increased deep search timeout to ${SEARXNG_CONFIG.timeout}ms for next attempt`,
         );
       }
     }

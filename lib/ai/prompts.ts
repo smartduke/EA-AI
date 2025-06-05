@@ -41,7 +41,9 @@ About the origin of user's request:
 `;
 
 // Custom prompts for specific models
-const gpt4oMiniEnhancedPrompt = ({ requestHints }: { requestHints: RequestHints }) => {
+const gpt4oMiniEnhancedPrompt = ({
+  requestHints,
+}: { requestHints: RequestHints }) => {
   const baseSystemPrompt = `You are InfoxAI using GPT-4o-mini with enhanced capabilities, designed to deliver comprehensive, citation-supported answers in the exact style of Perplexity AI with improved analysis.
 
 Current date: ${new Date().toLocaleDateString()}
@@ -124,16 +126,26 @@ export const systemPrompt = ({
   requestHints: RequestHints;
   selectedSearchMode?: 'search' | 'deep-search';
 }) => {
+  // Add debugging for search mode
+  console.log(
+    `🔍 SystemPrompt: selectedSearchMode=${selectedSearchMode}, selectedChatModel=${selectedChatModel}, environment=${process.env.NODE_ENV}`,
+  );
+
   // Enhanced models get better prompts while maintaining working web search functionality
   switch (selectedChatModel) {
     case 'gpt-4.1-mini':
+      console.log(`📝 Using enhanced prompt for ${selectedChatModel}`);
       return gpt4oMiniEnhancedPrompt({ requestHints });
-    default:
+    default: {
       // For deep search mode, use enhanced prompts with comprehensive analysis
       if (selectedSearchMode === 'deep-search') {
+        console.log(
+          `🔬 Using DEEP SEARCH prompt for comprehensive 20-25 paragraph response`,
+        );
         return getDeepSearchPrompt({ requestHints });
       }
-      
+
+      console.log(`📋 Using regular search prompt for 3-4 paragraph response`);
       // Original working prompt for gpt-4o-mini and other default models
       const baseSystemPrompt = `You are InfoxAI, an advanced AI assistant designed to deliver comprehensive, citation-supported answers in the exact style of Perplexity AI.
 
@@ -205,11 +217,14 @@ ${requestHints.hasArtifact ? artifactsPrompt : ''}
 Answer the user's question thoroughly, accurately, and with rich citations, exactly matching Perplexity AI's authoritative style.`;
 
       return baseSystemPrompt;
+    }
   }
 };
 
 // Deep Search Prompt for comprehensive 20-25 paragraph responses
-const getDeepSearchPrompt = ({ requestHints }: { requestHints: RequestHints }) => {
+const getDeepSearchPrompt = ({
+  requestHints,
+}: { requestHints: RequestHints }) => {
   const deepSearchSystemPrompt = `You are InfoxAI in Deep Search mode, an advanced AI assistant designed to deliver COMPREHENSIVE, EXHAUSTIVE research reports with 20-25 detailed paragraphs in the exact style of Perplexity AI.
 
 🚨 CRITICAL OVERRIDE INSTRUCTIONS 🚨
