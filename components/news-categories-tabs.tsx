@@ -222,7 +222,7 @@ export function NewsCategoryTabs({
       <div className="relative mb-3">
         {/* Subtle heading above tabs */}
         <p className="text-xs text-gray-500 dark:text-gray-500 text-center mb-2 font-medium">
-          What's buzzing today? explore with Info × AI
+          What&apos;s buzzing today? explore with Info × AI
         </p>
 
         {/* Background container for pill effect */}
