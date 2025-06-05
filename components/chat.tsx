@@ -19,6 +19,8 @@ import { useSearchParams } from 'next/navigation';
 import { useChatVisibility } from '@/hooks/use-chat-visibility';
 import { useLocalStorage } from 'usehooks-ts';
 import type { SearchMode } from './search-mode-selector';
+import { UsageLimitDialog } from '@/components/ui/usage-limit-dialog';
+import { GuestLimitDialog } from '@/components/ui/guest-limit-dialog';
 
 interface SessionUser {
   id: string;
@@ -30,6 +32,23 @@ interface SessionUser {
 interface Session {
   user: SessionUser;
   expires: string;
+}
+
+// State for usage limit dialog
+interface UsageLimitState {
+  isOpen: boolean;
+  userType: 'guest' | 'free' | 'pro';
+  limitType: 'search' | 'deep-search';
+  message: string;
+  requiresLogin: boolean;
+  requiresUpgrade: boolean;
+  requiresContact: boolean;
+}
+
+// Guest dialog state (separate for simplicity)
+interface GuestLimitState {
+  isOpen: boolean;
+  message: string;
 }
 
 export function Chat({
@@ -62,6 +81,23 @@ export function Chat({
     'search',
   );
 
+  // Usage limit dialog state
+  const [usageLimitState, setUsageLimitState] = useState<UsageLimitState>({
+    isOpen: false,
+    userType: 'guest',
+    limitType: 'search',
+    message: '',
+    requiresLogin: false,
+    requiresUpgrade: false,
+    requiresContact: false,
+  });
+
+  // Guest dialog state (separate for simplicity)
+  const [guestLimitState, setGuestLimitState] = useState<GuestLimitState>({
+    isOpen: false,
+    message: '',
+  });
+
   const {
     messages,
     setMessages,
@@ -90,6 +126,135 @@ export function Chat({
       mutate(unstable_serialize(getChatHistoryPaginationKey));
     },
     onError: (error) => {
+      console.log('Chat error received:', error.message);
+      console.log('Full error object:', error);
+
+      // Function to try parsing JSON from various formats
+      const tryParseErrorResponse = (errorMessage: string) => {
+        const parseAttempts = [
+          // Direct JSON parse
+          () => JSON.parse(errorMessage),
+          // Parse after '403: ' prefix
+          () => {
+            if (errorMessage.includes('403: ')) {
+              const jsonPart = errorMessage.split('403: ')[1];
+              return JSON.parse(jsonPart);
+            }
+            throw new Error('No 403 prefix found');
+          },
+          // Parse after any status code pattern
+          () => {
+            const match = errorMessage.match(/\d{3}: (.+)/);
+            if (match) {
+              return JSON.parse(match[1]);
+            }
+            throw new Error('No status code pattern found');
+          },
+          // Try to extract JSON from anywhere in the string
+          () => {
+            const jsonMatch = errorMessage.match(/\{.*\}/);
+            if (jsonMatch) {
+              return JSON.parse(jsonMatch[0]);
+            }
+            throw new Error('No JSON found in string');
+          },
+        ];
+
+        for (const attempt of parseAttempts) {
+          try {
+            const result = attempt();
+            console.log('Successfully parsed error response:', result);
+            return result;
+          } catch (parseError) {
+            // Continue to next attempt
+          }
+        }
+        return null;
+      };
+
+      // Check if this is a usage limit error (403 status or contains limit language)
+      const isUsageLimitError =
+        error.message.includes('403') ||
+        error.message.includes('daily limit') ||
+        error.message.includes('requiresUpgrade') ||
+        error.message.includes('requiresLogin');
+
+      if (isUsageLimitError) {
+        const response = tryParseErrorResponse(error.message);
+
+        if (
+          response &&
+          response.error &&
+          (response.requiresLogin ||
+            response.requiresUpgrade ||
+            response.requiresContact)
+        ) {
+          console.log('Showing usage limit dialog for:', response);
+
+          // Use guest dialog for guest users
+          if (response.requiresLogin || response.userType === 'guest') {
+            setGuestLimitState({
+              isOpen: true,
+              message: response.error,
+            });
+          } else {
+            // Use regular dialog for authenticated users
+            setUsageLimitState({
+              isOpen: true,
+              userType: response?.userType || 'free',
+              limitType: selectedSearchMode,
+              message: response.error,
+              requiresLogin: false,
+              requiresUpgrade: response?.requiresUpgrade || false,
+              requiresContact: response?.requiresContact || false,
+            });
+          }
+          return; // Don't show the regular toast
+        }
+
+        // Fallback handling for specific error patterns if JSON parsing fails
+        if (
+          error.message.includes('Deep search is not available for guest users')
+        ) {
+          setGuestLimitState({
+            isOpen: true,
+            message:
+              'Deep search is not available for guest users. Please login to access this feature.',
+          });
+          return;
+        }
+
+        if (error.message.includes('daily limit')) {
+          // Try to determine user type based on session
+          const isGuest =
+            session?.user?.email?.includes('@guest.local') || false;
+          const userType = isGuest ? 'guest' : 'free';
+
+          const message = error.message.includes('deep search')
+            ? `You have reached your daily limit of deep searches. ${userType === 'guest' ? 'Please login to access more searches.' : 'Upgrade to Pro for higher limits.'}`
+            : `You have reached your daily limit of searches. ${userType === 'guest' ? 'Please login to access more searches.' : 'Upgrade to Pro for higher limits.'}`;
+
+          if (userType === 'guest') {
+            setGuestLimitState({
+              isOpen: true,
+              message: message,
+            });
+          } else {
+            setUsageLimitState({
+              isOpen: true,
+              userType: userType,
+              limitType: selectedSearchMode,
+              message: message,
+              requiresLogin: false,
+              requiresUpgrade: userType === 'free',
+              requiresContact: false,
+            });
+          }
+          return;
+        }
+      }
+
+      // Default error handling
       toast({
         type: 'error',
         description: error.message,
@@ -123,13 +288,19 @@ export function Chat({
     }
   }, [query, append, hasAppendedQuery, id]);
 
-  const { data: votes } = useSWR<Array<Vote>>(
-    messages.length >= 2 ? `/api/vote?chatId=${id}` : null,
+  const selectedArtifact = useArtifactSelector((state) => state);
+  const isArtifactVisible = useArtifactSelector((state) => state.isVisible);
+
+  const {
+    data: votes,
+    mutate: mutateVotes,
+    isLoading: isVotesLoading,
+  } = useSWR<Array<Vote>>(
+    session?.user ? `/api/vote?chatId=${id}` : null,
     fetcher,
   );
 
   const [attachments, setAttachments] = useState<Array<Attachment>>([]);
-  const isArtifactVisible = useArtifactSelector((state) => state.isVisible);
 
   // Check if this is the home page (no messages)
   const isHomePage = messages.length === 0;
@@ -238,6 +409,27 @@ export function Chat({
         selectedVisibilityType={visibilityType}
         session={session}
         selectedModelId={initialChatModel}
+      />
+
+      {/* Guest Limit Dialog (Simple, no redirects) */}
+      <GuestLimitDialog
+        isOpen={guestLimitState.isOpen}
+        onClose={() => setGuestLimitState({ isOpen: false, message: '' })}
+        message={guestLimitState.message}
+      />
+
+      {/* Usage Limit Dialog for Authenticated Users */}
+      <UsageLimitDialog
+        isOpen={usageLimitState.isOpen}
+        onClose={() =>
+          setUsageLimitState((prev) => ({ ...prev, isOpen: false }))
+        }
+        userType={usageLimitState.userType}
+        limitType={usageLimitState.limitType}
+        message={usageLimitState.message}
+        requiresLogin={usageLimitState.requiresLogin}
+        requiresUpgrade={usageLimitState.requiresUpgrade}
+        requiresContact={usageLimitState.requiresContact}
       />
     </>
   );

@@ -9,6 +9,9 @@ import {
   primaryKey,
   foreignKey,
   boolean,
+  integer,
+  decimal,
+  date,
 } from 'drizzle-orm/pg-core';
 
 // Remove custom user table since Supabase handles user auth
@@ -139,6 +142,68 @@ export const stream = pgTable('Stream', {
 });
 
 export type Stream = InferSelectModel<typeof stream>;
+
+// SUBSCRIPTION TABLES
+
+// User subscriptions table
+export const userSubscription = pgTable('UserSubscription', {
+  id: uuid('id').primaryKey().notNull().defaultRandom(),
+  userId: uuid('userId').notNull(), // Reference to Supabase auth.users
+  planType: varchar('planType', { enum: ['free', 'pro'] })
+    .notNull()
+    .default('free'),
+  billingPeriod: varchar('billingPeriod', { enum: ['monthly', 'yearly'] }),
+  status: varchar('status', {
+    enum: ['active', 'canceled', 'expired', 'past_due'],
+  })
+    .notNull()
+    .default('active'),
+  currentPeriodStart: timestamp('currentPeriodStart'),
+  currentPeriodEnd: timestamp('currentPeriodEnd'),
+  cancelAtPeriodEnd: boolean('cancelAtPeriodEnd').notNull().default(false),
+  razorpaySubscriptionId: text('razorpaySubscriptionId'),
+  razorpayCustomerId: text('razorpayCustomerId'),
+  createdAt: timestamp('createdAt').notNull().defaultNow(),
+  updatedAt: timestamp('updatedAt').notNull().defaultNow(),
+});
+
+export type UserSubscription = InferSelectModel<typeof userSubscription>;
+
+// Usage tracking table
+export const usageTracking = pgTable('UsageTracking', {
+  id: uuid('id').primaryKey().notNull().defaultRandom(),
+  userId: uuid('userId').notNull(), // Reference to Supabase auth.users
+  date: date('date').notNull(), // YYYY-MM-DD format
+  searchesUsed: integer('searchesUsed').notNull().default(0),
+  deepSearchesUsed: integer('deepSearchesUsed').notNull().default(0),
+  createdAt: timestamp('createdAt').notNull().defaultNow(),
+  updatedAt: timestamp('updatedAt').notNull().defaultNow(),
+});
+
+export type UsageTracking = InferSelectModel<typeof usageTracking>;
+
+// Payment transactions table
+export const paymentTransaction = pgTable('PaymentTransaction', {
+  id: uuid('id').primaryKey().notNull().defaultRandom(),
+  userId: uuid('userId').notNull(), // Reference to Supabase auth.users
+  razorpayPaymentId: text('razorpayPaymentId').notNull(),
+  razorpayOrderId: text('razorpayOrderId').notNull(),
+  razorpaySignature: text('razorpaySignature'),
+  amount: decimal('amount', { precision: 10, scale: 2 }).notNull(), // Amount in dollars
+  currency: varchar('currency', { length: 3 }).notNull().default('USD'),
+  status: varchar('status', {
+    enum: ['pending', 'completed', 'failed', 'refunded'],
+  })
+    .notNull()
+    .default('pending'),
+  planType: varchar('planType', { enum: ['free', 'pro'] }).notNull(),
+  billingPeriod: varchar('billingPeriod', { enum: ['monthly', 'yearly'] }),
+  metadata: json('metadata'), // Additional data from Razorpay
+  createdAt: timestamp('createdAt').notNull().defaultNow(),
+  updatedAt: timestamp('updatedAt').notNull().defaultNow(),
+});
+
+export type PaymentTransaction = InferSelectModel<typeof paymentTransaction>;
 
 // User type for TypeScript - this will come from Supabase
 export type User = {

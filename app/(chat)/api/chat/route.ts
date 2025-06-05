@@ -37,6 +37,11 @@ import {
 import { after } from 'next/server';
 import type { Chat } from '@/lib/db/schema';
 import { z } from 'zod';
+import {
+  canUserPerformAction,
+  incrementUsage,
+  getUserSubscription,
+} from '@/lib/services/subscription';
 
 export const maxDuration = 60;
 
@@ -62,7 +67,52 @@ function getStreamContext() {
   return globalStreamContext;
 }
 
+// Guest user limits (hardcoded as per requirements)
+const GUEST_LIMITS = {
+  searchesPerDay: 1,
+  deepSearchesPerDay: 0,
+};
+
+// Track usage for guest users in memory (per browser session using IP + User-Agent)
+const guestUsageTracker = new Map<
+  string,
+  { searches: number; deepSearches: number; timestamp: number }
+>();
+
+// Helper function to get guest identifier (more persistent than random ID)
+function getGuestIdentifier(request: Request): string {
+  const forwarded = request.headers.get('x-forwarded-for');
+  const ip = forwarded
+    ? forwarded.split(',')[0].trim()
+    : request.headers.get('x-real-ip') || 'unknown';
+  const userAgent = request.headers.get('user-agent') || 'unknown';
+
+  // Create a simple hash to keep the key manageable
+  const identifier = `${ip}_${userAgent}`;
+  let hash = 0;
+  for (let i = 0; i < identifier.length; i++) {
+    const char = identifier.charCodeAt(i);
+    hash = (hash << 5) - hash + char;
+    hash = hash & hash; // Convert to 32-bit integer
+  }
+
+  return `guest_${Math.abs(hash)}`;
+}
+
+// Clean up old guest usage entries (older than 24 hours)
+function cleanupGuestUsage() {
+  const oneDayAgo = Date.now() - 24 * 60 * 60 * 1000;
+  for (const [key, value] of guestUsageTracker.entries()) {
+    if (value.timestamp < oneDayAgo) {
+      guestUsageTracker.delete(key);
+    }
+  }
+}
+
 export async function POST(request: Request) {
+  // Clean up old guest usage entries
+  cleanupGuestUsage();
+
   let requestBody: PostRequestBody;
 
   try {
@@ -101,6 +151,105 @@ export async function POST(request: Request) {
     )
       ? 'guest'
       : 'regular';
+
+    // Check usage limits BEFORE processing the request
+    const isGuest =
+      !session?.user || session.user.email?.includes('@guest.local');
+
+    if (isGuest) {
+      // Handle guest users
+      const guestId = getGuestIdentifier(request);
+      const guestUsage = guestUsageTracker.get(guestId) || {
+        searches: 0,
+        deepSearches: 0,
+        timestamp: Date.now(),
+      };
+
+      if (selectedSearchMode === 'deep-search') {
+        return new Response(
+          JSON.stringify({
+            error:
+              'Deep search is not available for guest users. Please login to access this feature.',
+            requiresLogin: true,
+            userType: 'guest',
+          }),
+          {
+            status: 403,
+            headers: { 'Content-Type': 'application/json' },
+          },
+        );
+      }
+
+      // Check if guest has used their one search (only when using search tools)
+      if (guestUsage.searches >= GUEST_LIMITS.searchesPerDay) {
+        return new Response(
+          JSON.stringify({
+            error:
+              'You have used your free search. Please login to continue searching.',
+            requiresLogin: true,
+            userType: 'guest',
+          }),
+          {
+            status: 403,
+            headers: { 'Content-Type': 'application/json' },
+          },
+        );
+      }
+
+      // Update guest usage immediately for search mode
+      if (selectedSearchMode === 'search') {
+        guestUsageTracker.set(guestId, {
+          ...guestUsage,
+          searches: guestUsage.searches + 1,
+          timestamp: Date.now(),
+        });
+      }
+    } else {
+      // Handle authenticated users
+      const userId = session.user.id;
+      const actionType =
+        selectedSearchMode === 'deep-search' ? 'deepSearch' : 'search';
+
+      // Check if user can perform the action
+      const canPerform = await canUserPerformAction(userId, actionType);
+
+      if (!canPerform) {
+        const subscription = await getUserSubscription(userId);
+        const planType = subscription?.planType || 'free';
+
+        const searchType =
+          actionType === 'deepSearch' ? 'deep searches' : 'searches';
+
+        let upgradeMessage: string;
+        let requiresUpgrade = false;
+        let requiresContact = false;
+
+        if (planType === 'free') {
+          upgradeMessage = ' Upgrade to Pro for higher limits.';
+          requiresUpgrade = true;
+        } else {
+          upgradeMessage =
+            ' Contact us for more usage or your limits will reset tomorrow.';
+          requiresContact = true;
+        }
+
+        return new Response(
+          JSON.stringify({
+            error: `You have reached your daily limit of ${searchType}.${upgradeMessage}`,
+            requiresUpgrade,
+            requiresContact,
+            userType: planType === 'pro' ? 'pro' : 'free',
+          }),
+          {
+            status: 403,
+            headers: { 'Content-Type': 'application/json' },
+          },
+        );
+      }
+
+      // Note: Usage tracking for authenticated users will happen in onFinish callback
+      // after successful completion
+    }
 
     const messageCount = await getMessageCountByUserId({
       id: effectiveSession.user.id,
@@ -248,6 +397,28 @@ export async function POST(request: Request) {
                       },
                     ],
                   });
+
+                  // Track usage for authenticated users after successful completion
+                  // Only track if this was not a guest user
+                  if (!effectiveSession.user.email?.includes('@guest.local')) {
+                    try {
+                      // Track usage based on the selected search mode after successful completion
+                      const actionType =
+                        selectedSearchMode === 'deep-search'
+                          ? 'deepSearch'
+                          : 'search';
+                      await incrementUsage(
+                        effectiveSession.user.id,
+                        actionType,
+                      );
+                      console.log(
+                        `✅ Tracked ${actionType} usage for user ${effectiveSession.user.id}`,
+                      );
+                    } catch (usageError) {
+                      console.error('❌ Failed to track usage:', usageError);
+                      // Don't fail the entire request if usage tracking fails
+                    }
+                  }
                 } catch (error) {
                   console.error('Failed to save chat:', error);
                 }

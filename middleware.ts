@@ -27,9 +27,18 @@ export async function middleware(request: NextRequest) {
     data: { session },
   } = await supabase.auth.getSession();
 
-  // If session exists and trying to access auth pages, redirect to home
+  // If session exists and trying to access auth pages, redirect appropriately
   if (session && ['/login', '/register'].includes(pathname)) {
-    return NextResponse.redirect(new URL('/', request.url));
+    // Check if there's a returnUrl parameter
+    const returnUrl = request.nextUrl.searchParams.get('returnUrl');
+
+    if (returnUrl) {
+      // Redirect to the return URL
+      return NextResponse.redirect(new URL(returnUrl, request.url));
+    } else {
+      // Default redirect to home
+      return NextResponse.redirect(new URL('/', request.url));
+    }
   }
 
   // Allow all users (authenticated and guest) to access the app

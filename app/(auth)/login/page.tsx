@@ -36,7 +36,18 @@ export default function Page() {
 
       setIsSuccessful(true);
       router.refresh();
-      router.push('/');
+
+      // Check if there's a return URL parameter
+      const urlParams = new URLSearchParams(window.location.search);
+      const returnUrl = urlParams.get('returnUrl');
+
+      if (returnUrl) {
+        // Redirect to the return URL
+        router.push(returnUrl);
+      } else {
+        // Default redirect to home page
+        router.push('/');
+      }
     } catch (error) {
       toast({
         type: 'error',
