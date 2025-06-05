@@ -5,7 +5,7 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import { useState, useEffect, Suspense } from 'react';
 import { toast } from '@/components/toast';
 import { SubmitButton } from '@/components/submit-button';
-import { createSupabaseBrowserClient } from '@/lib/supabase/client';
+import { createClient } from '@/lib/supabase/client';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import Form from 'next/form';
@@ -19,7 +19,7 @@ function ResetPasswordForm() {
 
   useEffect(() => {
     const handlePasswordReset = async () => {
-      const supabase = createSupabaseBrowserClient();
+      const supabase = createClient();
       let attempts = 0;
       const maxAttempts = 3;
       const retryDelay = 1000; // 1 second
@@ -133,7 +133,7 @@ function ResetPasswordForm() {
     };
 
     // Also listen for auth state changes as a backup
-    const supabase = createSupabaseBrowserClient();
+    const supabase = createClient();
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange((event, session) => {
@@ -159,7 +159,7 @@ function ResetPasswordForm() {
 
   const handleSubmit = async (formData: FormData) => {
     try {
-      const supabase = createSupabaseBrowserClient();
+      const supabase = createClient();
       const password = formData.get('password') as string;
       const confirmPassword = formData.get('confirmPassword') as string;
 

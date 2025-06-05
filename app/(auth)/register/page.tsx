@@ -6,7 +6,7 @@ import { useState } from 'react';
 import { toast } from '@/components/toast';
 import { AuthForm } from '@/components/auth-form';
 import { SubmitButton } from '@/components/submit-button';
-import { createSupabaseBrowserClient } from '@/lib/supabase/client';
+import { createClient } from '@/lib/supabase/client';
 import { getSiteUrl } from '@/lib/utils';
 
 export default function Page() {
@@ -16,7 +16,7 @@ export default function Page() {
 
   const handleSubmit = async (formData: FormData) => {
     try {
-      const supabase = createSupabaseBrowserClient();
+      const supabase = createClient();
       const email = formData.get('email') as string;
       const password = formData.get('password') as string;
 

@@ -1,6 +1,5 @@
-import { createRouteHandlerClient } from '@supabase/auth-helpers-nextjs';
-import { cookies } from 'next/headers';
 import { adaptSupabaseSession, type AdaptedSession } from './session-adapter';
+import { createClient } from './server';
 
 export async function auth(): Promise<AdaptedSession> {
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
@@ -11,12 +10,9 @@ export async function auth(): Promise<AdaptedSession> {
     return null;
   }
 
-  // Note: NextJS 15 cookie warnings are expected with @supabase/auth-helpers-nextjs@0.9.0
-  // These warnings don't affect functionality but indicate the library needs updating
-  // for full NextJS 15 compatibility. The warnings can be safely ignored for now.
-  const supabase = createRouteHandlerClient({ cookies });
-
   try {
+    const supabase = await createClient();
+
     // Use getUser() for secure authentication instead of getSession()
     const {
       data: { user },

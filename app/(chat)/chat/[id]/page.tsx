@@ -1,7 +1,8 @@
 import { cookies } from 'next/headers';
+import { createClient } from '@/lib/supabase/server';
 import { notFound } from 'next/navigation';
-import { createServerComponentClient } from '@supabase/auth-helpers-nextjs';
 
+import { auth } from '@/lib/supabase/auth';
 import { Chat } from '@/components/chat';
 import { getChatById, getMessagesByChatId } from '@/lib/db/queries';
 import { DataStreamHandler } from '@/components/data-stream-handler';
@@ -19,7 +20,7 @@ export default async function Page(props: { params: Promise<{ id: string }> }) {
     notFound();
   }
 
-  const supabase = createServerComponentClient({ cookies });
+  const supabase = await createClient();
   const {
     data: { session: supabaseSession },
   } = await supabase.auth.getSession();

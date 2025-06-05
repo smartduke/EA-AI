@@ -11,16 +11,9 @@ import {
   CardHeader,
   CardTitle,
 } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import {
-  CreditCard,
-  FileText,
-  Settings,
-  Calendar,
-  AlertTriangle,
-} from 'lucide-react';
+import { CreditCard, FileText, Settings, AlertTriangle } from 'lucide-react';
 import { toast } from '@/components/toast';
-import { createSupabaseBrowserClient } from '@/lib/supabase/client';
+import { createClient } from '@/lib/supabase/client';
 
 interface SubscriptionData {
   subscription: {
@@ -55,7 +48,7 @@ export default function SubscriptionPage() {
 
   useEffect(() => {
     const checkAuth = async () => {
-      const supabase = createSupabaseBrowserClient();
+      const supabase = createClient();
       const {
         data: { session },
         error,

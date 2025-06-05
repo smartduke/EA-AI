@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { createSupabaseBrowserClient } from '@/lib/supabase/client';
+import { createClient } from '@/lib/supabase/client';
 import { ProfileForm } from '@/components/profile/profile-form';
 import { SubscriptionManager } from '@/components/profile/subscription-manager';
 import type { User } from '@supabase/auth-helpers-nextjs';
@@ -14,7 +14,7 @@ export default function ProfilePage() {
 
   useEffect(() => {
     const checkAuth = async () => {
-      const supabase = createSupabaseBrowserClient();
+      const supabase = createClient();
 
       try {
         const {

@@ -5,9 +5,12 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useTheme } from 'next-themes';
-import { createSupabaseBrowserClient } from '@/lib/supabase/client';
+import { createClient } from '@/lib/supabase/client';
 import { guestEmailPattern } from '@/lib/constants';
-
+import { cn } from '@/lib/utils';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { Button } from '@/components/ui/button';
+import { toast } from './toast';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -20,8 +23,6 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
 } from '@/components/ui/sidebar';
-import { toast } from './toast';
-import { LoaderIcon } from './icons';
 
 interface User {
   id: string;
@@ -32,7 +33,7 @@ interface User {
 export function SidebarUserNav({ user }: { user: User }) {
   const router = useRouter();
   const { theme, setTheme } = useTheme();
-  const supabase = createSupabaseBrowserClient();
+  const supabase = createClient();
 
   // Check if user is guest
   const isGuest = guestEmailPattern.test(user.email ?? '');

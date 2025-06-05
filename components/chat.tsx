@@ -183,8 +183,7 @@ export function Chat({
         const response = tryParseErrorResponse(error.message);
 
         if (
-          response &&
-          response.error &&
+          response?.error &&
           (response.requiresLogin ||
             response.requiresUpgrade ||
             response.requiresContact)

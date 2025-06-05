@@ -1,7 +1,7 @@
 'use client';
 
 import React from 'react';
-import { Search, Eye, CheckCircle, Circle } from 'lucide-react';
+import { Search, CheckCircle, Circle } from 'lucide-react';
 
 interface ResearchPhase {
   id: string;

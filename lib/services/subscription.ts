@@ -7,7 +7,7 @@ import {
   usageTracking,
   paymentTransaction,
 } from '@/lib/db/schema';
-import { eq, and, gte, lte } from 'drizzle-orm';
+import { eq, and, } from 'drizzle-orm';
 import {
   getPlanLimits,
   type PlanType,

@@ -1,6 +1,5 @@
 import { type NextRequest, NextResponse } from 'next/server';
 import { auth } from '@/lib/supabase/auth';
-import { getUserSubscription } from '@/lib/services/subscription';
 import { drizzle } from 'drizzle-orm/postgres-js';
 import postgres from 'postgres';
 import { paymentTransaction } from '@/lib/db/schema';

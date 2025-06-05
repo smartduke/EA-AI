@@ -49,7 +49,7 @@ export const PipelineLoader: React.FC<PipelineLoaderProps> = ({ onComplete }) =>
             animate={{ rotate: 360 }}
             transition={{ 
               duration: 2, 
-              repeat: Infinity, 
+              repeat: Number.POSITIVE_INFINITY, 
               ease: "linear" 
             }}
             className="w-4 h-4 border-2 border-gray-300 dark:border-gray-600 border-t-gray-600 dark:border-t-gray-400 rounded-full flex-shrink-0"
@@ -76,7 +76,7 @@ export const PipelineLoader: React.FC<PipelineLoaderProps> = ({ onComplete }) =>
                 }}
                 transition={{
                   duration: 2,
-                  repeat: Infinity,
+                  repeat: Number.POSITIVE_INFINITY,
                   ease: 'linear',
                 }}
                 style={{ width: '50%' }}

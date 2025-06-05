@@ -17,7 +17,6 @@ import postgres from 'postgres';
 
 import {
   chat,
-  type User,
   document,
   type Suggestion,
   suggestion,

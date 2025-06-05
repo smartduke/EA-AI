@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { toast } from '@/components/toast';
-import { createSupabaseBrowserClient } from '@/lib/supabase/client';
+import { createClient } from '@/lib/supabase/client';
 
 interface ProfileFormProps {
   user: {
@@ -26,7 +26,7 @@ export function ProfileForm({ user, profile }: ProfileFormProps) {
     profile?.full_name || user.user_metadata?.full_name || '',
   );
 
-  const supabase = createSupabaseBrowserClient();
+  const supabase = createClient();
 
   const handleProfileUpdate = async () => {
     try {

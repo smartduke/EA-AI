@@ -4,7 +4,7 @@ import Link from 'next/link';
 import { useState } from 'react';
 import { toast } from '@/components/toast';
 import { SubmitButton } from '@/components/submit-button';
-import { createSupabaseBrowserClient } from '@/lib/supabase/client';
+import { createClient } from '@/lib/supabase/client';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { getSiteUrl } from '@/lib/utils';
@@ -18,7 +18,7 @@ export default function ForgotPasswordPage() {
   const handleSubmit = async (formData: FormData) => {
     try {
       setIsLoading(true);
-      const supabase = createSupabaseBrowserClient();
+      const supabase = createClient();
       const email = formData.get('email') as string;
 
       setEmail(email);

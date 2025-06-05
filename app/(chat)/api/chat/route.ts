@@ -4,7 +4,6 @@ import {
   createDataStream,
   smoothStream,
   streamText,
-  tool,
 } from 'ai';
 import { auth } from '@/lib/supabase/auth';
 import { type RequestHints, systemPrompt } from '@/lib/ai/prompts';
@@ -36,7 +35,6 @@ import {
 } from 'resumable-stream';
 import { after } from 'next/server';
 import type { Chat } from '@/lib/db/schema';
-import { z } from 'zod';
 import {
   canUserPerformAction,
   incrementUsage,
