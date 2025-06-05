@@ -218,8 +218,13 @@ export function NewsCategoryTabs({
 
   return (
     <div className={cn('w-full', className)}>
-      {/* Modern iOS-style pill tabs */}
+      {/* Modern iOS-style pill tabs with integrated heading */}
       <div className="relative mb-3">
+        {/* Subtle heading above tabs */}
+        <p className="text-xs text-gray-500 dark:text-gray-500 text-center mb-2 font-medium">
+          What's buzzing today? explore with Info × AI
+        </p>
+
         {/* Background container for pill effect */}
         <div className="bg-gray-100/80 dark:bg-gray-800/80 backdrop-blur-sm rounded-2xl p-1.5 border border-gray-200/50 dark:border-gray-700/50">
           <div className="flex overflow-x-auto scrollbar-hide">
