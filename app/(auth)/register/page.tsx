@@ -53,8 +53,12 @@ export default function Page() {
         description:
           'Account created successfully! Please check your email to verify your account.',
       });
-      router.refresh();
-      router.push('/');
+
+      // Wait a bit for the session to propagate
+      await new Promise((resolve) => setTimeout(resolve, 500));
+
+      // Use window.location.href for full page reload to refresh server session
+      window.location.href = '/';
     } catch (error) {
       toast({
         type: 'error',
