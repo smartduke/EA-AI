@@ -8,7 +8,6 @@ import { useTheme } from 'next-themes';
 import { createClient } from '@/lib/supabase/client';
 import { guestEmailPattern } from '@/lib/constants';
 import { cn } from '@/lib/utils';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { toast } from './toast';
 import {
