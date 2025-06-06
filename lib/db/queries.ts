@@ -134,10 +134,32 @@ export async function getChatsByUserId({
       filteredChats = await query();
     }
 
-    const hasMore = filteredChats.length > limit;
+    // Get last message for each chat
+    const chatsWithLastMessage = await Promise.all(
+      filteredChats.map(async (chat) => {
+        const messages = await db
+          .select()
+          .from(message)
+          .where(eq(message.chatId, chat.id))
+          .orderBy(desc(message.createdAt))
+          .limit(1);
+
+        const lastMessage = messages[0]?.parts as
+          | { text: string }[]
+          | undefined;
+        return {
+          ...chat,
+          lastMessage: lastMessage?.[0]?.text || null,
+        };
+      }),
+    );
+
+    const hasMore = chatsWithLastMessage.length > limit;
 
     return {
-      chats: hasMore ? filteredChats.slice(0, limit) : filteredChats,
+      chats: hasMore
+        ? chatsWithLastMessage.slice(0, limit)
+        : chatsWithLastMessage,
       hasMore,
     };
   } catch (error) {

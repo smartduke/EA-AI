@@ -385,7 +385,7 @@ export function EnhancedChatItem({
   active = false,
   onDelete,
 }: {
-  chat: Chat;
+  chat: Chat & { lastMessage?: string };
   active?: boolean;
   onDelete?: (id: string) => void;
 }) {
