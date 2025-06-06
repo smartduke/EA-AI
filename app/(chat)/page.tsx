@@ -24,6 +24,7 @@ export default async function Page() {
             supabaseSession.user.user_metadata?.full_name ||
             supabaseSession.user.email,
           image: supabaseSession.user.user_metadata?.avatar_url,
+          user_metadata: supabaseSession.user.user_metadata,
         },
         expires: supabaseSession.expires_at
           ? new Date(supabaseSession.expires_at * 1000).toISOString()
@@ -36,6 +37,7 @@ export default async function Page() {
           email: `guest-${Date.now()}@guest.local`,
           name: 'Guest User',
           image: undefined,
+          user_metadata: { full_name: 'Guest User' },
         },
         expires: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(),
       };

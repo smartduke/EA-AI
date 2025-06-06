@@ -25,6 +25,7 @@ export default async function Layout({
         id: supabaseSession.user.id,
         email: supabaseSession.user.email,
         image: supabaseSession.user.user_metadata?.avatar_url,
+        user_metadata: supabaseSession.user.user_metadata,
       }
     : undefined;
 
