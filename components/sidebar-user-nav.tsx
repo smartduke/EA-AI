@@ -81,7 +81,8 @@ export function SidebarUserNav({ user }: { user: User }) {
               data-testid="user-nav-button"
               className={cn(
                 'h-14 w-full justify-between px-3',
-                'hover:bg-sidebar-accent/50',
+                'bg-gradient-to-r from-blue-500/10 to-purple-500/10 dark:from-blue-400/10 dark:to-purple-400/10',
+                'hover:from-blue-500/20 hover:to-purple-500/20 dark:hover:from-blue-400/20 dark:hover:to-purple-400/20',
                 'transition-all duration-200',
               )}
             >

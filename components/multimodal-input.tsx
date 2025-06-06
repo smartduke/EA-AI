@@ -98,12 +98,7 @@ function PureMultimodalInput({
   const resetHeight = () => {
     if (textareaRef.current) {
       textareaRef.current.style.height = 'auto';
-      // Set height based on whether we're on home page or chat page
-      if (messages.length === 0) {
-        textareaRef.current.style.height = '98px'; // Home page height
-      } else {
-        textareaRef.current.style.height = '50px'; // Chat page height
-      }
+      textareaRef.current.style.height = '98px'; // Maintain consistent height
     }
   };
 
@@ -242,7 +237,7 @@ function PureMultimodalInput({
             exit={{ opacity: 0, y: 10 }}
             transition={{ type: 'spring', stiffness: 300, damping: 20 }}
             className="absolute left-1/2 -translate-x-1/2 z-50"
-            style={{ bottom: '3.3rem' }}
+            style={{ bottom: '6.3rem' }}
           >
             <Button
               data-testid="scroll-to-bottom-button"
@@ -304,14 +299,19 @@ function PureMultimodalInput({
               value={input}
               onChange={handleInput}
               className={cx(
-                'min-h-[24px] max-h-[calc(75dvh)] overflow-hidden resize-none rounded-2xl !text-base pb-12 pr-12 pl-4 pt-4',
-                'bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600',
-                'shadow-sm hover:shadow-md focus:shadow-md transition-all duration-200',
-                'placeholder:text-gray-500 dark:placeholder:text-gray-400',
-                'focus:ring-2 focus:ring-blue-500 focus:border-blue-500',
+                'min-h-[56px] max-h-[calc(75dvh)] overflow-hidden resize-none',
+                'rounded-2xl !text-base pb-14 pr-14 pl-4 pt-4',
+                'bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm',
+                'border border-gray-200 dark:border-gray-700',
+                'shadow-lg shadow-black/5 hover:shadow-xl hover:shadow-black/10',
+                'dark:shadow-black/20 dark:hover:shadow-black/30',
+                'transition-all duration-300 ease-in-out',
+                'placeholder:text-gray-400 dark:placeholder:text-gray-500',
+                'focus:ring-2 focus:ring-blue-500/20 dark:focus:ring-blue-500/30',
+                'focus:border-blue-500/50 dark:focus:border-blue-500/50',
                 className,
               )}
-              rows={2}
+              rows={1}
               autoFocus
               onKeyDown={(event) => {
                 if (
@@ -332,7 +332,7 @@ function PureMultimodalInput({
               }}
             />
 
-            <div className="absolute bottom-2 left-2 w-fit flex flex-row justify-start gap-2">
+            <div className="absolute bottom-3 left-3 w-fit flex flex-row justify-start gap-2 items-center">
               <ModelSelector
                 session={session}
                 selectedModelId={selectedModelId}
@@ -348,7 +348,7 @@ function PureMultimodalInput({
               <AttachmentsButton fileInputRef={fileInputRef} status={status} />
             </div>
 
-            <div className="absolute bottom-2 right-2 w-fit flex flex-row justify-end">
+            <div className="absolute bottom-3 right-3 w-fit flex flex-row justify-end items-center">
               {status === 'submitted' ? (
                 <StopButton stop={stop} setMessages={setMessages} />
               ) : (
@@ -360,6 +360,34 @@ function PureMultimodalInput({
               )}
             </div>
           </div>
+
+          {(attachments.length > 0 || uploadQueue.length > 0) && (
+            <div
+              data-testid="attachments-preview"
+              className="flex flex-row gap-2 overflow-x-auto items-end py-2 px-1 scrollbar-thin scrollbar-thumb-gray-200 dark:scrollbar-thumb-gray-700 scrollbar-track-transparent"
+            >
+              {attachments.map((attachment) => (
+                <PreviewAttachment
+                  key={attachment.url}
+                  attachment={attachment}
+                  className="bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm border-gray-200 dark:border-gray-700 shadow-lg shadow-black/5 hover:shadow-xl hover:shadow-black/10 dark:shadow-black/20 dark:hover:shadow-black/30 transition-all duration-300"
+                />
+              ))}
+
+              {uploadQueue.map((filename) => (
+                <PreviewAttachment
+                  key={filename}
+                  attachment={{
+                    url: '',
+                    name: filename,
+                    contentType: '',
+                  }}
+                  isUploading={true}
+                  className="bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm border-gray-200 dark:border-gray-700 shadow-lg shadow-black/5 hover:shadow-xl hover:shadow-black/10 dark:shadow-black/20 dark:hover:shadow-black/30 transition-all duration-300"
+                />
+              ))}
+            </div>
+          )}
 
           {/* Hide suggested actions - keeping code intact for future use */}
           {/* <SuggestedActions
@@ -427,11 +455,16 @@ function PureMultimodalInput({
               value={input}
               onChange={handleInput}
               className={cx(
-                'min-h-[44px] max-h-[calc(75dvh)] overflow-hidden resize-none rounded-lg !text-base pb-3 pr-16 pl-[5.5rem] pt-3',
-                'bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600',
-                'shadow-sm hover:shadow-md focus:shadow-md transition-all duration-200',
-                'placeholder:text-gray-500 dark:placeholder:text-gray-400',
-                'focus:ring-2 focus:ring-blue-500 focus:border-blue-500',
+                'min-h-[56px] max-h-[calc(75dvh)] overflow-hidden resize-none',
+                'rounded-2xl !text-base pb-14 pr-14 pl-4 pt-4',
+                'bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm',
+                'border border-gray-200 dark:border-gray-700',
+                'shadow-lg shadow-black/5 hover:shadow-xl hover:shadow-black/10',
+                'dark:shadow-black/20 dark:hover:shadow-black/30',
+                'transition-all duration-300 ease-in-out',
+                'placeholder:text-gray-400 dark:placeholder:text-gray-500',
+                'focus:ring-2 focus:ring-blue-500/20 dark:focus:ring-blue-500/30',
+                'focus:border-blue-500/50 dark:focus:border-blue-500/50',
                 className,
               )}
               rows={1}
@@ -455,7 +488,7 @@ function PureMultimodalInput({
               }}
             />
 
-            <div className="absolute bottom-2 left-2 w-fit flex flex-row justify-start gap-1 items-center">
+            <div className="absolute bottom-3 left-3 w-fit flex flex-row justify-start gap-2 items-center">
               <ModelSelector
                 session={session}
                 selectedModelId={selectedModelId}
@@ -471,7 +504,7 @@ function PureMultimodalInput({
               <AttachmentsButton fileInputRef={fileInputRef} status={status} />
             </div>
 
-            <div className="absolute bottom-2 right-2 w-fit flex flex-row justify-end items-center">
+            <div className="absolute bottom-3 right-3 w-fit flex flex-row justify-end items-center">
               {status === 'submitted' ? (
                 <StopButton stop={stop} setMessages={setMessages} />
               ) : (

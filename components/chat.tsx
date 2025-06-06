@@ -21,6 +21,7 @@ import { useLocalStorage } from 'usehooks-ts';
 import type { SearchMode } from './search-mode-selector';
 import { UsageLimitDialog } from '@/components/ui/usage-limit-dialog';
 import { GuestLimitDialog } from '@/components/ui/guest-limit-dialog';
+import { cn } from '@/lib/utils';
 
 interface SessionUser {
   id: string;
@@ -315,7 +316,7 @@ export function Chat({
 
   return (
     <>
-      <div className="flex flex-col min-w-0 h-dvh bg-background">
+      <div className={cn('flex flex-col min-w-0 h-dvh')}>
         <ChatHeader
           chatId={id}
           selectedModelId={initialChatModel}
@@ -377,7 +378,7 @@ export function Chat({
               onPromptSelect={!isReadonly ? handlePromptSelect : undefined}
             />
 
-            <form className="flex mx-auto px-4 bg-background pb-4 md:pb-6 gap-2 w-full md:max-w-3xl">
+            <form className="flex mx-auto px-4 pb-4 md:pb-6 gap-2 w-full md:max-w-3xl">
               {!isReadonly && (
                 <MultimodalInput
                   chatId={id}

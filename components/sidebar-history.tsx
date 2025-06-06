@@ -26,6 +26,8 @@ import { fetcher } from '@/lib/utils';
 import { ChatItem } from './sidebar-history-item';
 import useSWRInfinite from 'swr/infinite';
 import { LoaderIcon } from './icons';
+import { cn } from '@/lib/utils';
+import { MessageSquareIcon, TrashIcon } from 'lucide-react';
 
 interface User {
   id: string;
@@ -169,18 +171,20 @@ export function SidebarHistory({ user }: { user: User | undefined }) {
   if (isLoading) {
     return (
       <SidebarGroup>
-        <div className="px-2 py-1 text-xs text-sidebar-foreground/50">
+        <div className="px-2 py-1.5 text-xs font-medium text-sidebar-foreground/60 flex items-center gap-2">
+          <div className="h-px flex-1 bg-gradient-to-r from-transparent via-sidebar-foreground/10 to-transparent" />
           Today
+          <div className="h-px flex-1 bg-gradient-to-r from-sidebar-foreground/10 to-transparent" />
         </div>
         <SidebarGroupContent>
           <div className="flex flex-col">
             {[44, 32, 28, 64, 52].map((item) => (
               <div
                 key={item}
-                className="rounded-md h-8 flex gap-2 px-2 items-center"
+                className="rounded-xl h-10 flex gap-2 px-2 items-center"
               >
                 <div
-                  className="h-4 rounded-md flex-1 max-w-[--skeleton-width] bg-sidebar-accent-foreground/10"
+                  className="h-4 rounded-lg flex-1 max-w-[--skeleton-width] bg-sidebar-accent-foreground/10 animate-pulse"
                   style={
                     {
                       '--skeleton-width': `${item}%`,
@@ -198,11 +202,17 @@ export function SidebarHistory({ user }: { user: User | undefined }) {
   if (hasEmptyChatHistory) {
     return (
       <SidebarGroup>
-        <SidebarGroupContent>
-          <div className="px-2 text-zinc-500 w-full flex flex-row justify-center items-center text-sm gap-2">
-            Your conversations will appear here once you start chatting!
+        <div className="flex flex-col items-center justify-center gap-4 px-4 py-8 text-center">
+          <div className="rounded-2xl bg-sidebar-accent/50 p-3">
+            <MessageSquareIcon className="h-6 w-6 text-sidebar-foreground/50" />
           </div>
-        </SidebarGroupContent>
+          <div className="space-y-2">
+            <div className="text-sm font-medium">No chat history</div>
+            <div className="text-xs text-sidebar-foreground/50">
+              Start a new chat to see your history here
+            </div>
+          </div>
+        </div>
       </SidebarGroup>
     );
   }
@@ -367,5 +377,53 @@ export function SidebarHistory({ user }: { user: User | undefined }) {
         </AlertDialogContent>
       </AlertDialog>
     </>
+  );
+}
+
+export function EnhancedChatItem({
+  chat,
+  active = false,
+  onDelete,
+}: {
+  chat: Chat;
+  active?: boolean;
+  onDelete?: (id: string) => void;
+}) {
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 5 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.15 }}
+      className={cn(
+        'group relative flex items-center gap-2 rounded-xl px-2 py-1.5',
+        'hover:bg-sidebar-accent/50 hover:shadow-sm',
+        'transition-all duration-200',
+        active && 'bg-sidebar-accent shadow-sm',
+      )}
+    >
+      <div className="flex-1 truncate text-sm">
+        <div className="flex items-center gap-2">
+          <div className="flex-1 truncate font-medium">
+            {chat.title || 'New Chat'}
+          </div>
+          {onDelete && (
+            <button
+              type="button"
+              onClick={() => onDelete(chat.id)}
+              className={cn(
+                'opacity-0 group-hover:opacity-100',
+                'rounded-lg p-1 hover:bg-sidebar-accent/50',
+                'transition-opacity duration-200',
+              )}
+            >
+              <TrashIcon className="h-4 w-4 text-sidebar-foreground/50" />
+            </button>
+          )}
+        </div>
+        <div className="truncate text-xs text-sidebar-foreground/50">
+          {chat.lastMessage || 'No messages yet'}
+        </div>
+      </div>
+    </motion.div>
   );
 }
