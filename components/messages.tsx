@@ -118,6 +118,14 @@ function PureMessages({
     (displayMessages.length === 0 ||
       displayMessages[displayMessages.length - 1]?.role !== 'assistant');
 
+  // Check if the last message has a web search
+  const hasWebSearch = messages[messages.length - 1]?.parts?.some(
+    (part) =>
+      part.type === 'tool-invocation' &&
+      (part.toolInvocation?.toolName === 'webSearch' ||
+        part.toolInvocation?.toolName === 'deepWebSearch'),
+  );
+
   return (
     <div
       ref={messagesContainerRef}
@@ -160,7 +168,7 @@ function PureMessages({
 
       {shouldShowThinking && (
         <AnimatePresence>
-          <ThinkingMessage />
+          <ThinkingMessage isWebSearch={hasWebSearch} />
         </AnimatePresence>
       )}
 

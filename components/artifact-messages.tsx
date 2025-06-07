@@ -66,7 +66,16 @@ function PureArtifactMessages({
 
       {status === 'submitted' &&
         messages.length > 0 &&
-        messages[messages.length - 1].role === 'user' && <ThinkingMessage />}
+        messages[messages.length - 1].role === 'user' && (
+          <ThinkingMessage
+            isWebSearch={messages[messages.length - 1]?.parts?.some(
+              (part) =>
+                part.type === 'tool-invocation' &&
+                (part.toolInvocation?.toolName === 'webSearch' ||
+                  part.toolInvocation?.toolName === 'deepWebSearch'),
+            )}
+          />
+        )}
 
       <motion.div
         ref={messagesEndRef}

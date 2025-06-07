@@ -361,34 +361,6 @@ function PureMultimodalInput({
             </div>
           </div>
 
-          {(attachments.length > 0 || uploadQueue.length > 0) && (
-            <div
-              data-testid="attachments-preview"
-              className="flex flex-row gap-2 overflow-x-auto items-end py-2 px-1 scrollbar-thin scrollbar-thumb-gray-200 dark:scrollbar-thumb-gray-700 scrollbar-track-transparent"
-            >
-              {attachments.map((attachment) => (
-                <PreviewAttachment
-                  key={attachment.url}
-                  attachment={attachment}
-                  className="bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm border-gray-200 dark:border-gray-700 shadow-lg shadow-black/5 hover:shadow-xl hover:shadow-black/10 dark:shadow-black/20 dark:hover:shadow-black/30 transition-all duration-300"
-                />
-              ))}
-
-              {uploadQueue.map((filename) => (
-                <PreviewAttachment
-                  key={filename}
-                  attachment={{
-                    url: '',
-                    name: filename,
-                    contentType: '',
-                  }}
-                  isUploading={true}
-                  className="bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm border-gray-200 dark:border-gray-700 shadow-lg shadow-black/5 hover:shadow-xl hover:shadow-black/10 dark:shadow-black/20 dark:hover:shadow-black/30 transition-all duration-300"
-                />
-              ))}
-            </div>
-          )}
-
           {/* Hide suggested actions - keeping code intact for future use */}
           {/* <SuggestedActions
             append={append}

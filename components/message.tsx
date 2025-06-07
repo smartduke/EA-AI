@@ -279,11 +279,11 @@ const PurePreviewMessage = ({
                 className="flex flex-col gap-4"
                 initial={{ y: 10, opacity: 0 }}
                 animate={{ y: 0, opacity: 1 }}
-                transition={{ 
-                  duration: 0.6, 
-                  ease: [0.23, 1, 0.32, 1],  // Smooth easing
+                transition={{
+                  duration: 0.6,
+                  ease: [0.23, 1, 0.32, 1], // Smooth easing
                   opacity: { duration: 0.4 },
-                  y: { duration: 0.6 }
+                  y: { duration: 0.6 },
                 }}
               >
                 {(() => {
@@ -307,7 +307,7 @@ const PurePreviewMessage = ({
                     } else if (
                       part.type === 'tool-invocation' &&
                       (part.toolInvocation?.toolName === 'webSearch' ||
-                       part.toolInvocation?.toolName === 'deepWebSearch') &&
+                        part.toolInvocation?.toolName === 'deepWebSearch') &&
                       part.toolInvocation?.state === 'result'
                     ) {
                       const results = part.toolInvocation.result?.results;
@@ -416,24 +416,26 @@ export const PreviewMessage = memo(
   },
 );
 
-export const ThinkingMessage = () => {
+export const ThinkingMessage = ({
+  isWebSearch = false,
+}: { isWebSearch?: boolean }) => {
   return (
     <motion.div
       data-testid="message-assistant-loading"
       className="w-full mx-auto max-w-3xl px-4 group/message"
       initial={{ y: 5, opacity: 0 }}
       animate={{ y: 0, opacity: 1, transition: { delay: 0.2 } }}
-      exit={{ 
-        y: -5, 
-        opacity: 0, 
-        transition: { 
+      exit={{
+        y: -5,
+        opacity: 0,
+        transition: {
           duration: 0.3,
-          ease: [0.23, 1, 0.32, 1]
-        }
+          ease: [0.23, 1, 0.32, 1],
+        },
       }}
       data-role="assistant"
     >
-      <PipelineLoader />
+      <PipelineLoader isSimpleMode={!isWebSearch} />
     </motion.div>
   );
 };

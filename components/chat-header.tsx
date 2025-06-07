@@ -43,6 +43,9 @@ function PureChatHeader({
 
   const { width: windowWidth } = useWindowSize();
 
+  // Check if we're on a chat page (has a valid chatId)
+  const isChatPage = chatId !== '';
+
   return (
     <header className="flex sticky top-0 py-1.5 items-start px-2 md:px-2 gap-2 bg-transparent z-10">
       <SidebarToggle />
@@ -66,8 +69,8 @@ function PureChatHeader({
         </Tooltip>
       )}
 
-      {/* Show visibility selector only on chat pages (not home page) and move to right */}
-      {!isReadonly && !isHomePage && (
+      {/* Show visibility selector only on chat pages (not home page or other pages) */}
+      {!isReadonly && !isHomePage && isChatPage && (
         <VisibilitySelector
           chatId={chatId}
           selectedVisibilityType={selectedVisibilityType}

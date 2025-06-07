@@ -5,32 +5,38 @@ import { motion, AnimatePresence } from 'framer-motion';
 
 interface PipelineLoaderProps {
   onComplete?: () => void;
+  isSimpleMode?: boolean;
 }
 
-export const PipelineLoader: React.FC<PipelineLoaderProps> = ({ onComplete }) => {
+export const PipelineLoader: React.FC<PipelineLoaderProps> = ({
+  onComplete,
+  isSimpleMode = false,
+}) => {
   const [currentStep, setCurrentStep] = useState(0);
-  
-  const loadingTexts = [
-    'Searching the web...',
-    'Reading from sources...',
-    'Analyzing information...',
-    'Synthesizing response...',
-    'Finalizing results...'
-  ];
 
-  const stepDurations = [2000, 3000, 2000, 1500, 500];
+  const loadingTexts = isSimpleMode
+    ? ['Generating response...']
+    : [
+        'Searching the web...',
+        'Reading from sources...',
+        'Analyzing information...',
+        'Synthesizing response...',
+        'Finalizing results...',
+      ];
+
+  const stepDurations = isSimpleMode ? [2000] : [2000, 3000, 2000, 1500, 500];
 
   useEffect(() => {
     const timer = setTimeout(() => {
       if (currentStep < loadingTexts.length - 1) {
-        setCurrentStep(prev => prev + 1);
+        setCurrentStep((prev) => prev + 1);
       } else {
         onComplete?.();
       }
     }, stepDurations[currentStep] || 2000);
 
     return () => clearTimeout(timer);
-  }, [currentStep, onComplete]);
+  }, [currentStep, onComplete, loadingTexts.length, stepDurations]);
 
   const progressPercentage = ((currentStep + 1) / loadingTexts.length) * 100;
 
@@ -47,14 +53,14 @@ export const PipelineLoader: React.FC<PipelineLoaderProps> = ({ onComplete }) =>
           {/* Circle Loader Icon */}
           <motion.div
             animate={{ rotate: 360 }}
-            transition={{ 
-              duration: 2, 
-              repeat: Number.POSITIVE_INFINITY, 
-              ease: "linear" 
+            transition={{
+              duration: 2,
+              repeat: Number.POSITIVE_INFINITY,
+              ease: 'linear',
             }}
             className="w-4 h-4 border-2 border-gray-300 dark:border-gray-600 border-t-gray-600 dark:border-t-gray-400 rounded-full flex-shrink-0"
           />
-          
+
           {/* Text with Shimmer */}
           <AnimatePresence mode="wait">
             <motion.div
@@ -62,9 +68,9 @@ export const PipelineLoader: React.FC<PipelineLoaderProps> = ({ onComplete }) =>
               initial={{ opacity: 0, x: 10 }}
               animate={{ opacity: 1, x: 0 }}
               exit={{ opacity: 0, x: -10 }}
-              transition={{ 
-                duration: 0.4, 
-                ease: [0.23, 1, 0.32, 1] 
+              transition={{
+                duration: 0.4,
+                ease: [0.23, 1, 0.32, 1],
               }}
               className="relative overflow-hidden"
             >
@@ -88,38 +94,42 @@ export const PipelineLoader: React.FC<PipelineLoaderProps> = ({ onComplete }) =>
           </AnimatePresence>
         </div>
 
-        {/* Progress Bar */}
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ delay: 0.3 }}
-          className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-1 overflow-hidden"
-        >
+        {/* Progress Bar - Only show in pipeline mode */}
+        {!isSimpleMode && (
           <motion.div
-            className="h-full bg-gray-600 dark:bg-gray-400 rounded-full"
-            initial={{ width: '0%' }}
-            animate={{ 
-              width: `${progressPercentage}%`
-            }}
-            transition={{ 
-              duration: 0.8, 
-              ease: [0.23, 1, 0.32, 1]
-            }}
-          />
-        </motion.div>
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 0.3 }}
+            className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-1 overflow-hidden"
+          >
+            <motion.div
+              className="h-full bg-gray-600 dark:bg-gray-400 rounded-full"
+              initial={{ width: '0%' }}
+              animate={{
+                width: `${progressPercentage}%`,
+              }}
+              transition={{
+                duration: 0.8,
+                ease: [0.23, 1, 0.32, 1],
+              }}
+            />
+          </motion.div>
+        )}
 
-        {/* Status Text */}
-        <motion.div
-          className="text-left"
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ delay: 0.5 }}
-        >
-          <span className="text-sm text-gray-500 dark:text-gray-500">
-            {Math.round(progressPercentage)}% complete
-          </span>
-        </motion.div>
+        {/* Status Text - Only show in pipeline mode */}
+        {!isSimpleMode && (
+          <motion.div
+            className="text-left"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 0.5 }}
+          >
+            <span className="text-sm text-gray-500 dark:text-gray-500">
+              {Math.round(progressPercentage)}% complete
+            </span>
+          </motion.div>
+        )}
       </motion.div>
     </div>
   );
-}; 
+};
