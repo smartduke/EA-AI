@@ -58,6 +58,7 @@ function PureMultimodalInput({
   selectedVisibilityType,
   session,
   selectedModelId,
+  isHomePage = false,
 }: {
   chatId: string;
   input: UseChatHelpers['input'];
@@ -74,6 +75,7 @@ function PureMultimodalInput({
   selectedVisibilityType: VisibilityType;
   session: Session;
   selectedModelId: string;
+  isHomePage?: boolean;
 }) {
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const { width } = useWindowSize();
@@ -81,26 +83,6 @@ function PureMultimodalInput({
   // Search mode state management
   const [selectedSearchMode, setSelectedSearchMode] =
     useLocalStorage<SearchMode>('search-mode', 'search');
-
-  useEffect(() => {
-    if (textareaRef.current) {
-      adjustHeight();
-    }
-  }, []);
-
-  const adjustHeight = () => {
-    if (textareaRef.current) {
-      textareaRef.current.style.height = 'auto';
-      textareaRef.current.style.height = `${textareaRef.current.scrollHeight + 2}px`;
-    }
-  };
-
-  const resetHeight = () => {
-    if (textareaRef.current) {
-      textareaRef.current.style.height = 'auto';
-      textareaRef.current.style.height = '98px'; // Maintain consistent height
-    }
-  };
 
   const [localStorageInput, setLocalStorageInput] = useLocalStorage(
     'input',
@@ -113,10 +95,7 @@ function PureMultimodalInput({
       // Prefer DOM value over localStorage to handle hydration
       const finalValue = domValue || localStorageInput || '';
       setInput(finalValue);
-      adjustHeight();
     }
-    // Only run once after hydration
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   useEffect(() => {
@@ -125,7 +104,6 @@ function PureMultimodalInput({
 
   const handleInput = (event: React.ChangeEvent<HTMLTextAreaElement>) => {
     setInput(event.target.value);
-    adjustHeight();
   };
 
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -140,7 +118,6 @@ function PureMultimodalInput({
 
     setAttachments([]);
     setLocalStorageInput('');
-    resetHeight();
 
     if (width && width > 768) {
       textareaRef.current?.focus();
@@ -299,8 +276,13 @@ function PureMultimodalInput({
               value={input}
               onChange={handleInput}
               className={cx(
-                'min-h-[56px] max-h-[calc(75dvh)] overflow-hidden resize-none',
-                'rounded-2xl !text-base pb-14 pr-14 pl-4 pt-4',
+                'overflow-hidden resize-none',
+                {
+                  '!min-h-[98px]': isHomePage,
+                  '!min-h-[50px]': !isHomePage,
+                },
+                'max-h-[calc(75dvh)]',
+                'rounded-2xl !text-base pb-4 pr-14 pl-4 pt-4',
                 'bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm',
                 'border border-gray-200 dark:border-gray-700',
                 'shadow-lg shadow-black/5 hover:shadow-xl hover:shadow-black/10',
@@ -333,19 +315,26 @@ function PureMultimodalInput({
             />
 
             <div className="absolute bottom-3 left-3 w-fit flex flex-row justify-start gap-2 items-center">
-              <ModelSelector
-                session={session}
-                selectedModelId={selectedModelId}
-                className="p-2 h-[34px] text-xs"
-                compact={true}
-              />
-              <SearchModeSelector
-                selectedSearchMode={selectedSearchMode}
-                onSearchModeChange={setSelectedSearchMode}
-                className="p-2 h-[34px] text-xs"
-                compact={true}
-              />
-              <AttachmentsButton fileInputRef={fileInputRef} status={status} />
+              {isHomePage && (
+                <>
+                  <ModelSelector
+                    session={session}
+                    selectedModelId={selectedModelId}
+                    className="p-2 h-[34px] text-xs"
+                    compact={true}
+                  />
+                  <SearchModeSelector
+                    selectedSearchMode={selectedSearchMode}
+                    onSearchModeChange={setSelectedSearchMode}
+                    className="p-2 h-[34px] text-xs"
+                    compact={true}
+                  />
+                  <AttachmentsButton
+                    fileInputRef={fileInputRef}
+                    status={status}
+                  />
+                </>
+              )}
             </div>
 
             <div className="absolute bottom-3 right-3 w-fit flex flex-row justify-end items-center">
@@ -427,8 +416,13 @@ function PureMultimodalInput({
               value={input}
               onChange={handleInput}
               className={cx(
-                'min-h-[56px] max-h-[calc(75dvh)] overflow-hidden resize-none',
-                'rounded-2xl !text-base pb-14 pr-14 pl-4 pt-4',
+                'overflow-hidden resize-none',
+                {
+                  '!min-h-[98px]': isHomePage,
+                  '!min-h-[50px]': !isHomePage,
+                },
+                'max-h-[calc(75dvh)]',
+                'rounded-2xl !text-base pb-4 pr-14 pl-4 pt-4',
                 'bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm',
                 'border border-gray-200 dark:border-gray-700',
                 'shadow-lg shadow-black/5 hover:shadow-xl hover:shadow-black/10',
@@ -461,19 +455,26 @@ function PureMultimodalInput({
             />
 
             <div className="absolute bottom-3 left-3 w-fit flex flex-row justify-start gap-2 items-center">
-              <ModelSelector
-                session={session}
-                selectedModelId={selectedModelId}
-                className="p-2 h-[34px] text-xs"
-                compact={true}
-              />
-              <SearchModeSelector
-                selectedSearchMode={selectedSearchMode}
-                onSearchModeChange={setSelectedSearchMode}
-                className="p-2 h-[34px] text-xs"
-                compact={true}
-              />
-              <AttachmentsButton fileInputRef={fileInputRef} status={status} />
+              {isHomePage && (
+                <>
+                  <ModelSelector
+                    session={session}
+                    selectedModelId={selectedModelId}
+                    className="p-2 h-[34px] text-xs"
+                    compact={true}
+                  />
+                  <SearchModeSelector
+                    selectedSearchMode={selectedSearchMode}
+                    onSearchModeChange={setSelectedSearchMode}
+                    className="p-2 h-[34px] text-xs"
+                    compact={true}
+                  />
+                  <AttachmentsButton
+                    fileInputRef={fileInputRef}
+                    status={status}
+                  />
+                </>
+              )}
             </div>
 
             <div className="absolute bottom-3 right-3 w-fit flex flex-row justify-end items-center">

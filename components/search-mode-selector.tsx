@@ -48,7 +48,9 @@ export function SearchModeSelector({
   className = '',
   compact = false,
 }: SearchModeSelectorProps) {
-  const currentMode = searchModes.find((mode) => mode.id === selectedSearchMode);
+  const currentMode = searchModes.find(
+    (mode) => mode.id === selectedSearchMode,
+  );
   const IconComponent = currentMode?.icon || Search;
 
   return (
@@ -57,9 +59,7 @@ export function SearchModeSelector({
         <Button
           variant="outline"
           className={`gap-2 ${className} ${
-            compact
-              ? 'text-xs h-8 px-2'
-              : 'text-sm h-10 px-3'
+            compact ? 'text-xs h-8 px-2' : 'text-sm h-10 px-3'
           } bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors`}
         >
           <IconComponent size={compact ? 14 : 16} />
@@ -109,4 +109,4 @@ export function SearchModeSelector({
       </DropdownMenuContent>
     </DropdownMenu>
   );
-} 
+}

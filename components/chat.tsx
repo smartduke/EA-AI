@@ -359,6 +359,7 @@ export function Chat({
                   selectedVisibilityType={visibilityType}
                   session={session}
                   selectedModelId={initialChatModel}
+                  isHomePage={true}
                 />
               </div>
             )}
@@ -395,6 +396,7 @@ export function Chat({
                   selectedVisibilityType={visibilityType}
                   session={session}
                   selectedModelId={initialChatModel}
+                  isHomePage={false}
                 />
               )}
             </form>

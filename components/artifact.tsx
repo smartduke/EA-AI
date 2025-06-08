@@ -357,6 +357,7 @@ function PureArtifact({
                     selectedVisibilityType={selectedVisibilityType}
                     session={session}
                     selectedModelId={selectedModelId}
+                    isHomePage={false}
                   />
                 </form>
               </div>

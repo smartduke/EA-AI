@@ -21,7 +21,11 @@ interface ResearchPipelineProps {
   currentPhase?: string;
 }
 
-export function ResearchPipeline({ isVisible, phases, currentPhase }: ResearchPipelineProps) {
+export function ResearchPipeline({
+  isVisible,
+  phases,
+  currentPhase,
+}: ResearchPipelineProps) {
   if (!isVisible) return null;
 
   const getPhaseIcon = (status: ResearchPhase['status']) => {
@@ -39,11 +43,14 @@ export function ResearchPipeline({ isVisible, phases, currentPhase }: ResearchPi
     <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4 mb-4">
       <div className="flex items-center gap-2 mb-3">
         <Search size={18} className="text-blue-600 dark:text-blue-400" />
-        <h3 className="font-medium text-blue-900 dark:text-blue-100">Research</h3>
+        <h3 className="font-medium text-blue-900 dark:text-blue-100">
+          Research
+        </h3>
       </div>
-      
+
       <p className="text-sm text-blue-700 dark:text-blue-300 mb-4">
-        It takes a few minutes to gather sources, analyze data, and create your report.
+        It takes a few minutes to gather sources, analyze data, and create your
+        report.
       </p>
 
       <div className="space-y-4">
@@ -51,13 +58,15 @@ export function ResearchPipeline({ isVisible, phases, currentPhase }: ResearchPi
           <div key={phase.id} className="space-y-2">
             <div className="flex items-center gap-2">
               {getPhaseIcon(phase.status)}
-              <span className={`text-sm font-medium ${
-                phase.status === 'active' 
-                  ? 'text-blue-900 dark:text-blue-100' 
-                  : phase.status === 'completed'
-                  ? 'text-green-700 dark:text-green-300'
-                  : 'text-gray-600 dark:text-gray-400'
-              }`}>
+              <span
+                className={`text-sm font-medium ${
+                  phase.status === 'active'
+                    ? 'text-blue-900 dark:text-blue-100'
+                    : phase.status === 'completed'
+                      ? 'text-green-700 dark:text-green-300'
+                      : 'text-gray-600 dark:text-gray-400'
+                }`}
+              >
                 {phase.title}
               </span>
             </div>
@@ -80,7 +89,10 @@ export function ResearchPipeline({ isVisible, phases, currentPhase }: ResearchPi
             {phase.sources && phase.sources.length > 0 && (
               <div className="ml-6 flex flex-wrap gap-2">
                 {phase.sources.map((source, index) => (
-                  <div key={index} className="flex items-center gap-1 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-full px-3 py-1">
+                  <div
+                    key={index}
+                    className="flex items-center gap-1 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-full px-3 py-1"
+                  >
                     <div className="w-3 h-3 rounded-full bg-gradient-to-r from-blue-500 to-purple-500 flex items-center justify-center">
                       <div className="w-1.5 h-1.5 bg-white rounded-full" />
                     </div>
@@ -96,4 +108,4 @@ export function ResearchPipeline({ isVisible, phases, currentPhase }: ResearchPi
       </div>
     </div>
   );
-} 
+}
