@@ -10,7 +10,11 @@ import {
   useState,
 } from 'react';
 import useSWR, { useSWRConfig } from 'swr';
-import { useDebounceCallback, useWindowSize } from 'usehooks-ts';
+import {
+  useDebounceCallback,
+  useWindowSize,
+  useLocalStorage,
+} from 'usehooks-ts';
 import type { Document, Vote } from '@/lib/db/schema';
 import { fetcher } from '@/lib/utils';
 import { MultimodalInput } from './multimodal-input';
@@ -28,6 +32,7 @@ import { textArtifact } from '@/artifacts/text/client';
 import equal from 'fast-deep-equal';
 import type { UseChatHelpers } from '@ai-sdk/react';
 import type { VisibilityType } from './visibility-selector';
+import type { SearchMode } from './search-mode-selector';
 
 interface SessionUser {
   id: string;
@@ -119,6 +124,9 @@ function PureArtifact({
   const [currentVersionIndex, setCurrentVersionIndex] = useState(-1);
 
   const { open: isSidebarOpen } = useSidebar();
+
+  const [selectedSearchMode, setSelectedSearchMode] =
+    useLocalStorage<SearchMode>('search-mode', 'search');
 
   useEffect(() => {
     if (documents && documents.length > 0) {
@@ -358,6 +366,8 @@ function PureArtifact({
                     session={session}
                     selectedModelId={selectedModelId}
                     isHomePage={false}
+                    selectedSearchMode={selectedSearchMode}
+                    setSelectedSearchMode={setSelectedSearchMode}
                   />
                 </form>
               </div>
