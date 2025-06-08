@@ -30,7 +30,7 @@ import type { Vote } from '@/lib/db/schema';
 import type { Message } from 'ai';
 import { toast } from 'sonner';
 
-// Helper function to get favicon URL for a domain
+// Helper function to get favicon URL for a domain TEST
 function getFaviconUrl(url: string): string {
   try {
     const urlObj = new URL(url);
@@ -369,9 +369,7 @@ export function TabView({
                         >
                           {result.url && (
                             <img
-                              src={
-                                result.favicon || getFaviconUrl(result.url)
-                              }
+                              src={result.favicon || getFaviconUrl(result.url)}
                               alt=""
                               width="12"
                               height="12"
@@ -386,10 +384,7 @@ export function TabView({
                           </span>
                         </a>
                       </TooltipTrigger>
-                      <TooltipContent
-                        side="bottom"
-                        className="max-w-[20rem]"
-                      >
+                      <TooltipContent side="bottom" className="max-w-[20rem]">
                         <div className="space-y-2">
                           <a
                             href={result.url}
@@ -528,9 +523,7 @@ export function TabView({
                     className="relative shrink-0 size-20 rounded-lg overflow-hidden border border-neutral-200 dark:border-neutral-800 hover:opacity-90 transition-opacity cursor-pointer sm:hidden"
                   >
                     <img
-                      src={normalizeImageUrl(
-                        result.thumbnailUrl || result.url,
-                      )}
+                      src={normalizeImageUrl(result.thumbnailUrl || result.url)}
                       alt={result.title}
                       width="80"
                       height="80"
@@ -566,13 +559,15 @@ export function TabView({
                   <button
                     key={`answer-desktop-video-${index}-${result.url}`}
                     type="button"
-                    onClick={() => index === 6 ? setActiveTab('videos') : openVideoLightbox(index)}
+                    onClick={() =>
+                      index === 6
+                        ? setActiveTab('videos')
+                        : openVideoLightbox(index)
+                    }
                     className="relative shrink-0 size-16 md:size-20 lg:size-24 rounded-lg overflow-hidden border border-neutral-200 dark:border-neutral-800 hover:opacity-90 transition-opacity cursor-pointer hidden sm:block"
                   >
                     <img
-                      src={normalizeImageUrl(
-                        result.thumbnailUrl || result.url,
-                      )}
+                      src={normalizeImageUrl(result.thumbnailUrl || result.url)}
                       alt={result.title || 'Video result'}
                       width="240"
                       height="240"
@@ -636,9 +631,7 @@ export function TabView({
                 {followUpQuestions.map((question, index) => {
                   // Extract questions from the numbered format [1] Question text
                   const match = question.match(/\[\d+\]\s*(.+)/);
-                  const formattedQuestion = match
-                    ? match[1].trim()
-                    : question;
+                  const formattedQuestion = match ? match[1].trim() : question;
 
                   return (
                     <div key={question}>
@@ -646,9 +639,7 @@ export function TabView({
                         variant="ghost"
                         size="sm"
                         className="w-full h-auto py-1.5 px-3 rounded-lg text-left justify-between border-none hover:bg-primary/5 dark:hover:bg-primary/10 transition-all duration-150 flex items-center"
-                        onClick={() =>
-                          onSelectQuestion?.(formattedQuestion)
-                        }
+                        onClick={() => onSelectQuestion?.(formattedQuestion)}
                       >
                         <span className="text-sm text-neutral-700 dark:text-neutral-300 truncate mr-2">
                           {formattedQuestion}
@@ -693,9 +684,7 @@ export function TabView({
                         }}
                       >
                         <CopyIcon size={16} />
-                        <span className="ml-2 text-sm font-medium">
-                          Copy
-                        </span>
+                        <span className="ml-2 text-sm font-medium">Copy</span>
                       </Button>
                     </TooltipTrigger>
                     <TooltipContent>Copy response text</TooltipContent>
@@ -734,8 +723,7 @@ export function TabView({
 
                                   const votesWithoutCurrent =
                                     currentVotes.filter(
-                                      (vote) =>
-                                        vote.messageId !== message.id,
+                                      (vote) => vote.messageId !== message.id,
                                     );
 
                                   return [
@@ -802,8 +790,7 @@ export function TabView({
 
                                   const votesWithoutCurrent =
                                     currentVotes.filter(
-                                      (vote) =>
-                                        vote.messageId !== message.id,
+                                      (vote) => vote.messageId !== message.id,
                                     );
 
                                   return [
@@ -826,9 +813,7 @@ export function TabView({
                       >
                         <ThumbDownIcon size={16} />
                         <span className="ml-2 text-sm font-medium">
-                          {vote && !vote.isUpvoted
-                            ? 'Downvoted'
-                            : 'Downvote'}
+                          {vote && !vote.isUpvoted ? 'Downvoted' : 'Downvote'}
                         </span>
                       </Button>
                     </TooltipTrigger>
@@ -859,9 +844,7 @@ export function TabView({
                       <div className="flex items-center gap-2 mb-1.5">
                         {result.url && (
                           <img
-                            src={
-                              result.favicon || getFaviconUrl(result.url)
-                            }
+                            src={result.favicon || getFaviconUrl(result.url)}
                             alt=""
                             width="12"
                             height="12"
@@ -943,9 +926,7 @@ export function TabView({
                       <div className="flex items-center gap-1.5 mt-1">
                         {result.url && (
                           <img
-                            src={
-                              result.favicon || getFaviconUrl(result.url)
-                            }
+                            src={result.favicon || getFaviconUrl(result.url)}
                             alt=""
                             width="12"
                             height="12"
@@ -1286,6 +1267,3 @@ export function TabView({
     </div>
   );
 }
-
-
-
