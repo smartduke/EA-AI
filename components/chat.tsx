@@ -77,10 +77,8 @@ export function Chat({
   });
 
   // Search mode state management
-  const [selectedSearchMode] = useLocalStorage<SearchMode>(
-    'search-mode',
-    'search',
-  );
+  const [selectedSearchMode, setSelectedSearchMode] =
+    useLocalStorage<SearchMode>('search-mode', 'search');
 
   // Usage limit dialog state
   const [usageLimitState, setUsageLimitState] = useState<UsageLimitState>({
@@ -348,7 +346,6 @@ export function Chat({
                   chatId={id}
                   input={input}
                   setInput={setInput}
-                  handleSubmit={handleSubmit}
                   status={status}
                   stop={stop}
                   attachments={attachments}
@@ -356,10 +353,13 @@ export function Chat({
                   messages={messages}
                   setMessages={setMessages}
                   append={append}
+                  handleSubmit={handleSubmit}
                   selectedVisibilityType={visibilityType}
                   session={session}
                   selectedModelId={initialChatModel}
                   isHomePage={true}
+                  selectedSearchMode={selectedSearchMode}
+                  setSelectedSearchMode={setSelectedSearchMode}
                 />
               </div>
             )}
@@ -385,7 +385,6 @@ export function Chat({
                   chatId={id}
                   input={input}
                   setInput={setInput}
-                  handleSubmit={handleSubmit}
                   status={status}
                   stop={stop}
                   attachments={attachments}
@@ -393,10 +392,13 @@ export function Chat({
                   messages={messages}
                   setMessages={setMessages}
                   append={append}
+                  handleSubmit={handleSubmit}
                   selectedVisibilityType={visibilityType}
                   session={session}
                   selectedModelId={initialChatModel}
                   isHomePage={false}
+                  selectedSearchMode={selectedSearchMode}
+                  setSelectedSearchMode={setSelectedSearchMode}
                 />
               )}
             </form>

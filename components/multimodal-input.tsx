@@ -42,6 +42,27 @@ interface Session {
   expires: string;
 }
 
+interface Props {
+  chatId: string;
+  input: UseChatHelpers['input'];
+  setInput: UseChatHelpers['setInput'];
+  status: UseChatHelpers['status'];
+  stop: () => void;
+  attachments: Array<Attachment>;
+  setAttachments: Dispatch<SetStateAction<Array<Attachment>>>;
+  messages: Array<UIMessage>;
+  setMessages: UseChatHelpers['setMessages'];
+  append: UseChatHelpers['append'];
+  handleSubmit: UseChatHelpers['handleSubmit'];
+  className?: string;
+  selectedVisibilityType: VisibilityType;
+  session: Session;
+  selectedModelId: string;
+  isHomePage?: boolean;
+  selectedSearchMode: SearchMode;
+  setSelectedSearchMode: (mode: SearchMode) => void;
+}
+
 function PureMultimodalInput({
   chatId,
   input,
@@ -59,30 +80,18 @@ function PureMultimodalInput({
   session,
   selectedModelId,
   isHomePage = false,
-}: {
-  chatId: string;
-  input: UseChatHelpers['input'];
-  setInput: UseChatHelpers['setInput'];
-  status: UseChatHelpers['status'];
-  stop: () => void;
-  attachments: Array<Attachment>;
-  setAttachments: Dispatch<SetStateAction<Array<Attachment>>>;
-  messages: Array<UIMessage>;
-  setMessages: UseChatHelpers['setMessages'];
-  append: UseChatHelpers['append'];
-  handleSubmit: UseChatHelpers['handleSubmit'];
-  className?: string;
-  selectedVisibilityType: VisibilityType;
-  session: Session;
-  selectedModelId: string;
-  isHomePage?: boolean;
-}) {
+  selectedSearchMode,
+  setSelectedSearchMode,
+}: Props) {
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const { width } = useWindowSize();
 
-  // Search mode state management
-  const [selectedSearchMode, setSelectedSearchMode] =
-    useLocalStorage<SearchMode>('search-mode', 'search');
+  // Handle search mode change with page refresh
+  const handleSearchModeChange = (mode: SearchMode) => {
+    setSelectedSearchMode(mode);
+    // Refresh the page to ensure new search mode is properly loaded
+    window.location.reload();
+  };
 
   const [localStorageInput, setLocalStorageInput] = useLocalStorage(
     'input',
@@ -325,7 +334,7 @@ function PureMultimodalInput({
                   />
                   <SearchModeSelector
                     selectedSearchMode={selectedSearchMode}
-                    onSearchModeChange={setSelectedSearchMode}
+                    onSearchModeChange={handleSearchModeChange}
                     className="p-2 h-[34px] text-xs"
                     compact={true}
                   />
@@ -465,7 +474,7 @@ function PureMultimodalInput({
                   />
                   <SearchModeSelector
                     selectedSearchMode={selectedSearchMode}
-                    onSearchModeChange={setSelectedSearchMode}
+                    onSearchModeChange={handleSearchModeChange}
                     className="p-2 h-[34px] text-xs"
                     compact={true}
                   />
