@@ -22,6 +22,7 @@ import type { SearchMode } from './search-mode-selector';
 import { UsageLimitDialog } from '@/components/ui/usage-limit-dialog';
 import { GuestLimitDialog } from '@/components/ui/guest-limit-dialog';
 import { cn } from '@/lib/utils';
+import { IntroText } from './intro-text';
 
 interface SessionUser {
   id: string;
@@ -326,22 +327,23 @@ export function Chat({
 
         {/* Conditional layout based on whether we're on home page or chat page */}
         {isHomePage ? (
-          /* Home page: Center everything vertically */
-          <div className="flex flex-col justify-center items-center flex-1 px-4 gap-4">
-            <Messages
-              chatId={id}
-              status={status}
-              votes={votes}
-              messages={messages}
-              setMessages={setMessages}
-              reload={reload}
-              isReadonly={isReadonly}
-              isArtifactVisible={isArtifactVisible}
-              onPromptSelect={!isReadonly ? handlePromptSelect : undefined}
-            />
+          /* Home page: Top to bottom layout */
+          <div className="flex flex-col w-full min-h-[calc(100vh-4rem)] px-4 pt-8">
+            <IntroText />
+            <div className="w-full md:max-w-4xl mx-auto mt-8 mb-8">
+              <Messages
+                chatId={id}
+                status={status}
+                votes={votes}
+                messages={messages}
+                setMessages={setMessages}
+                reload={reload}
+                isReadonly={isReadonly}
+                isArtifactVisible={isArtifactVisible}
+                onPromptSelect={undefined}
+              />
 
-            {!isReadonly && (
-              <div className="w-full md:max-w-3xl">
+              {!isReadonly && (
                 <MultimodalInput
                   chatId={id}
                   input={input}
@@ -361,8 +363,8 @@ export function Chat({
                   selectedSearchMode={selectedSearchMode}
                   setSelectedSearchMode={setSelectedSearchMode}
                 />
-              </div>
-            )}
+              )}
+            </div>
           </div>
         ) : (
           /* Chat page: Original layout */

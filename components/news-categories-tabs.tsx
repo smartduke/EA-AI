@@ -352,28 +352,26 @@ export function NewsCategoryTabs({
             ) : headlines[category.id]?.length > 0 ? (
               // Compact Headlines
               <div className="space-y-1">
-                {headlines[category.id].map(
-                  (headline: HeadlineType, i: number) => (
-                    <motion.button
-                      key={`${category.id}-${headline.link}-${i}`}
-                      initial={{ opacity: 0, y: 10 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      transition={{ delay: i * 0.03, duration: 0.2 }}
-                      type="button"
-                      className="w-full text-left py-2 px-3 bg-white/60 dark:bg-gray-900/60 backdrop-blur-sm rounded-lg border border-gray-200/30 dark:border-gray-700/30 hover:border-blue-200 dark:hover:border-blue-700/40 hover:bg-white/80 dark:hover:bg-gray-900/80 transition-all duration-200 group"
-                      onClick={async () => {
-                        onSelectMessageAction(headline.message);
-                      }}
-                    >
-                      <div className="flex items-center gap-2">
-                        <div className="size-1.5 bg-gradient-to-r from-blue-500 to-purple-500 rounded-full flex-shrink-0 group-hover:scale-110 transition-transform duration-200" />
-                        <span className="text-xs font-medium text-gray-900 dark:text-gray-100 group-hover:text-blue-700 dark:group-hover:text-blue-300 transition-colors duration-200 line-clamp-1">
-                          {headline.heading}
-                        </span>
-                      </div>
-                    </motion.button>
-                  ),
-                )}
+                {headlines[category.id].map((headline: HeadlineType, i: number) => (
+                  <motion.button
+                    key={`${category.id}-${headline.link}-${i}`}
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: i * 0.03, duration: 0.2 }}
+                    type="button"
+                    className="w-full text-left py-2 px-3 bg-white/60 dark:bg-gray-900/60 backdrop-blur-sm rounded-lg border border-gray-200/30 dark:border-gray-700/30 hover:border-blue-200 dark:hover:border-blue-700/40 hover:bg-white/80 dark:hover:bg-gray-900/80 transition-all duration-200 group"
+                    onClick={async () => {
+                      onSelectMessageAction(headline.message);
+                    }}
+                  >
+                    <div className="flex items-center gap-2">
+                      <div className="size-1.5 bg-gradient-to-r from-blue-500 to-purple-500 rounded-full flex-shrink-0 group-hover:scale-110 transition-transform duration-200" />
+                      <span className="text-xs font-medium text-gray-900 dark:text-gray-100 group-hover:text-blue-700 dark:group-hover:text-blue-300 transition-colors duration-200 line-clamp-1">
+                        {headline.heading}
+                      </span>
+                    </div>
+                  </motion.button>
+                ))}
               </div>
             ) : (
               // Compact Empty State

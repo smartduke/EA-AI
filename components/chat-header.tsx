@@ -9,7 +9,6 @@ import { useSidebar } from './ui/sidebar';
 import { memo } from 'react';
 import { Tooltip, TooltipContent, TooltipTrigger } from './ui/tooltip';
 import { type VisibilityType, VisibilitySelector } from './visibility-selector';
-import { WeatherSnippet } from './weather-snippet';
 
 interface SessionUser {
   id: string;
@@ -76,13 +75,6 @@ function PureChatHeader({
           selectedVisibilityType={selectedVisibilityType}
           className="ml-auto"
         />
-      )}
-
-      {/* Show weather snippet only on home page */}
-      {isHomePage && (
-        <div className="ml-auto">
-          <WeatherSnippet />
-        </div>
       )}
     </header>
   );

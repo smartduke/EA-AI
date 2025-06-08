@@ -20,7 +20,6 @@ import { GPSIcon, UploadIcon, StopIcon } from './icons';
 import { PreviewAttachment } from './preview-attachment';
 import { Button } from './ui/button';
 import { Textarea } from './ui/textarea';
-import { NewsCategoryTabs } from './news-categories-tabs';
 import { ModelSelector } from './model-selector';
 import { SearchModeSelector, type SearchMode } from './search-mode-selector';
 import equal from 'fast-deep-equal';
@@ -29,6 +28,7 @@ import { AnimatePresence, motion } from 'framer-motion';
 import { ArrowDown } from 'lucide-react';
 import { useScrollToBottom } from '@/hooks/use-scroll-to-bottom';
 import type { VisibilityType } from './visibility-selector';
+import { StarterPrompts } from './starter-prompts';
 
 interface SessionUser {
   id: string;
@@ -281,13 +281,15 @@ function PureMultimodalInput({
             <Textarea
               data-testid="multimodal-input"
               ref={textareaRef}
-              placeholder="Ask anything..."
+              placeholder={
+                isHomePage ? 'Ask anything...' : 'Ask Follow-up question'
+              }
               value={input}
               onChange={handleInput}
               className={cx(
                 'overflow-hidden resize-none',
                 {
-                  '!min-h-[98px]': isHomePage,
+                  '!min-h-[110px]': isHomePage,
                   '!min-h-[50px]': !isHomePage,
                 },
                 'max-h-[calc(75dvh)]',
@@ -359,21 +361,13 @@ function PureMultimodalInput({
             </div>
           </div>
 
-          {/* Hide suggested actions - keeping code intact for future use */}
-          {/* <SuggestedActions
-            append={append}
-            chatId={chatId}
-            selectedVisibilityType={selectedVisibilityType}
-          /> */}
-
-          {/* New News Headlines Feature */}
-          <NewsCategoryTabs
+          <StarterPrompts
             className="mt-4"
-            onSelectMessageAction={(message: string) => {
+            onSelectPrompt={(prompt: string) => {
               window.history.replaceState({}, '', `/chat/${chatId}`);
               append({
                 role: 'user',
-                content: message,
+                content: prompt,
               });
             }}
           />
@@ -421,13 +415,15 @@ function PureMultimodalInput({
             <Textarea
               data-testid="multimodal-input"
               ref={textareaRef}
-              placeholder="Ask anything..."
+              placeholder={
+                isHomePage ? 'Ask anything...' : 'Ask Follow-up question'
+              }
               value={input}
               onChange={handleInput}
               className={cx(
                 'overflow-hidden resize-none',
                 {
-                  '!min-h-[98px]': isHomePage,
+                  '!min-h-[110px]': isHomePage,
                   '!min-h-[50px]': !isHomePage,
                 },
                 'max-h-[calc(75dvh)]',

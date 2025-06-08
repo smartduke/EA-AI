@@ -136,8 +136,6 @@ function PureMessages({
       }`}
       suppressHydrationWarning
     >
-      {messages.length === 0 && <Greeting onPromptSelect={onPromptSelect} />}
-
       {displayMessages.map((message, index) => (
         <PreviewMessage
           key={message.id}
