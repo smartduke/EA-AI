@@ -1,10 +1,12 @@
 'use client';
 import { useRouter } from 'next/navigation';
 import { useWindowSize } from 'usehooks-ts';
+import { guestEmailPattern } from '@/lib/constants';
 
 import { SidebarToggle } from '@/components/sidebar-toggle';
 import { Button } from '@/components/ui/button';
 import { PlusIcon } from './icons';
+import { LogIn } from 'lucide-react';
 import { useSidebar } from './ui/sidebar';
 import { memo } from 'react';
 import { Tooltip, TooltipContent, TooltipTrigger } from './ui/tooltip';
@@ -41,12 +43,13 @@ function PureChatHeader({
   const { open } = useSidebar();
 
   const { width: windowWidth } = useWindowSize();
+  const isGuest = guestEmailPattern.test(session.user.email ?? '');
 
   // Check if we're on a chat page (has a valid chatId)
   const isChatPage = chatId !== '';
 
   return (
-    <header className="flex sticky top-0 py-1.5 items-start px-2 md:px-2 gap-2 bg-transparent z-10">
+    <header className="flex sticky top-0 py-1.5 items-start px-2 md:px-2 gap-2 bg-transparent [@media(max-width:640px)]:bg-white dark:[@media(max-width:640px)]:bg-gray-900 z-10">
       <SidebarToggle />
 
       {(!open || windowWidth < 768) && (
@@ -75,6 +78,18 @@ function PureChatHeader({
           selectedVisibilityType={selectedVisibilityType}
           className="ml-auto"
         />
+      )}
+
+      {/* Sign In button for guest users - only on home page */}
+      {isGuest && isHomePage && (
+        <Button
+          variant="outline"
+          className="ml-auto flex items-center gap-2 bg-white hover:bg-gray-50 dark:bg-gray-900 dark:hover:bg-gray-800"
+          onClick={() => router.push('/login')}
+        >
+          <LogIn className="w-4 h-4" />
+          <span className="font-medium">Sign In</span>
+        </Button>
       )}
     </header>
   );

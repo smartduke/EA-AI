@@ -132,7 +132,7 @@ function PureMessages({
       className={`flex flex-col min-w-0 gap-3 relative -mt-10 ${
         isHomePage
           ? 'pt-4' // Home page: just basic spacing
-          : 'flex-1 overflow-y-scroll pt-4' // Chat page: original layout
+          : 'flex-1 overflow-y-scroll [@media(max-width:640px)]:pt-12 pt-4' // Chat page: original layout with mobile padding
       }`}
       suppressHydrationWarning
     >
