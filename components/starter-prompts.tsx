@@ -180,7 +180,7 @@ export function StarterPrompts({
                   }}
                   className="w-full flex items-center justify-between px-6 py-4 hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors text-left group border-b border-gray-100 dark:border-gray-800 last:border-0"
                 >
-                  <span className="text-sm [@media(max-width:640px)]:text-[13px] font-semibold text-gray-900 dark:text-gray-100 group-hover:text-blue-700 dark:group-hover:text-blue-300 transition-colors duration-200 line-clamp-1">
+                  <span className="text-sm [@media(max-width:640px)]:text-[13px] text-gray-900 dark:text-gray-100 group-hover:text-blue-700 dark:group-hover:text-blue-300 transition-colors duration-200 line-clamp-1">
                     {prompt}
                   </span>
                   <ChevronRight className="w-4 h-4 text-gray-300 group-hover:text-gray-400 dark:text-gray-600 dark:group-hover:text-gray-500 flex-shrink-0" />
