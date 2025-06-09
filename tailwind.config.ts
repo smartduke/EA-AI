@@ -10,7 +10,8 @@ const config: Config = {
   theme: {
     extend: {
       fontFamily: {
-        sans: ['var(--font-geist)'],
+        sans: ['var(--font-poppins)'],
+        poppins: ['var(--font-poppins)'],
         mono: ['var(--font-geist-mono)'],
       },
       screens: {
@@ -89,7 +90,7 @@ const config: Config = {
               marginBottom: '0',
             },
             // Remove excess margin from images
-            'img': {
+            img: {
               marginTop: '0.5em',
               marginBottom: '0.5em',
             },

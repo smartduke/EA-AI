@@ -54,7 +54,7 @@ export function IntroText() {
       {/* Brand Name */}
       <div className="text-left mb-6">
         <h1 className="text-sm md:text-base font-bold tracking-wide text-gray-900 dark:text-white flex items-center gap-2">
-          <span className="uppercase">EscapeArtist AI</span>
+          <span className="uppercase font-semibold">EscapeArtist AI</span>
           <Sparkles className="w-4 h-4 text-blue-500" />
         </h1>
       </div>
