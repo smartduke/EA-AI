@@ -157,7 +157,7 @@ export function StarterPrompts({
                 {selectedCategoryData.icon && (
                   <selectedCategoryData.icon className="w-4 h-4 text-gray-500" />
                 )}
-                <h2 className="text-[15px] font-medium text-gray-700 dark:text-gray-200">
+                <h2 className="text-[15px] [@media(max-width:640px)]:text-[13px] font-medium text-gray-700 dark:text-gray-200">
                   {selectedCategoryData.label}
                 </h2>
               </div>
@@ -180,7 +180,7 @@ export function StarterPrompts({
                   }}
                   className="w-full flex items-center justify-between px-6 py-4 hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors text-left group border-b border-gray-100 dark:border-gray-800 last:border-0"
                 >
-                  <span className="text-[15px] text-gray-600 dark:text-gray-300 pr-4">
+                  <span className="text-sm [@media(max-width:640px)]:text-[13px] font-semibold text-gray-900 dark:text-gray-100 group-hover:text-blue-700 dark:group-hover:text-blue-300 transition-colors duration-200 line-clamp-1">
                     {prompt}
                   </span>
                   <ChevronRight className="w-4 h-4 text-gray-300 group-hover:text-gray-400 dark:text-gray-600 dark:group-hover:text-gray-500 flex-shrink-0" />
@@ -203,7 +203,7 @@ export function StarterPrompts({
                   key={category.id}
                   type="button"
                   onClick={() => setSelectedCategory(category.id)}
-                  className="group relative flex items-center gap-2.5 px-5 py-2.5 rounded-full text-[15px] font-medium bg-white hover:bg-gray-50 dark:bg-white/5 dark:hover:bg-white/10 shadow-[0_1px_2px_rgba(0,0,0,0.08)] transition-all duration-200 border border-gray-100 dark:border-white/10 whitespace-nowrap overflow-hidden"
+                  className="group relative flex items-center gap-2.5 px-5 py-2.5 rounded-full text-[15px] [@media(max-width:640px)]:text-[13px] font-medium bg-white hover:bg-gray-50 dark:bg-white/5 dark:hover:bg-white/10 shadow-[0_1px_2px_rgba(0,0,0,0.08)] transition-all duration-200 border border-gray-100 dark:border-white/10 whitespace-nowrap overflow-hidden"
                 >
                   {/* Gradient background for icon */}
                   <div
@@ -217,7 +217,7 @@ export function StarterPrompts({
                     <Icon className="size-3 text-white" />
                   </div>
 
-                  <span className="text-gray-700 dark:text-gray-200 relative">
+                  <span className="text-gray-700 dark:text-gray-200 relative text-[15px] [@media(max-width:640px)]:text-[13px]">
                     {category.label}
                   </span>
                 </button>

@@ -327,12 +327,6 @@ function PureMultimodalInput({
             <div className="absolute bottom-3 left-3 w-fit flex flex-row justify-start gap-2 items-center">
               {isHomePage && (
                 <>
-                  <ModelSelector
-                    session={session}
-                    selectedModelId={selectedModelId}
-                    className="p-2 h-[34px] text-xs"
-                    compact={true}
-                  />
                   <SearchModeSelector
                     selectedSearchMode={selectedSearchMode}
                     onSearchModeChange={handleSearchModeChange}
@@ -460,12 +454,6 @@ function PureMultimodalInput({
             <div className="absolute bottom-3 left-3 w-fit flex flex-row justify-start gap-2 items-center">
               {isHomePage && (
                 <>
-                  <ModelSelector
-                    session={session}
-                    selectedModelId={selectedModelId}
-                    className="p-2 h-[34px] text-xs"
-                    compact={true}
-                  />
                   <SearchModeSelector
                     selectedSearchMode={selectedSearchMode}
                     onSearchModeChange={handleSearchModeChange}

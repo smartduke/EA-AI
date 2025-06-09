@@ -269,7 +269,7 @@ export function TabView({
   return (
     <div className="flex flex-col w-full">
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-        <TabsList className="h-auto bg-transparent p-0 border-0 flex gap-6 mb-4 mt-2 justify-start [@media(max-width:640px)]:overflow-x-auto [@media(max-width:640px)]:gap-2 [@media(max-width:640px)]:px-4">
+        <TabsList className="h-auto bg-transparent p-0 border-0 flex gap-6 mb-4 mt-2 justify-start [@media(max-width:640px)]:overflow-x-auto [@media(max-width:640px)]:gap-2">
           <TabsTrigger
             value="answer"
             className="relative px-0 py-3 min-w-0 h-auto bg-transparent hover:bg-transparent rounded-none border-0 data-[state=active]:bg-transparent data-[state=active]:shadow-none focus-visible:ring-0 focus-visible:ring-offset-0 [@media(max-width:640px)]:min-w-max [@media(max-width:640px)]:whitespace-nowrap"
@@ -291,7 +291,7 @@ export function TabView({
               className="relative px-0 py-3 min-w-0 h-auto bg-transparent hover:bg-transparent rounded-none border-0 data-[state=active]:bg-transparent data-[state=active]:shadow-none focus-visible:ring-0 focus-visible:ring-offset-0 [@media(max-width:640px)]:min-w-max [@media(max-width:640px)]:whitespace-nowrap"
             >
               <span className="flex items-center gap-2 text-sm font-medium text-neutral-700 dark:text-neutral-300 data-[state=active]:text-neutral-900 dark:data-[state=active]:text-white">
-                <div className="text-neutral-800 dark:text-neutral-200">
+                <div className="text-neutral-800 dark:text-neutral-200 [@media(max-width:640px)]:hidden">
                   <BoxIcon size={16} />
                 </div>
                 Sources{' '}
@@ -313,7 +313,7 @@ export function TabView({
               className="relative px-0 py-3 min-w-0 h-auto bg-transparent hover:bg-transparent rounded-none border-0 data-[state=active]:bg-transparent data-[state=active]:shadow-none focus-visible:ring-0 focus-visible:ring-offset-0 [@media(max-width:640px)]:min-w-max [@media(max-width:640px)]:whitespace-nowrap"
             >
               <span className="flex items-center gap-2 text-sm font-medium text-neutral-700 dark:text-neutral-300 data-[state=active]:text-neutral-900 dark:data-[state=active]:text-white">
-                <div className="text-neutral-800 dark:text-neutral-200">
+                <div className="text-neutral-800 dark:text-neutral-200 [@media(max-width:640px)]:hidden">
                   <ImageIcon size={16} />
                 </div>
                 Images{' '}
@@ -335,7 +335,7 @@ export function TabView({
               className="relative px-0 py-3 min-w-0 h-auto bg-transparent hover:bg-transparent rounded-none border-0 data-[state=active]:bg-transparent data-[state=active]:shadow-none focus-visible:ring-0 focus-visible:ring-offset-0 [@media(max-width:640px)]:min-w-max [@media(max-width:640px)]:whitespace-nowrap"
             >
               <span className="flex items-center gap-2 text-sm font-medium text-neutral-700 dark:text-neutral-300 data-[state=active]:text-neutral-900 dark:data-[state=active]:text-white">
-                <div className="text-neutral-800 dark:text-neutral-200">
+                <div className="text-neutral-800 dark:text-neutral-200 [@media(max-width:640px)]:hidden">
                   <PlayIcon size={16} />
                 </div>
                 Videos{' '}

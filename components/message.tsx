@@ -89,11 +89,14 @@ const PurePreviewMessage = ({
     <AnimatePresence>
       <motion.div
         data-testid={`message-${message.role}`}
-        className={cn('w-full mx-auto max-w-3xl px-4 group/message', {
-          // Sticky behavior temporarily disabled
-          // 'sticky top-0 z-40 bg-background/80 backdrop-blur-md border-b border-border/50':
-          //   message.role === 'user' && isSticky && !isHomePage,
-        })}
+        className={cn(
+          'w-full mx-auto max-w-3xl [@media(max-width:640px)]:max-w-sm px-4 group/message',
+          {
+            // Sticky behavior temporarily disabled
+            // 'sticky top-0 z-40 bg-background/80 backdrop-blur-md border-b border-border/50':
+            //   message.role === 'user' && isSticky && !isHomePage,
+          },
+        )}
         ref={message.role === 'user' ? messageRef : undefined}
         initial={{ y: 5, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
@@ -169,23 +172,6 @@ const PurePreviewMessage = ({
                           </Markdown>
                         )}
                       </div>
-                      {message.role === 'user' && !isReadonly && (
-                        <Tooltip>
-                          <TooltipTrigger asChild>
-                            <Button
-                              data-testid="message-edit-button"
-                              variant="ghost"
-                              className="px-2 h-fit rounded-full text-muted-foreground opacity-0 group-hover/message:opacity-100"
-                              onClick={() => {
-                                setMode('edit');
-                              }}
-                            >
-                              {/* Icon removed but button functionality preserved */}
-                            </Button>
-                          </TooltipTrigger>
-                          <TooltipContent>Edit message</TooltipContent>
-                        </Tooltip>
-                      )}
                     </div>
                   );
                 }
