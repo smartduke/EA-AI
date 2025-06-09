@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ArrowRight } from 'lucide-react';
+import { ArrowRight, Sparkles } from 'lucide-react';
 
 const INTRO_MESSAGES = [
   {
@@ -51,6 +51,14 @@ export function IntroText() {
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
     >
+      {/* Brand Name */}
+      <div className="text-left mb-6">
+        <h1 className="text-sm md:text-base font-bold tracking-wide text-gray-900 dark:text-white flex items-center gap-2">
+          <span className="uppercase">EscapeArtist AI</span>
+          <Sparkles className="w-4 h-4 text-blue-500" />
+        </h1>
+      </div>
+
       <div className="relative py-8">
         {/* Subtle gradient background */}
         <div

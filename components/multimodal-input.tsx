@@ -223,7 +223,7 @@ function PureMultimodalInput({
             exit={{ opacity: 0, y: 10 }}
             transition={{ type: 'spring', stiffness: 300, damping: 20 }}
             className="absolute left-1/2 -translate-x-1/2 z-50"
-            style={{ bottom: '6.3rem' }}
+            style={{ bottom: '4rem' }}
           >
             <Button
               data-testid="scroll-to-bottom-button"
@@ -305,7 +305,6 @@ function PureMultimodalInput({
                 className,
               )}
               rows={1}
-              autoFocus
               onKeyDown={(event) => {
                 if (
                   event.key === 'Enter' &&
@@ -439,7 +438,6 @@ function PureMultimodalInput({
                 className,
               )}
               rows={1}
-              autoFocus
               onKeyDown={(event) => {
                 if (
                   event.key === 'Enter' &&

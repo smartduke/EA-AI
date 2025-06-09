@@ -468,7 +468,7 @@ export function TabView({
                     {index === 3 && imageSources.length > 4 && (
                       <div className="absolute inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center">
                         <span className="text-white text-xs font-medium">
-                          +{imageSources.length - 4}
+                          +{imageSources.length - 4} Images
                         </span>
                       </div>
                     )}
@@ -500,7 +500,7 @@ export function TabView({
                     {index === 6 && imageSources.length > 7 && (
                       <div className="absolute inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center">
                         <span className="text-white text-xs sm:text-sm font-medium">
-                          +{imageSources.length - 7}
+                          +{imageSources.length - 7} Images
                         </span>
                       </div>
                     )}
@@ -547,7 +547,7 @@ export function TabView({
                     {index === 3 && videoSources.length > 4 && (
                       <div className="absolute inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center">
                         <span className="text-white text-xs font-medium">
-                          +{videoSources.length - 4}
+                          +{videoSources.length - 4} Videos
                         </span>
                       </div>
                     )}
@@ -591,7 +591,7 @@ export function TabView({
                     {index === 6 && videoSources.length > 7 && (
                       <div className="absolute inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center">
                         <span className="text-white text-xs sm:text-sm font-medium">
-                          +{videoSources.length - 7}
+                          +{videoSources.length - 7} Videos
                         </span>
                       </div>
                     )}
